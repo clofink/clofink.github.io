@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Headless SDK Test Page</title>
+</head>
+<body>
+    <style>
+        label {
+            display: block;
+            width: fit-content;
+        }
+        textarea {
+            width: fit-content;
+            height: fit-content;
+        }
+        label, button {
+            margin-top: .5em;
+            margin-bottom: .5em;
+        }
+        .config {
+            border-radius: 10px;
+            border: 1px solid black;
+            height: 50px;
+            margin-bottom: 1em;
+            height: fit-content;
+            padding: .5em;
+        }
+        .scrollable {
+            overflow-y: scroll;
+            max-height: 8em;
+            min-height: 1em;
+        }
+        .panel {
+            float: left;
+            padding: .5em;
+        }
+        #dataLog {
+            border-radius: 10px;
+            border: 1px solid black;
+            height: calc(100vh - 2em);
+            overflow-y: scroll;
+        }
+        summary {
+            user-select: none;
+            cursor: pointer;
+        }
+        input, select {
+            min-width: 0px;
+            max-width: fit-content;
+            width: fit-content;
+        }
+        .logItem {
+            margin: .5em;
+            border: 1px solid black;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .logHeader, .logBody {
+            padding: .5em;
+        }
+        .logBody {
+            max-height: 10em;
+            overflow-y: scroll;
+        }
+        .error {
+            background-color: lightpink;
+        }
+        .info {
+            background-color: lightgrey;
+        }
+        @media (max-width: 1000px) {
+            .panel1, .panel2 {
+                width: calc(50% - 1em);
+                min-width: 10em;
+            }
+        }
+        @media (min-width: 1001px) {
+            .panel1 {
+                width: calc(30% - 1em);
+            }
+            .panel2 {
+                width: calc(70% - 1em);
+
+            }
+        }
+    </style>
+    <div class="panelContainer">
+        <div class="panel panel1">
+            <details class="config" id="account" open>
+                <summary>Account Configuration</summary>
+                <label>Deployment ID: 
+                    <input id="deployId" value="">
+                </label>
+                <label>Region:
+                    <select id="region">
+                        <option value="use1">US East</option>
+                        <option value="use2">US East 2</option>
+                        <option value="usw2" selected>US West</option>
+                        <option value="cac1">Canada</option>
+                        <option value="euw1">Europe (Ireland)</option>
+                        <option value="euw2">Europe (London)</option>
+                        <option value="euc1">Europe (Frankfurt)</option>
+                        <option value="aps1">Asia Pacific (Mumbai)</option>
+                        <option value="apne1">Asia Pacific (Tokyo)</option>
+                        <option value="apne2">Asia Pacific (Seoul)</option>
+                        <option value="apse2">Asia Pacific (Sydney)</option>
+                        <option value="sae1">South America</option>
+                    </select>
+                </label>
+                <button id="loadWidget">Load Widget</button>
+                <button id="reload">Reload</button>
+            </details>
+            <label>Plugin:
+                <select id="plugin">
+                    <option>Auth</option>
+                    <option>AuthProvider</option>
+                    <option>CoBrowseService</option>
+                    <option>CobrowseVoice</option>
+                    <option>Conversations</option>
+                    <option>Database</option>
+                    <option>Engagement</option>
+                    <option>Journey</option>
+                    <option>Knowledge</option>
+                    <option>KnowledgeService</option>
+                    <option>Launcher</option>
+                    <option>MessagingService</option>
+                    <option>Messenger</option>
+                </select>
+            </label>
+            <details class="config" id="events" data-depends-on="plugin" data-depends-value="Auth,CoBrowseService,CobrowseVoice,Conversations,Database,Journey,Knowledge,KnowledgeService,Launcher,MessagingService,Messenger">
+                <summary>Events</summary>
+                <button id="selectAll" data-depends-on="plugin" data-depends-value="Auth,CoBrowseService,CobrowseVoice,Conversations,Database,Journey,Knowledge,KnowledgeService,Launcher,MessagingService,Messenger">Select All</button>
+                <button id="addEvents" data-depends-on="plugin" data-depends-value="Auth,CoBrowseService,CobrowseVoice,Conversations,Database,Journey,Knowledge,KnowledgeService,Launcher,MessagingService,Messenger">Add Events</button>
+                <div class="scrollable">
+                    <label data-depends-on="plugin" data-depends-value="Auth">
+                        <input id="Auth.ready" type="checkbox">Ready
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Auth">
+                        <input id="Auth.authenticating" type="checkbox">Authenticating
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Auth">
+                        <input id="Auth.authenticated" type="checkbox">Authenticated
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Auth">
+                        <input id="Auth.loggedOut" type="checkbox">Logged Out
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Auth">
+                        <input id="Auth.authError" type="checkbox">Auth Error
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Auth">
+                        <input id="Auth.tokenError" type="checkbox">Token Error
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Auth">
+                        <input id="Auth.authProviderError" type="checkbox">Auth Provider Error
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Auth">
+                        <input id="Auth.error" type="checkbox">Error
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Auth">
+                        <input id="Auth.logoutError" type="checkbox">Logout Error
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="CoBrowseService">
+                        <input id="CoBrowseService.ready" type="checkbox">Ready
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="CoBrowseService">
+                        <input id="CoBrowseService.sessionStarted" type="checkbox">Session Started
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="CoBrowseService">Session Ended: 
+                        <input id="CoBrowseService.sessionEnded" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="CoBrowseService">Control Requested: 
+                        <input id="CoBrowseService.controlRequested" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="CoBrowseService">Control Granted: 
+                        <input id="CoBrowseService.controlGranted" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="CoBrowseService">Control Revoked: 
+                        <input id="CoBrowseService.controlRevoked" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="CoBrowseService">Navigation Requested: 
+                        <input id="CoBrowseService.navigationRequested" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="CoBrowseService">Navigation Granted: 
+                        <input id="CoBrowseService.navigationGranted" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="CoBrowseService">Navigation Declined: 
+                        <input id="CoBrowseService.navigationDeclined" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="CobrowseVoice">Error: 
+                        <input id="CobrowseVoice.error" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="CobrowseVoice">Session Started: 
+                        <input id="CobrowseVoice.sessionStarted" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="CobrowseVoice">Session Ended: 
+                        <input id="CobrowseVoice.sessionEnded" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Conversations">Ready: 
+                        <input id="Conversations.ready" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Conversations">Opened: 
+                        <input id="Conversations.opened" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Conversations">Started: 
+                        <input id="Conversations.started" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Conversations">Closed: 
+                        <input id="Conversations.closed" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Conversations">Error: 
+                        <input id="Conversations.error" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Database">Ready: 
+                        <input id="Database.ready" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Database">Updated: 
+                        <input id="Database.updated" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Database">Removed: 
+                        <input id="Database.removed" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Engage">Ready: 
+                        <input id="Engage.ready" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Engage">Invite Accepted: 
+                        <input id="Engage.inviteAccepted" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Engage">Invite Rejected: 
+                        <input id="Engage.inviteRejected" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Engage">Invite Ignored: 
+                        <input id="Engage.inviteIgnored" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Engage">Invite Error: 
+                        <input id="Engage.inviteError" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Journey">Ready: 
+                        <input id="Journey.ready" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Journey">Qualified Web Messaging Offer: 
+                        <input id="Journey.qualifiedWebMessagingOffer" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Journey">Qualified Content Offer: 
+                        <input id="Journey.qualifiedContentOffer" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Journey">Qualified Open Action: 
+                        <input id="Journey.qualifiedOpenAction" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Knowledge">Ready: 
+                        <input id="Knowledge.ready" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Knowledge">Error: 
+                        <input id="Knowledge.error" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="KnowledgeService">Ready: 
+                        <input id="KnowledgeService.ready" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="KnowledgeService">Error: 
+                        <input id="KnowledgeService.error" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="KnowledgeService">Search Results: 
+                        <input id="KnowledgeService.searchResults" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="KnowledgeService">No Search Results Found: 
+                        <input id="KnowledgeService.noSearchResultsFound" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="KnowledgeService">Suggestions: 
+                        <input id="KnowledgeService.suggestions" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="KnowledgeService">No Suggestions Found: 
+                        <input id="KnowledgeService.noSuggestionsFound" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="KnowledgeService">Categories: 
+                        <input id="KnowledgeService.categories" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="KnowledgeService">No Categories Found: 
+                        <input id="KnowledgeService.noCategoriesFound" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="KnowledgeService">Article: 
+                        <input id="KnowledgeService.article" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="KnowledgeService">No Article Found: 
+                        <input id="KnowledgeService.noArticleFound" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="KnowledgeService">Articles By Category: 
+                        <input id="KnowledgeService.articlesByCategory" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="KnowledgeService">No Articles By Category Found: 
+                        <input id="KnowledgeService.noArticlesByCategoryFound" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="KnowledgeService">Top Viewed Articles: 
+                        <input id="KnowledgeService.topViewedArticles" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="KnowledgeService">No Top Viewed Articles Found: 
+                        <input id="KnowledgeService.noTopViewedArticlesFound" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="KnowledgeService">Feedback Sent: 
+                        <input id="KnowledgeService.feedbackSent" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Launcher">Ready: 
+                        <input id="Launcher.ready" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Launcher">Visible: 
+                        <input id="Launcher.visible" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Launcher">Hidden: 
+                        <input id="Launcher.hidden" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Ready: 
+                        <input id="MessagingService.ready" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Started: 
+                        <input id="MessagingService.started" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Messages Received: 
+                        <input id="MessagingService.messagesReceived" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Uploading: 
+                        <input id="MessagingService.uploading" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Upload Approved: 
+                        <input id="MessagingService.uploadApproved" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">File Uploaded: 
+                        <input id="MessagingService.fileUploaded" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">File Upload Error: 
+                        <input id="MessagingService.fileUploadError" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">File Upload Cancelled: 
+                        <input id="MessagingService.fileUploadCancelled" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">File Received: 
+                        <input id="MessagingService.fileReceived" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Messages Updated: 
+                        <input id="MessagingService.messagesUpdated" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">File Downloaded: 
+                        <input id="MessagingService.fileDownloaded" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">File Download Error: 
+                        <input id="MessagingService.fileDownloadError" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">File Deleted: 
+                        <input id="MessagingService.fileDeleted" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Old Messages: 
+                        <input id="MessagingService.oldMessages" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">History Complete: 
+                        <input id="MessagingService.historyComplete" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Typing Received: 
+                        <input id="MessagingService.typingReceived" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Typing Timeout: 
+                        <input id="MessagingService.typingTimeout" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Client Typing Started: 
+                        <input id="MessagingService.clientTypingStarted" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Restored: 
+                        <input id="MessagingService.restored" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Session Cleared: 
+                        <input id="MessagingService.sessionCleared" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Offline: 
+                        <input id="MessagingService.offline" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Reconnecting: 
+                        <input id="MessagingService.reconnecting" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Reconnected: 
+                        <input id="MessagingService.reconnected" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Conversation Disconnected: 
+                        <input id="MessagingService.conversationDisconnected" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Read Only Conversation: 
+                        <input id="MessagingService.readOnlyConversation" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Conversation Reset: 
+                        <input id="MessagingService.conversationReset" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Conversation Cleared: 
+                        <input id="MessagingService.conversationCleared" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Error: 
+                        <input id="MessagingService.error" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Cobrowse Offer: 
+                        <input id="MessagingService.cobrowseOffer" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Cobrowse Offer Accepted: 
+                        <input id="MessagingService.cobrowseOfferAccepted" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Cobrowse Offer Rejected: 
+                        <input id="MessagingService.cobrowseOfferRejected" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="MessagingService">Cobrowse Offer Expired: 
+                        <input id="MessagingService.cobrowseOfferExpired" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Messenger">Ready: 
+                        <input id="Messenger.ready" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Messenger">Opened: 
+                        <input id="Messenger.opened" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Messenger">Closed: 
+                        <input id="Messenger.closed" type="checkbox">
+                    </label>
+                </div>
+            </details>
+            <details class="config" id="commands" data-depends-on="plugin" data-depends-value="Messenger,Database,MessagingService,Launcher,KnowledgeService,Journey,Engagement,CoBrowseService,AuthProvider,Auth">
+                <summary>Commands</summary>
+                <label data-depends-on="plugin" data-depends-value="Messenger,Database,MessagingService,Launcher,KnowledgeService,Journey,Engagement,CoBrowseService,AuthProvider,Auth">Command: 
+                    <select id="command">
+                        <option data-depends-on="plugin" data-depends-value="Auth">Auth.logout</option>
+                        <option data-depends-on="plugin" data-depends-value="Auth">Auth.getTokens</option>
+                        <option data-depends-on="plugin" data-depends-value="Auth">Auth.refreshToken</option>
+                        <option data-depends-on="plugin" data-depends-value="Auth">Auth.reAuthenticate</option>
+                        <option data-depends-on="plugin" data-depends-value="AuthProvider">AuthProvider.getAuthCode</option>
+                        <option data-depends-on="plugin" data-depends-value="AuthProvider">AuthProvider.reAuthenticate</option>
+                        <option data-depends-on="plugin" data-depends-value="CoBrowseService">CobrowseService.acceptSession</option>
+                        <option data-depends-on="plugin" data-depends-value="CoBrowseService">CobrowseService.declineSession</option>
+                        <option data-depends-on="plugin" data-depends-value="CoBrowseService">CobrowseService.offerState</option>
+                        <option data-depends-on="plugin" data-depends-value="CoBrowseService">CobrowseService.stopSession</option>
+                        <option data-depends-on="plugin" data-depends-value="CoBrowseService">CobrowseService.acceptControl</option>
+                        <option data-depends-on="plugin" data-depends-value="CoBrowseService">CobrowseService.declineControl</option>
+                        <option data-depends-on="plugin" data-depends-value="CoBrowseService">CobrowseService.startDrawing</option>
+                        <option data-depends-on="plugin" data-depends-value="CoBrowseService">CobrowseService.stopDrawing</option>
+                        <option data-depends-on="plugin" data-depends-value="CoBrowseService">CobrowseService.acceptNavigation</option>
+                        <option data-depends-on="plugin" data-depends-value="CoBrowseService">CobrowseService.declineNavigation</option>
+                        <option data-depends-on="plugin" data-depends-value="Database">Database.set</option>
+                        <option data-depends-on="plugin" data-depends-value="Database">Database.update</option>
+                        <option data-depends-on="plugin" data-depends-value="Database">Database.get</option>
+                        <option data-depends-on="plugin" data-depends-value="Database">Database.remove</option>
+                        <option data-depends-on="plugin" data-depends-value="Engagement">Engage.invite</option>
+                        <option data-depends-on="plugin" data-depends-value="Engagement">Engage.accept</option>
+                        <option data-depends-on="plugin" data-depends-value="Engagement">Engage.reject</option>
+                        <option data-depends-on="plugin" data-depends-value="Journey">Journey.pageview</option>
+                        <option data-depends-on="plugin" data-depends-value="Journey">Journey.record</option>
+                        <option data-depends-on="plugin" data-depends-value="Journey">Journey.formsTrack</option>
+                        <option data-depends-on="plugin" data-depends-value="Journey">Journey.trackClickEvents</option>
+                        <option data-depends-on="plugin" data-depends-value="Journey">Journey.trackIdleEvents</option>
+                        <option data-depends-on="plugin" data-depends-value="Journey">Journey.trackInViewport</option>
+                        <option data-depends-on="plugin" data-depends-value="Journey">Journey.trackScrollDepth</option>
+                        <option data-depends-on="plugin" data-depends-value="Journey">Journey.recordActionStateChange</option>
+                        <option data-depends-on="plugin" data-depends-value="KnowledgeService">KnowledgeService.search</option>
+                        <option data-depends-on="plugin" data-depends-value="KnowledgeService">KnowledgeService.getSuggestions</option>
+                        <option data-depends-on="plugin" data-depends-value="KnowledgeService">KnowledgeService.getCategories</option>
+                        <option data-depends-on="plugin" data-depends-value="KnowledgeService">KnowledgeService.getArticle</option>
+                        <option data-depends-on="plugin" data-depends-value="KnowledgeService">KnowledgeService.getArticlesByCategory</option>
+                        <option data-depends-on="plugin" data-depends-value="KnowledgeService">KnowledgeService.getTopViewedArticles</option>
+                        <option data-depends-on="plugin" data-depends-value="KnowledgeService">KnowledgeService.sendFeedback</option>
+                        <option data-depends-on="plugin" data-depends-value="KnowledgeService">KnowledgeService.getSession</option>
+                        <option data-depends-on="plugin" data-depends-value="Launcher">Launcher.show</option>
+                        <option data-depends-on="plugin" data-depends-value="Launcher">Launcher.hide</option>
+                        <option data-depends-on="plugin" data-depends-value="MessagingService">MessagingService.startConversation</option>
+                        <option data-depends-on="plugin" data-depends-value="MessagingService">MessagingService.sendMessage</option>
+                        <option data-depends-on="plugin" data-depends-value="MessagingService">MessagingService.requestUpload</option>
+                        <option data-depends-on="plugin" data-depends-value="MessagingService">MessagingService.getFile</option>
+                        <option data-depends-on="plugin" data-depends-value="MessagingService">MessagingService.refreshFiles</option>
+                        <option data-depends-on="plugin" data-depends-value="MessagingService">MessagingService.downloadFile</option>
+                        <option data-depends-on="plugin" data-depends-value="MessagingService">MessagingService.deleteFile</option>
+                        <option data-depends-on="plugin" data-depends-value="MessagingService">MessagingService.sendTyping</option>
+                        <option data-depends-on="plugin" data-depends-value="MessagingService">MessagingService.clearTypingTimeout</option>
+                        <option data-depends-on="plugin" data-depends-value="MessagingService">MessagingService.clearSession</option>
+                        <option data-depends-on="plugin" data-depends-value="MessagingService">MessagingService.fetchHistory</option>
+                        <option data-depends-on="plugin" data-depends-value="MessagingService">MessagingService.resetConversation</option>
+                        <option data-depends-on="plugin" data-depends-value="MessagingService">MessagingService.clearConversation</option>
+                        <option data-depends-on="plugin" data-depends-value="Messenger">Messenger.open</option>
+                        <option data-depends-on="plugin" data-depends-value="Messenger">Messenger.openConversation</option>
+                        <option data-depends-on="plugin" data-depends-value="Messenger">Messenger.openSearch</option>
+                        <option data-depends-on="plugin" data-depends-value="Messenger">Messenger.openCobrowse</option>
+                        <option data-depends-on="plugin" data-depends-value="Messenger">Messenger.close</option>
+                    </select>
+                </label>
+                <label data-depends-on="plugin" data-depends-value="Messenger,Database,MessagingService,Launcher,KnowledgeService,Journey,Engagement,CoBrowseService,AuthProvider,Auth">Command Body: 
+                    <textarea id="commandBody">{}</textarea>
+                </label>
+                <button id="runCommand" data-depends-on="plugin" data-depends-value="Messenger,Database,MessagingService,Launcher,KnowledgeService,Journey,Engagement,CoBrowseService,AuthProvider,Auth">Run Command</button>    
+            </details>
+        </div>
+        <div class="panel panel2">
+            <div id="dataLog"></div>
+        </div>
+    </div>
+    <script>
+        function qs(selector, target) {
+            return (target || document).querySelector(selector);
+        }
+        function qsa(selector, target) {
+            return (target || document).querySelectorAll(selector);
+        }
+        function log(message, level) {
+            if (message === undefined) throw "No Message"
+            if (level && ['log', 'info', 'warn', 'error'].indexOf(level) < 0) throw `Invalid Log Level "${level}". Use info, warn, or error`
+            console[level || "log"](message);
+        }
+        function eById(id, target) {
+            return (target || document).getElementById(id); 
+        }
+        function registerElement(element, event, callback) {
+            element.addEventListener(event, callback);
+        }
+        function registerElements(selector, event, callback, doCallback) {
+            const elements = qsa(selector);
+            for (let element of elements) {
+                if(doCallback) callback(element);
+                registerElement(element, event, callback);
+            }
+        }
+        function newElement(type, params) {
+            const newElem = document.createElement(type);
+            for (let param in params) {
+                if (param === "class") newElem.classList.add(...params[param]);
+                else newElem.setAttribute(param, params[param])
+            }
+            return newElem;
+        }
+        function addElement(element, target) {
+            (target || document.body).appendChild(element)
+        }
+    </script>
+    <script>
+        window.storedValues = {};
+        window.listenedEvents = [];
+
+        function getSampleCommandInput(command) {
+            const commandMapping = {
+                "Auth.logout": {},
+                "Auth.getTokens": {},
+                "Auth.refreshToken": {},
+                "Auth.reAuthenticate": {},
+                "AuthProvider.getAuthCode": {},
+                "AuthProvider.reAuthenticate": {},
+                "CobrowseService.acceptSession": {joinCode: ""},
+                "CobrowseService.declineSession": {joinCode: "", "session-uuid": ""},
+                "CobrowseService.offerState": {joinCode: "", "session-uuid": ""},
+                "CobrowseService.stopSession": {},
+                "CobrowseService.acceptControl": {},
+                "CobrowseService.declineControl": {},
+                "CobrowseService.startDrawing": {},
+                "CobrowseService.stopDrawing": {},
+                "CobrowseService.acceptNavigation": {},
+                "CobrowseService.declineNavigation": {},
+                "Database.set": {messaging: {customAttributes: {key: "value"}}},
+                "Database.update": {messaging: {customAttributes: {key: "value"}}},
+                "Database.get": {name: "messaging.customAttributes"},
+                "Database.remove": {name: "messaging.customAttributes"},
+                "Engage.invite": {engageContent: {offerText: ""}},
+                "Engage.accept": {},
+                "Engage.reject": {},
+                "Journey.pageview": {pageTitle: "", pageLocation: "custom-page-location", customAttributes: {visitorPreferredLang: "en"}, traitsMapper: []},
+                "Journey.record": {eventName: "product_added", customAttributes: {price: 15.99, code: "CDE-123", name: "Product", hasBatteries: false}, traitsMapper: []},
+                "Journey.formsTrack": {selector: "#registration-form", formName: "user registration", captureFormDataOnAbandon: true, customAttributes: { isVip: true }, traitsMapper: [{ fieldName: "firstName", traitName: "givenName" }, { fieldName: "lastName", traitName: "familyName" }]},
+                "Journey.trackClickEvents": {clickEvents: [{selector: "button.green-background", eventName: "green_button_clicked" }, {selector: ".close", eventName: "close_button_clicked" }, {selector: "#sign-up", eventName: "signup_button_clicked", customAttributes: {signUpValue: 2000}}]},
+                "Journey.trackIdleEvents": {idleEvents: [{idleAfterSeconds: 30, eventName: "idle_30_seconds" }, {idleAfterSeconds: 90, eventName: "idle_90_seconds", customAttributes: {currentCartValue: 129.99}}]},
+                "Journey.trackInViewport": {inViewportEvents: [{selector: ".close-button", eventName: "close_button_shown" }, {selector: "#sign-up", eventName: "signup_button_visible", customAttributes: {signUpValue: 2000}}]},
+                "Journey.trackScrollDepth": {scrollDepthEvents: [{percentage: 60, eventName: "scrolled_60_percent" }, {percentage: 90, eventName: "bottom_of_page_reached", customAttributes: {scrollValue: 600}}]},
+                "Journey.recordActionStateChange": {actionId: "e74846b2-e74a-4f40-b237-3c197a737994", actionState: "errored", errorCode: "00045", errorMessage: "Configuration not available."},
+                "KnowledgeService.search": {"pageSize": 3, "query": "", "queryType": "ManualSearch"},
+                "KnowledgeService.getSuggestions": {"pageSize": 3, "query": ""},
+                "KnowledgeService.getCategories": {},
+                "KnowledgeService.getArticle": {"articleId": "123abcd4-e567-890f-g123-456h789abc0d", "searchId": "123abcd4-e567-890f-g123-456h789abc0d", "queryType": "ManualSearch"},
+                "KnowledgeService.getArticlesByCategory": {"categoryId": "123abcd4-e567-890f-g123-456h789abc0d"},
+                "KnowledgeService.getTopViewedArticles": {"pageSize": 3},
+                "KnowledgeService.sendFeedback": {"documentId": "123abcd4-e567-890f-g123-456h789abc0d", "documentVersionId": "123abcd4-e567-890f-g123-456h789abc0d", "documentVariationId": "123abcd4-e567-890f-g123-456h789abc0d", "rating": "Positive", "searchId": "123abcd4-e567-890f-g123-456h789abc0d", "reason": "SearchResults", "comment": "My comment", "queryType": "ManualSearch"},
+                "KnowledgeService.getSession": {},
+                "Launcher.show": {},
+                "Launcher.hide": {},
+                "MessagingService.startConversation": {},
+                "MessagingService.sendMessage": {message: ""},
+                "MessagingService.requestUpload": {file: []},
+                "MessagingService.getFile": {id: ""},
+                "MessagingService.refreshFiles": {files: [{id: ""}]},
+                "MessagingService.downloadFile": {downloadUrl: "", name: ""},
+                "MessagingService.deleteFile": {id: ""},
+                "MessagingService.sendTyping": {},
+                "MessagingService.clearTypingTimeout": {},
+                "MessagingService.clearSession": {},
+                "MessagingService.fetchHistory": {},
+                "MessagingService.resetConversation": {},
+                "MessagingService.clearConversation": {},
+                "Messenger.open": {},
+                "Messenger.openConversation": {},
+                "Messenger.openSearch": {},
+                "Messenger.openCobrowse": {},
+                "Messenger.close": {}
+            }
+            return commandMapping[command];
+        }
+
+        function loadGenesys(region, deployId) {
+            const apiUrlMapping = {
+                "use1": "mypurecloud.com",
+                "use2": "use2.us-gov-pure.cloud",
+                "usw2": "usw2.pure.cloud",
+                "cac1": "cac1.pure.cloud",
+                "euw1": "mypurecloud.ie",
+                "euw2": "euw2.pure.cloud",
+                "euc1": "mypurecloud.de",
+                "aps1": "aps1.pure.cloud",
+                "apne1": "mypurecloud.jp",
+                "apne2": "apne2.pure.cloud",
+                "apse2": "mypurecloud.com.au",
+                "sae1": "sae1.pure.cloud"
+            }
+
+            window['_genesysJs'] = 'Genesys';
+            window['Genesys'] = window['Genesys'] || function () {
+                (window['Genesys'].q = window['Genesys'].q || []).push(arguments)
+            };
+            window['Genesys'].t = 1 * new Date();
+            window['Genesys'].c = {
+                environment: region,
+                deploymentId: deployId
+            };
+            element = newElement('script', {
+                async: 1,
+                src: `https://apps.${apiUrlMapping[region]}/genesys-bootstrap/genesys.min.js`,
+                charset: 'utf-8'
+            })
+            document.head.appendChild(element);
+        }
+
+        function reloadPage() {
+            location.reload();
+        }
+
+        async function runCommandAsync(command, args) {
+            return new Promise((resolve, reject) => {
+                try {
+                    Genesys("command", command, args,
+                        function (result) {
+                            resolve(result);
+                        },
+                        function (error) {
+                            reject(error);
+                        }
+                    );
+                }
+                catch (error) {
+                    reject(error)
+                }
+            })
+        }
+
+        function updateDependants(element) {
+            if (element instanceof Event) element = element.target;
+            const dependantElements = qsa(`[data-depends-on='${element.id}']`);
+            for (let dependantElement of dependantElements) {
+                const fieldValue = dependantElement.getAttribute("data-depends-value");
+                if (fieldValue.split(",").indexOf(element.value) >= 0) {
+                    switch (dependantElement.nodeName) {
+                        case "BUTTON":
+                            dependantElement.style.display = "inline-block";
+                            break;
+                        default:
+                            dependantElement.style.display = "block";
+                            break;
+                    }
+                }
+                else dependantElement.style.display = "none";
+            }
+        }
+
+        function updateGlobal(element) {
+            if (element instanceof Event) element = element.target;
+            let storedValue = element.value;
+            if (element.nodeName === "INPUT") {
+                if (element.type === "checkbox") storedValue = element.checked;
+                if (element.type === "number" || element.type === "range") storedValue = parseInt(element.value);
+            }
+            window.storedValues[element.id] = storedValue;
+        }
+
+        function registerEvents() {
+            for (let item in window.storedValues) {
+                if (item.split('.').length > 1 && window.storedValues[item] && window.listenedEvents.indexOf(item) < 0) {
+                    window.listenedEvents.push(item);
+                    Genesys("subscribe", item, handleEvent);
+                }
+            }
+        }
+
+        function handleEvent(event) {
+            log(event);
+            let eventName = event.publisher && event.eventName ? `${event.publisher}.${event.eventName}` : event.event;
+            const logItem = createLogItem(eventName, event.data)
+
+            addElement(logItem, eById("dataLog"));
+            logItem.scrollIntoView({behavior: "smooth"});
+        }
+
+        function createLogItem(eventName, eventBody, type) {
+            type = type || "info"
+            const logItem = newElement("div", {class: ['logItem']});
+            if (eventName) {
+                const logHeader = newElement("div", {class: ["logHeader", type]});
+                logHeader.innerText = eventName;
+                addElement(logHeader, logItem);
+            }
+            if (eventBody && Object.keys(eventBody).length > 0) {
+                const logBody = newElement("pre", {class: ["logBody"]});
+                logBody.innerText = JSON.stringify(eventBody, null, 2);
+                addElement(logBody, logItem);
+            }
+            return logItem;
+        }
+
+        function load() {
+            if (!window.storedValues.deployId || !window.storedValues.region) return;
+            loadGenesys(window.storedValues.region, window.storedValues.deployId);
+            registerEvents();
+            qs("#account").removeAttribute("open");
+            qs("#events").setAttribute("open", true);
+            qs("#commands").setAttribute("open", true)
+        }
+
+        function selectAllEvents() {
+            const allVisible = qsa("label[data-depends-on=plugin][style='display: block;'] input[type=checkbox]");
+            for (let visible of allVisible) {
+                if (!visible.checked) visible.click();
+            }
+        }
+
+        function updateSampleCommand() {
+            const sample = getSampleCommandInput(window.storedValues.command);
+            eById("commandBody").value = JSON.stringify(sample, null, 2);
+        }
+
+        async function runCommand() {
+            let commandResult;
+            let resultType;
+            try {
+                commandResult = await runCommandAsync(window.storedValues.command, JSON.parse(window.storedValues.commandBody));
+                resultType = "info";
+            }
+            catch(error) {
+                commandResult = error;
+                resultType = "error";
+            }
+            const logItem = createLogItem(window.storedValues.command, commandResult, resultType);
+            addElement(logItem, eById("dataLog"));
+            logItem.scrollIntoView({behavior: "smooth"});
+        }
+
+        registerElements("select", "change", updateDependants, true);
+        registerElements("input,select,textarea", "change", updateGlobal, true);
+        registerElement(eById("command"), "change", updateSampleCommand);
+        registerElement(eById("loadWidget"), "click", load);
+        registerElement(eById("selectAll"), "click", selectAllEvents);
+        registerElement(eById("runCommand"), "click", runCommand);
+        registerElement(eById("addEvents"), "click", registerEvents);
+        registerElement(eById("reload"), "click", reloadPage);
+    </script>
+</body>
+</html>
