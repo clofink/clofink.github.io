@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homepage</title>
+</head>
+<body>
+    <style>
+        body {
+            margin: 0;
+        }
+        .panel {
+            border-radius: 10px;
+            border: 1px solid black;
+            width: calc(50% - 1em - 2px);
+            float: left;
+            margin: .5em;
+            overflow: hidden;
+            min-width: fit-content;
+        }
+        .panelHeader {
+            text-align: center;
+            background-color: lightgrey;
+            padding: .5em;
+        }
+    </style>
+    <div class="container">
+        <div class="panel">
+            <div class="panelHeader">Work Related</div>
+            <div class="panelBody">
+                <ul>
+                    <li>
+                        <a href="/HeadlessTester">Headless SDK Test Tool</a>
+                    </li>
+                    <li>
+                        <a href="/CCFActionBuilder">CCF Action Builder</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="panel">
+            <div class="panelHeader">Personal</div>
+            <div class="panelBody">
+                <ul>
+                    <li>
+                        <a href="/WordLists">Word List Generator</a>
+                    </li>
+                    <li>
+                        <a href="/TownBuilder">Town Builder</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
