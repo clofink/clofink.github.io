@@ -1,0 +1,78 @@
+label {
+    display: block;
+    width: fit-content;
+}
+textarea {
+    width: fit-content;
+    height: fit-content;
+}
+label, button {
+    margin-top: .5em;
+    margin-bottom: .5em;
+}
+.config {
+    border-radius: 10px;
+    border: 1px solid black;
+    height: 50px;
+    margin-bottom: 1em;
+    height: fit-content;
+    padding: .5em;
+}
+.scrollable {
+    overflow-y: scroll;
+    max-height: 8em;
+    min-height: 1em;
+}
+.panel {
+    float: left;
+    padding: .5em;
+}
+#dataLog {
+    border-radius: 10px;
+    border: 1px solid black;
+    height: calc(100vh - 2em);
+    overflow-y: scroll;
+}
+summary {
+    user-select: none;
+    cursor: pointer;
+}
+input, select {
+    min-width: 0px;
+    max-width: fit-content;
+    width: fit-content;
+}
+.logItem {
+    margin: .5em;
+    border: 1px solid black;
+    border-radius: 10px;
+    overflow: hidden;
+}
+.logHeader, .logBody {
+    padding: .5em;
+}
+.logBody {
+    max-height: 10em;
+    overflow-y: scroll;
+}
+.error {
+    background-color: lightpink;
+}
+.info {
+    background-color: lightgrey;
+}
+@media (max-width: 1000px) {
+    .panel1, .panel2 {
+        width: calc(50% - 1em);
+        min-width: 10em;
+    }
+}
+@media (min-width: 1001px) {
+    .panel1 {
+        width: calc(30% - 1em);
+    }
+    .panel2 {
+        width: calc(70% - 1em);
+
+    }
+}

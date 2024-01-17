@@ -1,0 +1,54 @@
+label {
+    display: block;
+    padding-bottom: 0.5em;
+    width: fit-content;
+}
+#keyboard {
+    user-select: none;
+}
+.row {
+    position: relative;
+}
+.key {
+    display: inline-block;
+    border: 1px black solid;
+    padding: .25em;
+    margin-top: .25em;
+    margin-bottom: .25em;
+    margin-left: .25em;
+    margin-right: .25em;
+    width: 2em;
+    border-radius: 5px;
+    height: 1.5em;
+    text-align: center;
+}
+.top {
+    left: .5em;
+}
+.middle {
+    left: 1em;
+}
+.bottom {
+    left: 1.5em;
+}
+[data-selected="both"] {
+    background-color: blue;
+    color: white;
+}
+[data-selected="lower"] {
+    background-color: green;
+    color: white;
+}
+.key p {
+    display: inline;
+    padding: .1em;
+    position: relative;
+}
+p.upper {
+    top: -.5em;
+    font-size: .65em;
+}
+p.lower {
+    top: .25em;
+    font-size: 1em;
+}

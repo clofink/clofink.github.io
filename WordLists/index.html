@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Practice Word Lists</title>
+    <link rel="stylesheet" href="/WordLists/styles.css">
+</head>
+<body>
+    <div>
+        <label>File Name:
+            <input id="fileName" value="Word Practice">
+        </label>
+        <label>Generate: 
+            <select id="generateType">
+                <option value="words">Words</option>
+                <option value="sentences">Sentences</option>
+            </select>
+        </label>
+        <label>Character List: 
+            <select id="charList">
+                <option value="topRow" >Top Row</option>
+                <option value="homeRow">Home Row</option>
+                <option value="bottomRow">Bottom Row</option>
+                <option value="leftNine">Left Nine</option>
+                <option value="middleTwelve">Middle Twelve</option>
+                <option value="rightNine">Right Nine</option>
+                <option value="random">Random</option>
+            </select>
+        </label>
+        <label data-depends-on="charList" data-depends-value="random">Letters: 
+            <input id="letterCount" type="number" max="60" min="1" value="6">
+        </label>
+        <label data-depends-on="charList" data-depends-value="random">Include Letters: 
+            <input id="hasLetters" type="checkbox" checked>
+        </label>
+        <label data-depends-on="charList" data-depends-value="random">Include Numbers: 
+            <input id="hasNumbers" type="checkbox">
+        </label>
+        <label data-depends-on="charList" data-depends-value="random">Include Special Characters: 
+            <input id="hasSpecialChars" type="checkbox">
+        </label>
+        <button data-depends-on="charList" data-depends-value="random" style="margin-bottom: .5em;" id="regenerate">Regenerate</button>
+        <label data-depends-on="generateType" data-depends-value="words">Words: 
+            <input id="wordCount" type="number" value="100">
+        </label>
+        <label data-depends-on="generateType" data-depends-value="sentences">Sentences: 
+            <input id="sentenceCount" type="number" value="100">
+        </label>
+        <label data-depends-on="generateType" data-depends-value="sentences">Clause Min: 
+            <input id="clauseMin" type="number" value="1">
+        </label>
+        <label data-depends-on="generateType" data-depends-value="sentences">Clause Max: 
+            <input id="clauseMax" type="number" value="3">
+        </label>
+        <label data-depends-on="generateType" data-depends-value="sentences">Words Per Clause Min: 
+            <input id="wordsPerClauseMin" type="number" value="3">
+        </label>
+        <label data-depends-on="generateType" data-depends-value="sentences">Words Per Clause Max: 
+            <input id="wordsPerClauseMax" type="number" value="8">
+        </label>
+        <label data-depends-on="generateType" data-depends-value="sentences">Sentence Ending Characters: 
+            <input id="sentenceEndChars" value=".?">
+        </label>
+        <label data-depends-on="generateType" data-depends-value="sentences">Clause Ending Characters: 
+            <input id="clauseEndChars" value=",;">
+        </label>
+        <label data-depends-on="generateType" data-depends-value="words,sentences">Word Length Min: 
+            <input id="wordLenMin" type="number" value="6" min="1" max="20">
+        </label>
+        <label data-depends-on="generateType" data-depends-value="words,sentences">Word Length Max: 
+            <input id="wordLenMax" type="number" value="6" min="1" max="20">
+        </label>
+        <label data-depends-on="generateType" data-depends-value="words">Capital Chance (): 
+            <input id="capitalChance" type="range" value="20">
+        </label>
+        <label data-depends-on="generateType" data-depends-value="sentences">Capitalize Sentence Start: 
+            <input id="capitalizeSentenceStart" type="checkbox" checked>
+        </label>
+        <label data-depends-on="generateType" data-depends-value="sentences">Random Capital Chance (): 
+            <input id="randomCapitalChance" type="range" value="20">
+        </label>
+        <div id="keyboard">
+            <div id="numRow" class="row num">
+                <div class="key" data-selected="none"><p class="upper">!</p><p class="lower">1</p></div>
+                <div class="key" data-selected="none"><p class="upper">@</p><p class="lower">2</p></div>
+                <div class="key" data-selected="none"><p class="upper">#</p><p class="lower">3</p></div>
+                <div class="key" data-selected="none"><p class="upper">$</p><p class="lower">4</p></div>
+                <div class="key" data-selected="none"><p class="upper">%</p><p class="lower">5</p></div>
+                <div class="key" data-selected="none"><p class="upper">^</p><p class="lower">6</p></div>
+                <div class="key" data-selected="none"><p class="upper">&</p><p class="lower">7</p></div>
+                <div class="key" data-selected="none"><p class="upper">*</p><p class="lower">8</p></div>
+                <div class="key" data-selected="none"><p class="upper">(</p><p class="lower">9</p></div>
+                <div class="key" data-selected="none"><p class="upper">)</p><p class="lower">0</p></div>
+                <div class="key" data-selected="none"><p class="upper">_</p><p class="lower">-</p></div>
+                <div class="key" data-selected="none"><p class="upper">+</p><p class="lower">=</p></div>
+            </div>
+            <div id="topRow" class="row top">
+                <div class="key" data-selected="both"><p class="lower">q</p></div>
+                <div class="key" data-selected="both"><p class="lower">w</p></div>
+                <div class="key" data-selected="both"><p class="lower">e</p></div>
+                <div class="key" data-selected="both"><p class="lower">r</p></div>
+                <div class="key" data-selected="both"><p class="lower">t</p></div>
+                <div class="key" data-selected="both"><p class="lower">y</p></div>
+                <div class="key" data-selected="both"><p class="lower">u</p></div>
+                <div class="key" data-selected="both"><p class="lower">i</p></div>
+                <div class="key" data-selected="both"><p class="lower">o</p></div>
+                <div class="key" data-selected="both"><p class="lower">p</p></div>
+                <div class="key" data-selected="none"><p class="upper">{</p><p class="lower">[</p></div>
+                <div class="key" data-selected="none"><p class="upper">}</p><p class="lower">]</p></div>
+            </div>
+            <div id="homeRow" class="row middle">
+                <div class="key" data-selected="both"><p class="lower">a</p></div>
+                <div class="key" data-selected="both"><p class="lower">s</p></div>
+                <div class="key" data-selected="both"><p class="lower">d</p></div>
+                <div class="key" data-selected="both"><p class="lower">f</p></div>
+                <div class="key" data-selected="both"><p class="lower">g</p></div>
+                <div class="key" data-selected="both"><p class="lower">h</p></div>
+                <div class="key" data-selected="both"><p class="lower">j</p></div>
+                <div class="key" data-selected="both"><p class="lower">k</p></div>
+                <div class="key" data-selected="none"><p class="lower">l</p></div>
+                <div class="key" data-selected="none"><p class="upper">:</p><p class="lower">;</p></div>
+                <div class="key" data-selected="none"><p class="upper">"</p><p class="lower">'</p></div>
+            </div>
+            <div id="bottomRow" class="row bottom">
+                <div class="key" data-selected="both"><p class="lower">z</p></div>
+                <div class="key" data-selected="both"><p class="lower">x</p></div>
+                <div class="key" data-selected="both"><p class="lower">c</p></div>
+                <div class="key" data-selected="both"><p class="lower">v</p></div>
+                <div class="key" data-selected="both"><p class="lower">b</p></div>
+                <div class="key" data-selected="both"><p class="lower">n</p></div>
+                <div class="key" data-selected="both"><p class="lower">m</p></div>
+                <div class="key" data-selected="none"><p class="upper"><</p><p class="lower">,</p></div>
+                <div class="key" data-selected="none"><p class="upper">></p><p class="lower">.</p></div>
+                <div class="key" data-selected="none"><p class="upper">?</p><p class="lower">/</p></div>
+            </div>
+        </div>
+        
+        <button id="generate">Generate</button>
+    </div>
+    <script src="/WordLists/WordLists.js"></script>
+</body>
+</html>
