@@ -366,7 +366,7 @@
 
         document.getElementById("generate").addEventListener("click", generateList);
         document.getElementById("charList").addEventListener("change", updateKeyboardDisplay);
-        document.getElementById("regenerate").addEventListener("change", updateRandomCharacters);
+        document.getElementById("regenerate").addEventListener("click", updateRandomCharacters);
         updateKeyboardDisplay(document.getElementById("charList"));
 
         registerElements("select", "change", updateDependants, true);
