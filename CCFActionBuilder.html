@@ -6,7 +6,7 @@
     <title>CCF Action Builder</title>
 </head>
 <body>
-    <button id="addTreatment">Add Treatment</button>
+    <button id="addTreatment" class="addTreatment">Add Treatment</button>
     <button id="generateString">Generate String</button>
     <div id="inputs"></div>
     <textarea id="output" style="resize: none;"></textarea>
@@ -191,7 +191,7 @@
                         for (let index of actionInfo[action].repeatIndex) {
                             newParams.push(createParameterField(actionInfo[action].params[index]));
                         }
-                        const removeParamButton = newElement('button');
+                        const removeParamButton = newElement('button', {class: ["removeParam"]});
                         removeParamButton.innerText = "Remove Parameter";
                         registerElement(removeParamButton, "click", function() {
                             for (let param of newParams) {
@@ -338,7 +338,7 @@
             addElement(actionTypeSelect, actionBody);
             addElement(actionSelect, actionBody);
             
-            const removeButton = newElement("button");
+            const removeButton = newElement("button", {class: ["removeAction"]});
             removeButton.innerText = "Remove Action";
             registerElement(removeButton, "click", function() {actionBody.remove(); updateDisplay();});
             registerElement(actionSelect, "change", function() {let existingParams = qs(".paramsBody", actionBody); if (existingParams) existingParams.remove(); let paramsElems = addParametersBlock(actionSelect.value); if(paramsElems) {addElement(paramsElems, actionBody)}});
@@ -397,14 +397,14 @@
             const nameInput = newElement('input', {class: ["treatmentName"]});
             addElement(nameInput, treatmentBody);
 
-            const addActionButton = newElement('button', {title: "Add Action"});
+            const addActionButton = newElement('button', {title: "Add Action", class: ["addAction"]});
             addActionButton.innerText = "Add Action";
             registerElement(addActionButton, "click", function() {addActionBlock(actionList)});
             addElement(addActionButton, treatmentBody);
             
-            const removeButton = newElement("button", {title: "Remove Treatment"});
+            const removeButton = newElement("button", {title: "Remove Treatment", class: ["removeTreatment"]});
             removeButton.innerText = "Remove Treatment";
-            registerElement(removeButton, "click", function() {treatmentBody.remove()});
+            registerElement(removeButton, "click", function() {treatmentBody.remove(); updateDisplay();});
             addElement(removeButton, treatmentBody);
             
             const actionList = newElement('ol', {class: ['actionList']});
@@ -425,13 +425,21 @@
         }
 
         function mutationCallback(mutationList) {
+            const buttonClasses = ["addParam", "addAction", "addTreatment"];
             for (const mutation of mutationList) {
                 for (let addedNode of mutation.addedNodes) {
                     if (addedNode.nodeType === 3) return;
-                    let inputsToWatch = qsa("input, select", addedNode);
+                    let inputsToWatch = qsa("input, select, button", addedNode);
                     for (let inputToWatch of inputsToWatch) {
                         if (inputToWatch.nodeName === "INPUT") {
                             registerElement(inputToWatch, "input", updateDisplay);
+                        }
+                        else if (inputToWatch.nodeName === "BUTTON") {
+                            for (let buttonClass of buttonClasses) {
+                                if (inputToWatch.classList.contains(buttonClass)) {
+                                    registerElement(inputToWatch, "click", updateDisplay);
+                                }
+                            }
                         }
                         else {
                             registerElement(inputToWatch, "change", updateDisplay);
@@ -440,10 +448,17 @@
                 }
                 for (let removedNode of mutation.removedNodes) {
                     if (removedNode.nodeType === 3) return;
-                    let inputsToWatch = qsa("input, select", removedNode);
+                    let inputsToWatch = qsa("input, select, button", removedNode);
                     for (let inputToWatch of inputsToWatch) {
                         if (inputToWatch.nodeName === "INPUT") {
                             unregisterElement(inputToWatch, "input", updateDisplay);
+                        }
+                        else if (inputToWatch.nodeName === "BUTTON") {
+                            for (let buttonClass of buttonClasses) {
+                                if (inputToWatch.classList.contains(buttonClass)) {
+                                    unregisterElement(inputToWatch, "click", updateDisplay);
+                                }
+                            }
                         }
                         else {
                             unregisterElement(inputToWatch, "change", updateDisplay);
