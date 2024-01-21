@@ -41,30 +41,32 @@ function sendEvent(element, event) {
 }
 
 var conditionalActions = {
-    "IfActiveSchedule": {params: [{name: "Action", type: "action"}]},
-    "IfActiveLanguage": {params: [{name: "Language"}, {name: "Action", type: "action"}]},
+    "IfActiveSchedule": {params: [{name: "Schedule Name"}, {name: "Action", type: "action"}]},
+    "IfActiveLanguage": {params: [{name: "Language Code"}, {name: "Action", type: "action"}]},
     "IfQAPlayback": {params: [{name: "Action", type: "action"}]},
     "IfParticipantData": {params: [{name: "Field Name"}, {name: "Value"}, {name: "Action", type: "action"}]},
-    "IfStaff": {params: [{name: "Low Count", type: "number"}, {name: "High Count", type: "number"}, {name: "Action", type: "action"}]},
+    "IfStaff": {params: [{name: "Lower Count", type: "number"}, {name: "Upper Count", type: "number"}, {name: "Action", type: "action"}]},
     "IfEWT": {params: [{name: "Lower Seconds", type: "number"}, {name: "Upper Seconds", type: "number"}, {name: "Action", type: "action"}]},
     "IfPIQ": {params: [{name: "Lower Position", type: "number"}, {name: "Upper Position", type: "number"}, {name: "Action", type: "action"}]},
     "IfTimeInQueue": {params: [{name: "Lower Seconds", type: "number"}, {name: "Upper Seconds", type: "number"}, {name: "Action", type: "action"}]},
-    "IfWaiting": {params: [{name: "Low Count", type: "number"}, {name: "High Count", type: "number"}, {name: "Action", type: "action"}]}
+    "IfWaiting": {params: [{name: "Lower Bound", type: "number"}, {name: "Upper Bound", type: "number"}, {name: "Action", type: "action"}]},
+    "IfPromptTextExists": {params: [{name: "Prompt Name"}, {name: "Action", type: "action"}]},
+    "IfRandom": {params: [{name: "Percentage", type: "number"}, {name: "Action", type: "action"}]}
 }
 
 var unconditionalActions = {
     "Disconnect": {},
-    "SetLanguage": {params: [{name: "Language"}]},
+    "SetLanguage": {params: [{name: "Language Code"}]},
     "SetQueue": {params: [{name: "Name"}]},
-    "SetPriority": {params: [{name: "Score", type: "number"}]},
-    "SetScheduleGroup": {params: [{name: "Name"}]},
-    "SetTreatment": {params: [{name: "Type"}, {name: "Name"}]},
+    "SetPriority": {params: [{name: "Value", type: "number"}]},
+    "SetScheduleGroup": {params: [{name: "Type"}, {name: "Name"}]},
+    "SetTreatment": {params: [{name: "Type", type: "enum", values: ["active:", "inqueue"]}, {name: "Name"}]},
     "ScheduleCheck": {},
     "EmergencyCheck": {},
     "SetSkills": {params: [{name: 'Mode', type: "enum", values: ["clear", "append", "overwrite"]}, {name: 'Skill Name'}], repeatIndex: [1]},
     "SetParticipantData": {params: [{name: 'Mode', type: "enum", values: ['initialize', 'overwrite']}, {name: 'Key'}, {name: 'Value'}], repeatIndex: [1,2]},
     "SetWait": {params: [{name:"Seconds", type:"number"}]},
-    "SetRedirect": {},
+    "SetRedirect": {params: [{name:"URL String"}]},
     "NoOp": {},
     "PlayPIQ": {},
     "PlayPIQDigital": {},
@@ -185,8 +187,9 @@ function createParameterField(fieldInfo) {
         case "enum": {
             const select = newElement('select');
             for (let value of fieldInfo.values) {
-                const option = newElement('option', {value: value});
-                option.innerText = value;
+                let valueParts = value.split(":");
+                const option = valueParts.length > 1 ? newElement('option', {value: valueParts[1]}) : newElement('option', {value: valueParts[0]});
+                option.innerText = valueParts[0];
                 addElement(option, select);
             }
             addElement(select, paramLabel);
