@@ -60,11 +60,11 @@ var unconditionalActions = {
     "SetQueue": {params: [{name: "Name"}]},
     "SetPriority": {params: [{name: "Value", type: "number"}]},
     "SetScheduleGroup": {params: [{name: "Type"}, {name: "Name"}]},
-    "SetTreatment": {params: [{name: "Type", type: "enum", values: ["active:", "inqueue"]}, {name: "Name"}]},
+    "SetTreatment": {params: [{name: "Type", type: "enum", values: ["Active:", "In-Queue:inqueue"]}, {name: "Name"}]},
     "ScheduleCheck": {},
     "EmergencyCheck": {},
-    "SetSkills": {params: [{name: 'Mode', type: "enum", values: ["clear", "append", "overwrite"]}, {name: 'Skill Name'}], repeatIndex: [1]},
-    "SetParticipantData": {params: [{name: 'Mode', type: "enum", values: ['initialize', 'overwrite']}, {name: 'Key'}, {name: 'Value'}], repeatIndex: [1,2]},
+    "SetSkills": {params: [{name: 'Mode', type: "enum", values: ["Clear:clear", "Append:append", "Overwrite:overwrite"]}, {name: 'Skill Name'}], repeatIndex: [1]},
+    "SetParticipantData": {params: [{name: 'Mode', type: "enum", values: ['Initialize:initialize', 'Overwrite:overwrite']}, {name: 'Key'}, {name: 'Value'}], repeatIndex: [1,2]},
     "SetWait": {params: [{name:"Seconds", type:"number"}]},
     "SetRedirect": {params: [{name:"URL String"}]},
     "NoOp": {},
@@ -75,6 +75,15 @@ var unconditionalActions = {
     "Loop": {params: [{name: "Start Index", type: "number"}, {name: "Loop Count", type: "number"}]},
     "ProcessTransferQueue": {},
     "ShowPrompt": {params: [{name: "Prompt Name"}]}
+}
+
+var separators = {
+    "treatmentSeparator": "|",
+    "treatmentNameDelimiters": ["[", "]"],
+    "actionSeparator": "~",
+    "actionParameterSeparator": ":",
+    "treatmentParameterSeparator": "|",
+    "treatmentParameterSubParameterSeparator": ":"
 }
 
 function updateDependants(element) {
@@ -227,50 +236,43 @@ function generateString(input) {
     for (let treatment in input) {
         let treatmentString = ""
         if (treatment !== "root") {
-            treatmentString += `[${treatment}]`
+            treatmentString += `${window.separators.treatmentNameDelimiters[0]}${treatment}${window.separators.treatmentNameDelimiters[1]}`
         }
         const actionStrings = [];
         for (let action of input[treatment]) {
             if (action.name === "ShowPrompt") {
-                actionStrings.push([...action.params].join(":"));
+                actionStrings.push([...action.params].join(window.separators.actionParameterSeparator));
                 continue;
             }
             if (action.params.indexOf("ShowPrompt") >= 0) {
                 action.params.splice(action.params.indexOf("ShowPrompt"), 1);
             }
-            actionStrings.push([action.name, ...action.params].join(":"));
+            actionStrings.push([action.name, ...action.params].join(window.separators.actionParameterSeparator));
         }
-        treatmentString += actionStrings.join("~");
+        treatmentString += actionStrings.join(window.separators.actionSeparator);
         treatmentStrings.push(treatmentString);
     }
-    return resultString = treatmentStrings.join("|");
+    return resultString = treatmentStrings.join(window.separators.treatmentSeparator);
 }
 
 function parseString(input) {
-    const treatmentSeparator = "|";
-    const treatmentNameDelimiters = ["[", "]"];
-    const actionSeparator = "~";
-    const actionParameterSeparator = ":";
-    const treatmentParameterSeparator = "|";
-    const treatmentParameterSubParameterSeparator = ":";
-
     const treatments = {};
 
-    const splitTreatments = input.split(treatmentSeparator);
+    const splitTreatments = input.split(window.separators.treatmentSeparator);
     for (let treatment of splitTreatments) {
         let treatmentName = "root";
         let treatmentBody = treatment;
-        if (treatment.indexOf('[') >= 0 && treatment.indexOf(']') >= 0) {
-            let preNameSplit = treatment.split(treatmentNameDelimiters[0]);
-            let postNameSplit = preNameSplit[1].split(treatmentNameDelimiters[1]);
+        if (treatment.indexOf(window.separators.treatmentNameDelimiters[0]) >= 0 && treatment.indexOf(window.separators.treatmentNameDelimiters[1]) >= 0) {
+            let preNameSplit = treatment.split(window.separators.treatmentNameDelimiters[0]);
+            let postNameSplit = preNameSplit[1].split(window.separators.treatmentNameDelimiters[1]);
             treatmentName = postNameSplit[0];
             treatmentBody = postNameSplit[1];
         }
         treatments[treatmentName] = [];
 
-        let splitActions = treatmentBody.split(actionSeparator);
+        let splitActions = treatmentBody.split(window.separators.actionSeparator);
         for (let action of splitActions) {
-            let splitParameters = action.split(actionParameterSeparator);
+            let splitParameters = action.split(window.separators.actionParameterSeparator);
             let actionName = splitParameters.shift();
             if (Object.keys(window.conditionalActions).indexOf(actionName) < 0 && Object.keys(window.unconditionalActions).indexOf(actionName) < 0) {
                 splitParameters.push(actionName);
