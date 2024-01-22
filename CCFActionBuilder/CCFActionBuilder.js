@@ -297,6 +297,11 @@ function createActionBlock(type) {
 
     addElement(actionTypeSelect, actionBody);
     addElement(actionSelect, actionBody);
+
+    const addActionBeforeButton = newElement("button");
+    addActionBeforeButton.innerText = "Add Action Before";
+    registerElement(addActionBeforeButton, "click", function() {addElement(createActionBlock("unconditional"), actionBody, "beforebegin")});
+    addElement(addActionBeforeButton, actionBody);
     
     const removeButton = newElement("button", {class: ["removeAction"]});
     removeButton.innerText = "Remove Action";
@@ -361,6 +366,11 @@ function newTreatmentBlock() {
     addActionButton.innerText = "Add Action";
     registerElement(addActionButton, "click", function() {addActionBlock(actionList)});
     addElement(addActionButton, treatmentBody);
+
+    const addTreatmentBeforeButton = newElement('button', {title: "Add Treatment Before"});
+    addTreatmentBeforeButton.innerText = "Add Treatment Before";
+    registerElement(addTreatmentBeforeButton, "click", function() {addElement(newTreatmentBlock(), treatmentBody, "beforebegin")});
+    addElement(addTreatmentBeforeButton, treatmentBody);
     
     const removeButton = newElement("button", {title: "Remove Treatment", class: ["removeTreatment"]});
     removeButton.innerText = "Remove Treatment";
