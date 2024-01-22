@@ -503,6 +503,5 @@ function getActionType(action) {
 }
 
 registerElement(eById("addTreatment"), "click", addTreatmentBlock);
-registerElement(eById("generateString"), "click", loadString);
 registerElement(eById('output'), "input", updateFields);
 listenForChanges();
