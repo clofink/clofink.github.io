@@ -1,7 +1,7 @@
 .treatmentBody {
     border: 1px solid black;
     border-radius: 5px;
-    width: calc(60vw - 0.5em);
+    width: calc(60vw - 2px);
     margin: .5em;
     padding: .5em;
     background-color: #ececec;
@@ -24,4 +24,11 @@
     width: 60vw;
     height: 20vh;
     padding: .5em;
+    margin: .5em;
+}
+
+@media (max-width: 700px) {
+    .treatmentBody, #output {
+        width: calc(100% - 2em);
+    }
 }
