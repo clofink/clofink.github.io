@@ -6,6 +6,9 @@
     padding: .5em;
     background-color: #ececec;
 }
+.actionBody select, .actionBody button, .actionBody input, .treatmentBody button, .treatmentBody input {
+    margin-right: .5em;
+}
 .paramsBody label {
     display: block;
     margin: .5em;

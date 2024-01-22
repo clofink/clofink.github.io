@@ -298,7 +298,7 @@ function createActionBlock(type) {
     addElement(actionTypeSelect, actionBody);
     addElement(actionSelect, actionBody);
 
-    const addActionBeforeButton = newElement("button");
+    const addActionBeforeButton = newElement("button", {class: ["addAction"]});
     addActionBeforeButton.innerText = "Add Action Before";
     registerElement(addActionBeforeButton, "click", function() {addElement(createActionBlock("unconditional"), actionBody, "beforebegin")});
     addElement(addActionBeforeButton, actionBody);
@@ -367,7 +367,7 @@ function newTreatmentBlock() {
     registerElement(addActionButton, "click", function() {addActionBlock(actionList)});
     addElement(addActionButton, treatmentBody);
 
-    const addTreatmentBeforeButton = newElement('button', {title: "Add Treatment Before"});
+    const addTreatmentBeforeButton = newElement('button', {title: "Add Treatment Before", class: ["addTreatment"]});
     addTreatmentBeforeButton.innerText = "Add Treatment Before";
     registerElement(addTreatmentBeforeButton, "click", function() {addElement(newTreatmentBlock(), treatmentBody, "beforebegin")});
     addElement(addTreatmentBeforeButton, treatmentBody);
