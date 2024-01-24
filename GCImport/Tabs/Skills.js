@@ -11,11 +11,12 @@ function showSkillsPage() {
     registerElement(fileInput, "change", loadFile);
     const startButton = newElement('button');
     startButton.innerText = "Start";
-    registerElement(startButton, "click", importSkills);
+    registerElement(startButton, "click", importSkillsWrapper);
     const logoutButton = newElement("button");
     logoutButton.innerText = "Logout";
     registerElement(logoutButton, "click", logout);
-    addElements([label, startButton, logoutButton], container);
+    const loadIcon = newElement("div", {id: "loadIcon"});
+    addElements([label, startButton, logoutButton, loadIcon], container);
     return container;
 }
 
@@ -26,6 +27,10 @@ async function createSkill(name) {
     }
     const result = await fetch(url, {method: "POST", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
     return result.json();
+}
+
+function importSkillsWrapper() {
+    showLoading(importSkills);
 }
 
 async function importSkills() {

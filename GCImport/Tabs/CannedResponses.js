@@ -2,7 +2,6 @@ addTab("Canned Responses", showCannedResponsePage);
 
 function showCannedResponsePage() {
     window.requiredFields = ["Name", "Library", "Type", "Content"];
-
     const container = newElement('div', {id: "userInputs"});
     const label = newElement('label');
     label.innerText = "Canned Responses CSV: ";
@@ -11,11 +10,12 @@ function showCannedResponsePage() {
     registerElement(fileInput, "change", loadFile);
     const startButton = newElement('button');
     startButton.innerText = "Start";
-    registerElement(startButton, "click", importCannedResponses);
+    registerElement(startButton, "click", importCannedWrapper);
     const logoutButton = newElement("button");
     logoutButton.innerText = "Logout";
     registerElement(logoutButton, "click", logout);
-    addElements([label, startButton, logoutButton], container);
+    const loadIcon = newElement("div", {id: "loadIcon"});
+    addElements([label, startButton, logoutButton, loadIcon], container);
     return container;
 }
 
@@ -60,6 +60,10 @@ async function createCannedResponse(name, content, contentType, libraryId, subst
     }
     const result = await fetch(url, {method: "POST", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
     return result.json();
+}
+
+function importCannedWrapper() {
+    showLoading(importCannedResponses);
 }
 
 async function importCannedResponses() {

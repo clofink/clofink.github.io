@@ -169,7 +169,6 @@ function loadFile(event) {
                     fileContents = undefined;
                     throw `${file.name} does not have required fields ${JSON.stringify(window.requiredFields)}`
                 }
-                console.log(fileContents);
             }
             catch (error) {
                 throw `${file.name} does not contain valid CSV.`
@@ -211,6 +210,16 @@ function addTab(tabName, renderCallback) {
     if (eById("tabList")) showTabs();
 }
 
+async function showLoading(loadingFunc) {
+    eById("loadIcon").classList.add("shown");
+    const results = await loadingFunc();
+    log(results);
+    eById("loadIcon").classList.remove("shown");
+    for (let result of results) {
+        log(result);
+    }
+}
+
 var tabs = [];
 var fileContents;
 
@@ -218,7 +227,7 @@ if (window.location.hash) {
     storeToken(getParameterByName('access_token'));
     let now = new Date().valueOf();
     let expireTime = parseInt(getParameterByName('expires_in')) * 1000;
-    console.log(new Date(now + expireTime));
+    log(new Date(now + expireTime));
     location.hash = ''
 }
 if (!getToken()) {

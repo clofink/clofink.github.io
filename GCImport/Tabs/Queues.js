@@ -11,11 +11,12 @@ function showQueuesPage() {
     registerElement(fileInput, "change", loadFile);
     const startButton = newElement('button');
     startButton.innerText = "Start";
-    registerElement(startButton, "click", importQueues);
+    registerElement(startButton, "click", importQueuesWrapper);
     const logoutButton = newElement("button");
     logoutButton.innerText = "Logout";
     registerElement(logoutButton, "click", logout);
-    addElements([label, startButton, logoutButton], container);
+    const loadIcon = newElement("div", {id: "loadIcon"});
+    addElements([label, startButton, logoutButton, loadIcon], container);
     return container;
 }
 
@@ -25,6 +26,10 @@ async function createQueue(configObj) {
     log(body)
     const result = await fetch(url, {method: "POST", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
     return result.json();
+}
+
+function importQueuesWrapper() {
+    showLoading(importQueues);
 }
 
 async function importQueues() {
