@@ -1,3 +1,50 @@
+function qs(selector, target) {
+    return (target || document).querySelector(selector);
+}
+function qsa(selector, target) {
+    return (target || document).querySelectorAll(selector);
+}
+function log(message, level) {
+    if (message === undefined) throw "No Message"
+    if (level && ['log', 'info', 'warn', 'error'].indexOf(level) < 0) throw `Invalid Log Level "${level}". Use info, warn, or error`
+    console[level || "log"](message);
+}
+function eById(id, target) {
+    return (target || document).getElementById(id); 
+}
+function registerElement(element, event, callback) {
+    element.addEventListener(event, callback);
+}
+function unregisterElement(element, event, callback) {
+    element.removeEventListener(event, callback);
+}
+function registerElements(elements, event, callback, doCallback) {
+    for (let element of elements) {
+        if(doCallback) callback(element);
+        registerElement(element, event, callback);
+    }
+}
+function newElement(type, params) {
+    const newElem = document.createElement(type);
+    for (let param in params) {
+        if (param === "class") newElem.classList.add(...params[param]);
+        else newElem.setAttribute(param, params[param])
+    }
+    return newElem;
+}
+function addElement(element, target, position) {
+    if (!position) (target || document.body).appendChild(element);
+    else (target || document.body).insertAdjacentElement(position, element);
+}
+function addElements(elements, target, position) {
+    for (let element of elements) {
+        addElement(element, target, position);
+    }
+}
+function sendEvent(element, event) {
+    element.dispatchEvent(new Event(event));
+}
+
 function showLoginPage() {
     const conversationPage = `
     <div id="userInputs">
@@ -28,24 +75,14 @@ function showLoginPage() {
 
 function showMainMenu() {
     const mainBody = `
-    <div id="userInputs">
-        <label>Import Item: 
-            <select id="option">
-                <option value="cannedResponse">Canned Responses</option>
-                <option value="skills">Skills</option>
-            </select>
-        </label>
-        <button id="start">Start</button>
-        <button id="logout">Log Out</button>
+    <div id="tabList"></div>
+    <div id="tabContent">
     </div>`;
     document.getElementById('page').innerHTML = mainBody;
     getOrgDetails().then(function(result) {
-        document.getElementById("header").innerText = `${result.name} (${result.thirdPartyOrgName}): ${result.id}`
-    }).catch(function(error) {console.error(error)})
-    document.getElementById('start').addEventListener("click", function() {
-        showPage(document.getElementById('option').value);
-    });
-    document.getElementById('logout').addEventListener("click", logout);
+        document.getElementById("header").innerText = `Current Org Name: ${result.name} (${result.thirdPartyOrgName}) Current Org ID: ${result.id}`
+    }).catch(function(error) {console.error(error)});
+    showTabs();
 }
 
 function showPage(pageName) {
@@ -79,7 +116,7 @@ function login() {
 function logout() {
     window.localStorage.removeItem('auth');
     window.localStorage.removeItem('environment');
-    document.getElementById('header').innerText = "";
+    document.getElementById('header').innerText = "Current Org Name: Current Org ID:";
     showPage("login");
 }
 
@@ -99,12 +136,6 @@ function getToken() {
         return window.localStorage.getItem('auth');
     }
     return '';
-}
-
-async function getUserDetails() {
-    const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/users/me`;
-    const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-    return result.json(); 
 }
 
 async function getOrgDetails() {
@@ -146,6 +177,36 @@ function loadFile(event) {
     }
 }
 
+function showTabs() {
+    const tabList = eById('tabList');
+    while (tabList.children.length > 0) {
+        tabList.children[0].remove();
+    }
+
+    for (let i = 0; i < window.tabs.length; i++) {
+        addElement(tabs[i], eById('tabList'));
+        if (i === 0) tabs[i].click();
+    }
+}
+
+function addTab(tabName, renderCallback) {
+    const tabSelected = function() {
+        for (let tab of qsa(".tabHeader")) {
+            tab.classList.remove("selected");
+        }
+        newTab.classList.add("selected");
+        const tabContainer = eById("tabContent");
+        tabContainer.innerHTML = "";
+        addElement(renderCallback(), tabContainer);
+    }
+    const newTab = newElement("div", {class: ["tabHeader"]});
+    newTab.innerText = tabName;
+    registerElement(newTab, "click", tabSelected);
+    tabs.push(newTab);
+    if (eById("tabList")) showTabs();
+}
+
+var tabs = [];
 var fileContents;
 
 if (window.location.hash) {

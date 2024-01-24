@@ -1,0 +1,33 @@
+.tabHeader {
+    display: inline-block;
+    border: 1px solid black;
+    padding: .5em;
+    border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
+    border-bottom: none;
+}
+.tabHeader.selected {
+    background-color: lightgray;
+}
+#tabContent {
+    border: 1px solid black;
+}
+#userInputs {
+    margin: .5em;
+    padding: .5em;
+}
+#userInputs button {
+    margin-right: .5em;
+}
+#page {
+    margin: .5em;
+}
+#header {
+    text-align: center;
+    padding: .5em;
+    background-color: lightgray;
+    margin: .5em;
+}
+body {
+    margin: 0;
+}

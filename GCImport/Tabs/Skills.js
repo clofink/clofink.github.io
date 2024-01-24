@@ -1,19 +1,22 @@
+addTab("Skills", showSkillsPage);
+
 function showSkillsPage() {
-    const mainBody = `
-    <div id="userInputs">
-        <label>CSV File: 
-            <input id="import" type="file" accept=".csv">
-        </label>
-        <button id="start">Start</button>
-        <button id="back">Back</button>
-        <button id="logout">Log Out</button>
-    </div>`;
-    document.getElementById('page').innerHTML = mainBody;
     window.requiredFields = ["Name"];
-    document.getElementById('import').addEventListener("change", loadFile);
-    document.getElementById('start').addEventListener('click', importSkills);
-    document.getElementById('back').addEventListener("click", function() {showPage("main")});
-    document.getElementById('logout').addEventListener("click", logout);
+
+    const container = newElement('div', {id: "userInputs"});
+    const label = newElement('label');
+    label.innerText = "Skills CSV: ";
+    const fileInput = newElement('input', {type: "file", accept: ".csv"});
+    addElement(fileInput, label);
+    registerElement(fileInput, "change", loadFile);
+    const startButton = newElement('button');
+    startButton.innerText = "Start";
+    registerElement(startButton, "click", importSkills);
+    const logoutButton = newElement("button");
+    logoutButton.innerText = "Logout";
+    registerElement(logoutButton, "click", logout);
+    addElements([label, startButton, logoutButton], container);
+    return container;
 }
 
 async function createSkill(name) {
