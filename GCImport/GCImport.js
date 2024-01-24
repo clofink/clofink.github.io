@@ -153,16 +153,21 @@ function loadFile(event) {
         const reader = new FileReader();
         reader.addEventListener('load', function(data) {
             try {
-                fileContents = Papa.parse(data.target.result, {header: true});
-                if (fileContents.meta.fields.length != window.requiredFields.length) {
+                fileContents = Papa.parse(data.target.result, {header: true, dynamicTyping: true});
+                log(fileContents);
+                if (fileContents.meta.fields.length < window.requiredFields.length) {
                     fileContents = undefined;
                     throw `${file.name} does not have required fields ${JSON.stringify(window.requiredFields)}`
                 }
+                let foundFields = 0;
                 for (let field of fileContents.meta.fields) {
-                    if (window.requiredFields.indexOf(field) < 0) {
-                        fileContents = undefined;
-                        throw `${file.name} does not have required fields ${JSON.stringify(window.requiredFields)}`
+                    if (window.requiredFields.indexOf(field) >= 0) {
+                        foundFields++;
                     }
+                }
+                if (foundFields < window.requiredFields.length) {
+                    fileContents = undefined;
+                    throw `${file.name} does not have required fields ${JSON.stringify(window.requiredFields)}`
                 }
                 console.log(fileContents);
             }

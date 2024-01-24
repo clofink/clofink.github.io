@@ -5,9 +5,10 @@
     border-top-right-radius: 10px;
     border-top-left-radius: 10px;
     border-bottom: none;
+    background-color: lightgrey;
 }
 .tabHeader.selected {
-    background-color: lightgray;
+    background-color: white;
 }
 #tabContent {
     border: 1px solid black;
@@ -27,6 +28,8 @@
     padding: .5em;
     background-color: lightgray;
     margin: .5em;
+    border-radius: 5px;
+    border: 1px solid black;
 }
 body {
     margin: 0;
