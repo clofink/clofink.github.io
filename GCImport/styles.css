@@ -6,6 +6,7 @@
     border-top-left-radius: 10px;
     border-bottom: none;
     background-color: lightgrey;
+    user-select: none;
 }
 .tabHeader.selected {
     background-color: white;
