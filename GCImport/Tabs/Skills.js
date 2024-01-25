@@ -16,7 +16,8 @@ function showSkillsPage() {
     logoutButton.innerText = "Logout";
     registerElement(logoutButton, "click", logout);
     const loadIcon = newElement("div", {id: "loadIcon"});
-    addElements([label, startButton, logoutButton, loadIcon], container);
+    const helpSection = addHelp(`Must have "routing" permission\nRequired CSV column "Name"`);
+    addElements([label, startButton, logoutButton, helpSection, loadIcon], container);
     return container;
 }
 

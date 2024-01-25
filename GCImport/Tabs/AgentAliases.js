@@ -16,7 +16,8 @@ function showAgentAliasPage() {
     logoutButton.innerText = "Logout";
     registerElement(logoutButton, "click", logout);
     const loadIcon = newElement("div", {id: "loadIcon"});
-    addElements([label, startButton, logoutButton, loadIcon], container);
+    const helpSection = addHelp(`Must have "users" permission\nRequired CSV columns "Name" and "Alias"`);
+    addElements([label, startButton, logoutButton, helpSection, loadIcon], container);
     return container;
 }
 

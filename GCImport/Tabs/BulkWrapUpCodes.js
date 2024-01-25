@@ -16,7 +16,8 @@ function showWrapUpCodesPage() {
     logoutButton.innerText = "Logout";
     registerElement(logoutButton, "click", logout);
     const loadIcon = newElement("div", {id: "loadIcon"});
-    addElements([label, startButton, logoutButton, loadIcon], container);
+    const helpSection = addHelp(`Must have "routing" permission\nRequired CSV columns "Queue Name" and "Wrap-Up Codes"\nWrap-Up Codes column is a comma-separated list of wrap-up codes\nIf the code does not exist, it will be created`);
+    addElements([label, startButton, logoutButton, helpSection, loadIcon], container);
     return container;
 }
 

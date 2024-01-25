@@ -15,7 +15,8 @@ function showCannedResponsePage() {
     logoutButton.innerText = "Logout";
     registerElement(logoutButton, "click", logout);
     const loadIcon = newElement("div", {id: "loadIcon"});
-    addElements([label, startButton, logoutButton, loadIcon], container);
+    const helpSection = addHelp(`Must have "response-management" permission\nRequired CSV columns "Name", "Library", "Type", and "Content"\nIf a library with a matching name does not exist, it will be created\nIf multiple libraries have the same name, the last one in the list returned from the API will be used`);
+    addElements([label, startButton, logoutButton, helpSection, loadIcon], container);
     return container;
 }
 

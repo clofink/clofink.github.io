@@ -193,6 +193,16 @@ function showTabs() {
     }
 }
 
+function addHelp(text) {
+    const details = newElement('details');
+    const summary = newElement("summary");
+    summary.innerText = "Help";
+    const docs = newElement("p");
+    docs.innerText = text;
+    addElements([summary, docs], details);
+    return details;
+}
+
 function addTab(tabName, renderCallback) {
     const tabSelected = function() {
         for (let tab of qsa(".tabHeader")) {
