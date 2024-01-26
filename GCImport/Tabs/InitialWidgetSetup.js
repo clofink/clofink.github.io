@@ -186,7 +186,11 @@ function showWidgetsPage() {
                 "fileUpload": { 
                     "modes": [{ "fileTypes": ["image/jpeg", "image/gif", "image/png"], "maxFileSizeKB": 10240 }] 
                 } 
-            }, 
+            },
+            "cobrowse": {
+                "enabled": false,
+                "allowAgentControl": false
+            },
             "customI18nLabels": [],
             "supportCenter": { "enabled": false },
             "position": { "alignment": "auto", "sideSpace": 20, "bottomSpace": 12 }, 
