@@ -32,7 +32,6 @@ function showQueuesPage() {
     async function createQueue(configObj) {
         const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/routing/queues`;
         const body = parseInput(configObj);
-        log(body)
         const result = await fetch(url, {method: "POST", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
         return result.json();
     }
@@ -52,7 +51,7 @@ function showQueuesPage() {
         const results = [];
         for (let queue of fileContents.data) {
             if (queue.Name) {
-                // here is where we would resolve scripts and in-queue flows maybe?
+                const newFields = {}
                 if (queue["Script"]) {
                     if (!scriptsAdded) {
                         const allScripts = await getAll("/api/v2/scripts?sortBy=name&sortOrder=ascending&scriptDataVersion=0&pageDataVersion=0&divisionIds=", "entities", 25);
@@ -62,7 +61,7 @@ function showQueuesPage() {
                         scriptsAdded = true;
                     }
                     if (scripts.hasOwnProperty(queue["Script"])) {
-                        queue["defaultScripts.MESSAGE.id"] = scripts[queue["Script"]];
+                        newFields["defaultScripts.MESSAGE.id"] = scripts[queue["Script"]];
                     }
                     else {
                         log(`No script with the name: ${queue["Script"]}`)
@@ -76,14 +75,15 @@ function showQueuesPage() {
                         }
                         inQueueFlowsAdded = true;
                     }
-                    if (inQueueFlowsAdded.hasOwnProperty(queue["In-Queue Flow"])) {
-                        queue["messageInQueueFlow.id"] = inQueueFlows[queue["In-Queue Flow"]];
+                    if (inQueueFlows.hasOwnProperty(queue["In-Queue Flow"])) {
+                        newFields["messageInQueueFlow.id"] = inQueueFlows[queue["In-Queue Flow"]];
                     }
                     else {
-                        log(`No In-Queue Flow with the name: ${inQueueFlows["In-Queue Flow"]}`)
+                        log(`No In-Queue Flow with the name: ${queue["In-Queue Flow"]}`)
                     }
                 }
-                results.push(createQueue(resolveMapping(queue)));
+                const mappedQueue = resolveMapping(queue);
+                results.push(createQueue({...mappedQueue, ...newFields}));
             }
         }
         return Promise.all(results);
