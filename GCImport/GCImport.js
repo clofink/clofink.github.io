@@ -193,13 +193,17 @@ function showTabs() {
     }
 }
 
-function addHelp(text) {
+function addHelp(textList) {
     const details = newElement('details');
     const summary = newElement("summary");
     summary.innerText = "Help";
-    const docs = newElement("p");
-    docs.innerText = text;
-    addElements([summary, docs], details);
+    const listContainer = newElement("ul");
+    for (let text of textList) {
+        const listItem = newElement('li');
+        listItem.innerText = text;
+        addElement(listItem, listContainer);
+    }
+    addElements([summary, listContainer], details);
     return details;
 }
 
@@ -223,7 +227,6 @@ function addTab(tabName, renderCallback) {
 async function showLoading(loadingFunc) {
     eById("loadIcon").classList.add("shown");
     const results = await loadingFunc();
-    log(results);
     eById("loadIcon").classList.remove("shown");
     for (let result of results) {
         log(result);
