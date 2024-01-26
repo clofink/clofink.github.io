@@ -15,58 +15,15 @@ function showWrapUpCodesPage() {
     const logoutButton = newElement("button");
     logoutButton.innerText = "Logout";
     registerElement(logoutButton, "click", logout);
-    const loadIcon = newElement("div", {id: "loadIcon"});
     const helpSection = addHelp([
         `Must have "routing" scope`, 
         `Required CSV columns "Queue Name" and "Wrap-Up Codes"`, 
         `Wrap-Up Codes column is a comma-separated list of wrap-up codes`, 
-        `If the code does not exist, it will be created`
+        `If the code does not exist, it will be created`,
+        `Wrap-Up Codes are only added. If there are already codes on a queue, they will not be removed.`
     ]);
-    addElements([label, startButton, logoutButton, helpSection, loadIcon], container);
+    addElements([label, startButton, logoutButton, helpSection], container);
     return container;
-
-    async function getAllWrapUpCodes() {
-        const wrapUpCodes = [];
-        let pageNum = 0;
-        let totalPages = 1;
-    
-        while (pageNum < totalPages) {
-            pageNum++;
-            const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/routing/wrapupcodes?pageNumber=${pageNum}&pageSize=25&sortBy=name&sortOrder=ascending`;
-            const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-            const resultJson = await result.json();
-            wrapUpCodes.push(...resultJson.entities);
-            totalPages = resultJson.pageCount;
-        }
-        return wrapUpCodes;
-    }
-    
-    async function getAllQueues() {
-        const queues = [];
-        let pageNum = 0;
-        let totalPages = 1;
-    
-        while (pageNum < totalPages) {
-            pageNum++;
-            const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/routing/queues/?pageNumber=${pageNum}&pageSize=25&sortOrder=asc&sortBy=name&name=**&divisionId`;
-            const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-            const resultJson = await result.json();
-            queues.push(...resultJson.entities);
-            totalPages = resultJson.pageCount;
-        }
-        return queues;
-    }
-    
-    async function createWrapUpCode(name) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/routing/wrapupcodes`;
-        const body = {
-            "name": name,
-            "division":{"id":"*"}
-        };
-        const result = await fetch(url, {method: "POST", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-        return result.json();
-    
-    }
     
     async function addWrapUpCodes(queueId, codes) {
         const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/routing/queues/${queueId}/wrapupcodes`;
@@ -78,17 +35,16 @@ function showWrapUpCodesPage() {
         showLoading(importWrapUpCodes);
     }
     
-    // NOTE: this only ADDs wrap up codes to queues. It does not remove any
     async function importWrapUpCodes() {
         if (!fileContents) throw "No valid file selected";
     
-        const queues = await getAllQueues();
+        const queues = await getAll("/api/v2/routing/queues?sortOrder=asc&sortBy=name&name=**&divisionId", "entities", 25);
         const queueMapping = {};
         for (let queue of queues) {
             queueMapping[queue.name] = queue.id;
         }
     
-        const wrapUpCodes = await getAllWrapUpCodes();
+        const wrapUpCodes = await getAll("/api/v2/routing/wrapupcodes?sortBy=name&sortOrder=ascending", "entities", 25);
         const wrapupCodeMapping = {};
         for (let wrapUpCode of wrapUpCodes) {
             wrapupCodeMapping[wrapUpCode.name] = wrapUpCode.id;
@@ -106,7 +62,7 @@ function showWrapUpCodesPage() {
                     const trimmedCode = wrapUpCode.trim();
                     if (!trimmedCode) continue;
                     if (!wrapupCodeMapping[trimmedCode]) {
-                        const newWrapUpCode = await createWrapUpCode(trimmedCode);
+                        const newWrapUpCode = await createItem("/api/v2/routing/wrapupcodes", {"name": trimmedCode, "division":{"id":"*"}});
                         wrapupCodeMapping[trimmedCode] = newWrapUpCode.id;
                     }
                     codesToAdd.push({id: wrapupCodeMapping[trimmedCode]});

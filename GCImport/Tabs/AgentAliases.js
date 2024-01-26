@@ -15,12 +15,11 @@ function showAgentAliasPage() {
     const logoutButton = newElement("button");
     logoutButton.innerText = "Logout";
     registerElement(logoutButton, "click", logout);
-    const loadIcon = newElement("div", {id: "loadIcon"});
     const helpSection = addHelp([
         `Must have "users" scope`, 
         `Required CSV columns "Email" and "Alias"`
     ]);
-    addElements([label, startButton, logoutButton, helpSection, loadIcon], container);
+    addElements([label, startButton, logoutButton, helpSection], container);
     return container;
 
     // undocumented API from the UI

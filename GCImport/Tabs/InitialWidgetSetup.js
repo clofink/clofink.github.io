@@ -15,7 +15,6 @@ function showWidgetsPage() {
     const logoutButton = newElement("button");
     logoutButton.innerText = "Logout";
     registerElement(logoutButton, "click", logout);
-    const loadIcon = newElement("div", { id: "loadIcon" });
     const helpSection = addHelp([
         `Must have "webdeployments" and "architect" scopes`, 
         `This will create an Inbound Message Flow (if one with a matching name doesn't exist), a Web Messenger Configuration (if one with a matching name doesn't exist), and a Web Messenger Deployment`,
@@ -26,15 +25,8 @@ function showWidgetsPage() {
         `Conversation Disconnect: one of none, display, disconnect`,
         `Color: HEX value`
     ]);
-    addElements([label, startButton, logoutButton, helpSection, loadIcon], container);
+    addElements([label, startButton, logoutButton, helpSection], container);
     return container;
-
-    async function createWidgetConfig(configObj) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/webdeployments/configurations/`;
-        const body = parseInput(configObj);
-        const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        return result.json();
-    }
     
     async function publishConfigDraft(configId) {
         const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/webdeployments/configurations/${configId}/versions/draft/publish`;
@@ -46,22 +38,6 @@ function showWidgetsPage() {
         const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/webdeployments/configurations/?showOnlyPublished=false`;
         const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
         return await result.json();
-    }
-    
-    async function getAllInboundMessageFlows() {
-        const inboundMessageFlows = [];
-        let pageNum = 0;
-        let totalPages = 1;
-    
-        while (pageNum < totalPages) {
-            pageNum++;
-            const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/flows?sortBy=name&sortOrder=asc&pageNumber=${pageNum}&pageSize=50&type=inboundshortmessage`;
-            const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-            const resultJson = await result.json();
-            inboundMessageFlows.push(...resultJson.entities);
-            totalPages = resultJson.pageCount;
-        }
-        return inboundMessageFlows;
     }
     
     async function createWidgetDeploy(name, configId, configVersion, flowId) {
@@ -78,18 +54,7 @@ function showWidgetsPage() {
         const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
         return result.json();
     }
-    
-    async function createInboundMessageFlow(name) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/flows/`;
-        const body = {
-            "type": "inboundshortmessage",
-            "name": name,
-            "description": ""
-        };
-        const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        return result.json();
-    }
-    
+
     async function createInitialVersion(flowId) {
         const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/flows/${flowId}/versions/`;
         const body = {
@@ -114,7 +79,7 @@ function showWidgetsPage() {
         if (!fileContents) throw "No valid file selected";
     
         // get list of inbound flows
-        const inboundFlows = await getAllInboundMessageFlows();
+        const inboundFlows = await getAll("/api/v2/flows?sortBy=name&sortOrder=asc&type=inboundshortmessage", "entities", 50);
         const inboundFlowsMapping = {};
         for (let flow of inboundFlows) {
             inboundFlowsMapping[flow.name] = flow.id;
@@ -131,7 +96,7 @@ function showWidgetsPage() {
         for (let initial of fileContents.data) {
             // create the inbound message flow
             if (!inboundFlowsMapping[initial["Inbound Flow Name"]]) {
-                const inboundFlow = await createInboundMessageFlow(initial["Inbound Flow Name"]);
+                const inboundFlow = await createItem("/api/v2/flows/", {"type": "inboundshortmessage", "name": initial["Inbound Flow Name"], "description": ""});
                 createdObjects.push(inboundFlow);
                 // publish an initial version
                 await createInitialVersion(inboundFlow.id);
@@ -142,7 +107,7 @@ function showWidgetsPage() {
     
             // create the messenger config
             if (!widgetConfigMapping[initial["Configuration Name"]]) {
-                const newConfig = await createWidgetConfig(resolveMapping(initial));
+                const newConfig = await createItem("/api/v2/webdeployments/configurations/", parseInput(resolveMapping(initial)));
                 const publishedConfig = await publishConfigDraft(newConfig.id);
                 createdObjects.push(publishedConfig);
                 widgetConfigMapping[initial["Configuration Name"]] = {id: publishedConfig.id, version: publishedConfig.version};

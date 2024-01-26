@@ -14,58 +14,14 @@ function showCannedResponsePage() {
     const logoutButton = newElement("button");
     logoutButton.innerText = "Logout";
     registerElement(logoutButton, "click", logout);
-    const loadIcon = newElement("div", {id: "loadIcon"});
     const helpSection = addHelp([
         `Must have "response-management" scope`, 
         `Required CSV columns "Name", "Library", "Type", and "Content"`, 
         `If a library with a matching name does not exist, it will be created`, 
         `If multiple libraries have the same name, the last one in the list returned from the API will be used`
     ]);
-    addElements([label, startButton, logoutButton, helpSection, loadIcon], container);
+    addElements([label, startButton, logoutButton, helpSection], container);
     return container;
-
-    async function getResponseLibraries() {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/responsemanagement/libraries?pageSize=500`;
-        const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-        return result.json();
-    }
-    
-    async function createResponseLibrary(libraryName) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/responsemanagement/libraries`;
-        const body = {
-            name: libraryName
-        }
-        const result = await fetch(url, {method: "POST", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-        return result.json();
-    }
-    
-    async function getCannedResponses(libraryId) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/responsemanagement/responses?libraryId=${libraryId}&pageNumer=1&pageSize=1000&expand=substitutionsSchema`;
-        const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-        return result.json();
-    }
-    
-    async function createCannedResponse(name, content, contentType, libraryId, substitutions) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/responsemanagement/responses`;
-        const body = {
-            "assets": [],
-            "libraries": [
-                {
-                    "id": libraryId
-                }
-            ],
-            "name": name,
-            "substitutions": substitutions,
-            "texts": [
-                {
-                    "content": content,
-                    "contentType": contentType
-                }
-            ],
-        }
-        const result = await fetch(url, {method: "POST", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-        return result.json();
-    }
     
     function importCannedWrapper() {
         showLoading(importCannedResponses);
@@ -74,10 +30,10 @@ function showCannedResponsePage() {
     async function importCannedResponses() {
         if (!fileContents) throw "No valid file selected";
     
-        const libraries = await getResponseLibraries();
+        const libraries = await getAll("/api/v2/responsemanagement/libraries?", "entities", 500);
         const libraryInfo = {};
         const results = [];
-        for (let library of libraries.entities) {
+        for (let library of libraries) {
             libraryInfo[library.name] = library.id;
         }
     
@@ -85,7 +41,7 @@ function showCannedResponsePage() {
             if (Object.keys(response).length != 4) continue;
             let libraryId;
             if (response.Library && !libraryInfo[response.Library]) {
-                const newLibrary = await createResponseLibrary(response.Library);
+                const newLibrary = await createItem("/api/v2/responsemanagement/libraries", {name: response.Library});
                 libraryInfo[response.Library] = newLibrary.id;
             }
             libraryId = libraryInfo[response.Library];
@@ -98,7 +54,23 @@ function showCannedResponsePage() {
                         response.Content = response.Content.replace(match, `<span class="rm-placeholder" data-placeholder="true">${match}</span>`)
                     }
                 }
-                results.push(createCannedResponse(response.Name, response.Content, response.Type, libraryId, substitutions));
+                const body = {
+                    "assets": [],
+                    "libraries": [
+                        {
+                            "id": libraryId
+                        }
+                    ],
+                    "name": response.Name,
+                    "substitutions": substitutions,
+                    "texts": [
+                        {
+                            "content": response.Content,
+                            "contentType": response.Type
+                        }
+                    ],
+                }        
+                results.push(createItem("/api/v2/responsemanagement/responses", body));
             }
         }
         return Promise.all(results);

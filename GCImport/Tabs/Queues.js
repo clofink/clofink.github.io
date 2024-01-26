@@ -15,7 +15,6 @@ function showQueuesPage() {
     const logoutButton = newElement("button");
     logoutButton.innerText = "Logout";
     registerElement(logoutButton, "click", logout);
-    const loadIcon = newElement("div", {id: "loadIcon"});
     const helpSection = addHelp([
         `Must have "routing" scope`, 
         `Required CSV column "Name"`, 
@@ -26,7 +25,7 @@ function showQueuesPage() {
         `Scoring Method: one of TimestampAndPriority, PriorityOnly`,
         `Evaluation Method: one of ALL, BEST, NONE`
     ]);
-    addElements([label, startButton, logoutButton, helpSection, loadIcon], container);
+    addElements([label, startButton, logoutButton, helpSection], container);
     return container;
     
     async function createQueue(configObj) {

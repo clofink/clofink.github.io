@@ -15,23 +15,13 @@ function showSkillsPage() {
     const logoutButton = newElement("button");
     logoutButton.innerText = "Logout";
     registerElement(logoutButton, "click", logout);
-    const loadIcon = newElement("div", {id: "loadIcon"});
     const helpSection = addHelp([
         `Must have "routing" scope`, 
         `Required CSV column "Name"`
     ]);
-    addElements([label, startButton, logoutButton, helpSection, loadIcon], container);
+    addElements([label, startButton, logoutButton, helpSection], container);
     return container;
 
-    async function createSkill(name) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/routing/skills`;
-        const body = {
-            name: name
-        }
-        const result = await fetch(url, {method: "POST", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-        return result.json();
-    }
-    
     function importSkillsWrapper() {
         showLoading(importSkills);
     }
@@ -42,7 +32,7 @@ function showSkillsPage() {
         const results = [];
         for (let skill of fileContents.data) {
             if (skill.Name) {
-                results.push(createSkill(skill.Name));
+                results.push(createItem("/api/v2/routing/skills", {name: skill.Name}));
             }
         }
         return Promise.all(results);
