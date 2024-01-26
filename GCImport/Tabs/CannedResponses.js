@@ -70,9 +70,9 @@ function showCannedResponsePage() {
                         }
                     ],
                 }        
-                results.push(createItem("/api/v2/responsemanagement/responses", body));
+                results.push(await createItem("/api/v2/responsemanagement/responses", body));
             }
         }
-        return Promise.all(results);
+        return results;
     }
 }
