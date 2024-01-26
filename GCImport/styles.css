@@ -1,3 +1,16 @@
+#tabList {
+    white-space: nowrap;
+    overflow-x: scroll;
+    scrollbar-width: none;
+}
+#tabList::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+summary {
+    user-select: none;
+    margin-top: .5em;
+}
 .tabHeader {
     display: inline-block;
     border: 1px solid black;
