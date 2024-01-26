@@ -207,6 +207,28 @@ function addHelp(textList) {
     return details;
 }
 
+async function getAll(path, resultsKey, pageSize) {
+    const items = [];
+    let pageNum = 0;
+    let totalPages = 1;
+
+    while (pageNum < totalPages) {
+        pageNum++;
+        const url = `https://api.${window.localStorage.getItem('environment')}${path}&pageNumber=${pageNum}&pageSize=${pageSize}`;
+        const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
+        const resultJson = await result.json();
+        items.push(...resultJson[resultsKey]);
+        totalPages = resultJson.pageCount;
+    }
+    return items;
+}
+
+async function createItem(path, body) {
+    const url = `https://api.${window.localStorage.getItem('environment')}${path}`;
+    const result = await fetch(url, {method: "POST", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
+    return result.json();
+}
+
 function addTab(tabName, renderCallback) {
     const tabSelected = function() {
         for (let tab of qsa(".tabHeader")) {
