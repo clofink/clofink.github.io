@@ -20,7 +20,11 @@ function showQueuesPage() {
         `Must have "routing" scope`, 
         `Required CSV column "Name"`, 
         `Default values are used for the queue if no override is provided`,
-        `Other valid fields are "Division", "Description", "Auto Answer", "Alerting Timeout", "SLA Percentage", "SLA Duration", "ACW", "ACW Timeout", "Manual Assignment", "Scoring Method", "Evaluation Method"`
+        `Other valid fields are "Division", "Description", "Auto Answer", "Alerting Timeout", "SLA Percentage", "SLA Duration", "ACW", "ACW Timeout", "Manual Assignment", "Scoring Method", "Evaluation Method"`,
+        `SLA Percentage: value between 0 and 1`,
+        `ACW: one of OPTIONAL, MANDATORY, MANDATORY_TIMEOUT, MANDATORY_FORCED_TIMEOUT, AGENT_REQUESTED`,
+        `Scoring Method: one of TimestampAndPriority, PriorityOnly`,
+        `Evaluation Method: one of ALL, BEST, NONE`
     ]);
     addElements([label, startButton, logoutButton, helpSection, loadIcon], container);
     return container;
