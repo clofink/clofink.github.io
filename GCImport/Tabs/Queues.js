@@ -1,7 +1,7 @@
 addTab("Queues", showQueuesPage);
 
 function showQueuesPage() {
-    window.requiredFields = ["name"];
+    window.requiredFields = ["Name"];
 
     const container = newElement('div', {id: "userInputs"});
     const label = newElement('label');
