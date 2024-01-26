@@ -20,8 +20,8 @@ function showWidgetsPage() {
         `This will create an Inbound Message Flow (if one with a matching name doesn't exist), a Web Messenger Configuration (if one with a matching name doesn't exist), and a Web Messenger Deployment`,
         `Required CSV columns "Configuration Name", "Inbound Flow Name", and "Deployment Name"`, 
         `Default values are used for the messenger configuration if no override is provided`, 
-        `Other valid fields are "Configuration Name", "Languages", "Default Language", "Home Screen", "Agent Typing Indicator", "Visitor Typing Indicator", "Auto-Start Conversations", "Rich Text Formatting", "Conversation Disconnect", "Clear Conversation", "Humanize Conversation", "Bot Name", "Color", "Position", "Allow Co-Browse", and "Allow Agent Control"`,
-        `Languages: comma-separated list of "en-us", "fr", "es", "ar", "zh-cn", "zh-tw", "cs", "da", "nl", "et", "fi", "de", "he", "it", "ja", "ko", "lv", "lt", "no", "pl", "pt-br", "pt-pt", "ru", "sv", "th", "tr"`,
+        `Other valid fields are "Configuration Name", "Languages", "Default Language", "Home Screen", "Home Screen Logo URL", "Agent Typing Indicator", "Visitor Typing Indicator", "Auto-Start Conversations", "Rich Text Formatting", "Conversation Disconnect", "Clear Conversation", "Humanize Conversation", "Bot Name", "Bot Image URL", "Color", "Position", "Allow Co-Browse", "Allow Agent Control", and "Headless Mode"`,
+        `Languages: comma-separated list of en-us, fr, es, ar, zh-cn, zh-tw, cs, da, nl, et, fi, de, he, it, ja, ko, lv, lt, no, pl, pt-br, pt-pt, ru, sv, th, tr`,
         `Conversation Disconnect: one of none, display, disconnect`,
         `Color: HEX value`
     ]);
@@ -128,6 +128,7 @@ function showWidgetsPage() {
             "Languages": "languages",
             "Default Language": "defaultLanguage",
             "Home Screen": "messenger.homeScreen.enabled", // true, false
+            "Home Screen Logo URL": "messenger.homeScreen.logoUrl",
             "Agent Typing Indicator": "messenger.apps.conversations.showAgentTypingIndicator", // true, false
             "Visitor Typing Indicator": "messenger.apps.conversations.showUserTypingIndicator", // true, false
             "Auto-Start Conversations": "messenger.apps.conversations.autoStart.enabled", // true, false
@@ -136,10 +137,12 @@ function showWidgetsPage() {
             "Clear Conversation": "messenger.apps.conversations.conversationClear.enabled", // true, false
             "Humanize Conversation": "messenger.apps.conversations.humanize.enabled", // true, false
             "Bot Name": "messenger.apps.conversations.humanize.bot.name",
+            "Bot Image URL": "messenger.apps.conversations.humanize.bot.avatarUrl",
             "Color": "messenger.styles.primaryColor",
             "Position": "position.alignment", // auto, right, left
             "Allow Co-Browse": "cobrowse.enabled",
-            "Allow Agent Control": "cobrowse.allowAgentControl"
+            "Allow Agent Control": "cobrowse.allowAgentControl",
+            "Headless Mode": "headlessMode.enabled"
         }
         const disconnectValues = {
             "none": {enabled: false, type: "Send"},
@@ -214,7 +217,7 @@ function showWidgetsPage() {
                     exampleCurrent = exampleCurrent[parts[i]];
                 }
                 else {
-                    console.error(`No matching key found for ${parts[i]}`);
+                    log(`No matching key found for ${parts[i]}`);
                 }
             }
         }
