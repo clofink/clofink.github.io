@@ -69,8 +69,9 @@ function showCannedResponsePage() {
                             "contentType": response.Type
                         }
                     ],
-                }        
-                results.push(await createItem("/api/v2/responsemanagement/responses", body));
+                }
+                const newMessage = await createItem("/api/v2/responsemanagement/responses", body);
+                results.push(newMessage);
             }
         }
         return results;
