@@ -17,9 +17,10 @@ function showQueuesPage() {
     registerElement(logoutButton, "click", logout);
     const helpSection = addHelp([
         `Must have "routing" scope`, 
+        `If using the Script column, "scripts-readonly" or "scripts" scope required. If using the In-Queue Flow column, "architect-readonly" or "architect" scope required`,
         `Required CSV column "Name"`, 
         `Default values are used for the queue if no override is provided`,
-        `Other valid fields are "Division", "Description", "Auto Answer", "Alerting Timeout", "SLA Percentage", "SLA Duration", "ACW", "ACW Timeout", "Manual Assignment", "Scoring Method", "Evaluation Method"`,
+        `Other valid fields are "Division", "Description", "Auto Answer", "Alerting Timeout", "SLA Percentage", "SLA Duration", "ACW", "ACW Timeout", "Manual Assignment", "Scoring Method", "Evaluation Method", "Script", "In-Queue Flow"`,
         `SLA Percentage: value between 0 and 1`,
         `ACW: one of OPTIONAL, MANDATORY, MANDATORY_TIMEOUT, MANDATORY_FORCED_TIMEOUT, AGENT_REQUESTED`,
         `Scoring Method: one of TimestampAndPriority, PriorityOnly`,
@@ -43,9 +44,45 @@ function showQueuesPage() {
     async function importQueues() {
         if (!fileContents) throw "No valid file selected";
     
+        const scripts = {};
+        const inQueueFlows = {};
+        let scriptsAdded = false;
+        let inQueueFlowsAdded = false;
+
         const results = [];
         for (let queue of fileContents.data) {
-            if (queue.name) {
+            if (queue.Name) {
+                // here is where we would resolve scripts and in-queue flows maybe?
+                if (queue["Script"]) {
+                    if (!scriptsAdded) {
+                        const allScripts = await getAll("/api/v2/scripts?sortBy=name&sortOrder=ascending&scriptDataVersion=0&pageDataVersion=0&divisionIds=", "entities", 25);
+                        for (let script of allScripts) {
+                            scripts[script.name] = script.id;
+                        }
+                        scriptsAdded = true;
+                    }
+                    if (scripts.hasOwnProperty(queue["Script"])) {
+                        queue["defaultScripts.MESSAGE.id"] = scripts[queue["Script"]];
+                    }
+                    else {
+                        log(`No script with the name: ${queue["Script"]}`)
+                    }
+                }
+                if (queue["In-Queue Flow"]) {
+                    if (!inQueueFlowsAdded) {
+                        const allInqueueFlows = await getAll("/api/v2/flows?sortBy=name&sortOrder=asc&type=inqueueshortmessage", "entities", 50);
+                        for (let flow of allInqueueFlows) {
+                            inQueueFlows[flow.name] = flow.id;
+                        }
+                        inQueueFlowsAdded = true;
+                    }
+                    if (inQueueFlowsAdded.hasOwnProperty(queue["In-Queue Flow"])) {
+                        queue["messageInQueueFlow.id"] = inQueueFlows[queue["In-Queue Flow"]];
+                    }
+                    else {
+                        log(`No In-Queue Flow with the name: ${inQueueFlows["In-Queue Flow"]}`)
+                    }
+                }
                 results.push(createQueue(resolveMapping(queue)));
             }
         }
@@ -144,7 +181,13 @@ function showQueuesPage() {
             "directRouting": "",
             "callingPartyName": "",
             "callingPartyNumber": "",
-            "defaultScripts": {},
+            "defaultScripts": {
+                "EMAIL": {"id": ""},
+                "CALLBACK": {"id": ""},
+                "VOICE": {"id": ""},
+                "CHAT": {"id": ""},
+                "MESSAGE": {"id": ""}
+            },
             "outboundMessagingAddresses": "",
             "outboundEmailAddress": "",
             "peerId": "",
