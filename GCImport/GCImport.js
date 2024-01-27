@@ -85,29 +85,6 @@ function showMainMenu() {
     showTabs();
 }
 
-function showPage(pageName) {
-    switch (pageName) {
-        case "login":
-            showLoginPage();
-            break;
-        case "main":
-            showMainMenu();
-            break;
-        case "cannedResponse":
-            showCannedResponsePage();
-            break;
-        case "skills":
-            showSkillsPage();
-            break;
-        case "queues":
-            showQueuesPage();
-            break;
-        default:
-            console.log("invalid page: ", pageName);
-            break;
-    }
-}
-
 function login() {
     window.localStorage.setItem('environment', document.querySelector('[name="environment"]').value);
     window.location.replace(`https://login.${window.localStorage.getItem('environment')}/oauth/authorize?response_type=token&client_id=${document.querySelector('[name="clientId"]').value}&redirect_uri=${encodeURIComponent(location.origin + location.pathname)}`);
@@ -117,7 +94,7 @@ function logout() {
     window.localStorage.removeItem('auth');
     window.localStorage.removeItem('environment');
     document.getElementById('header').innerText = "Current Org Name: Current Org ID:";
-    showPage("login");
+    showLoginPage();
 }
 
 function getParameterByName(name) {
@@ -266,8 +243,8 @@ if (window.location.hash) {
     location.hash = ''
 }
 if (!getToken()) {
-    showPage("login");
+    showLoginPage();
 }
 else {
-    showPage("main");
+    showMainMenu();
 }
