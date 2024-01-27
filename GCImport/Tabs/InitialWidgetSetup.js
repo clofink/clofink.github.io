@@ -28,34 +28,13 @@ function showWidgetsPage() {
     ]);
     addElements([label, startButton, logoutButton, helpSection], container);
     return container;
-    
-    async function publishConfigDraft(configId) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/webdeployments/configurations/${configId}/versions/draft/publish`;
-        const result = await fetch(url, { method: "POST", body: JSON.stringify({}), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        return result.json();
-    }
-    
+
     async function getAllWidgetConfigs() {
         const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/webdeployments/configurations/?showOnlyPublished=false`;
         const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
         return await result.json();
     }
     
-    async function createWidgetDeploy(name, configId, configVersion, flowId) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/webdeployments/deployments/`;
-        const body = {
-            "name": name,
-            "description": "",
-            "configuration": { "id": configId, "version": configVersion },
-            "allowAllDomains": true,
-            "allowedDomains": [],
-            "flow": { "id": flowId },
-            "status": "Active"
-        }
-        const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        return result.json();
-    }
-
     async function createInitialVersion(flowId) {
         const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/flows/${flowId}/versions/`;
         const body = {
@@ -65,13 +44,7 @@ function showWidgetsPage() {
         const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
         return result.json();
     }
-    
-    async function publishIntialVersion(flowId) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/flows/actions/publish?flow=${flowId}`;
-        const result = await fetch(url, { method: "POST", headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        return result.json();
-    }
-    
+
     function importWidgetsWrapper() {
         showLoading(importWidgets);
     }
@@ -101,7 +74,7 @@ function showWidgetsPage() {
                 createdObjects.push(inboundFlow);
                 // publish an initial version
                 await createInitialVersion(inboundFlow.id);
-                await publishIntialVersion(inboundFlow.id);
+                await createItem(`/api/v2/flows/actions/publish?flow=${inboundFlow.id}`, {});
                 inboundFlowsMapping[initial["Inbound Flow Name"]] = inboundFlow.id;
             }
             const flowId = inboundFlowsMapping[initial["Inbound Flow Name"]];
@@ -109,14 +82,23 @@ function showWidgetsPage() {
             // create the messenger config
             if (!widgetConfigMapping[initial["Configuration Name"]]) {
                 const newConfig = await createItem("/api/v2/webdeployments/configurations/", parseInput(resolveMapping(initial)));
-                const publishedConfig = await publishConfigDraft(newConfig.id);
+                const publishedConfig = await createItem(`/api/v2/webdeployments/configurations/${newConfig.id}/versions/draft/publish`, {});
                 createdObjects.push(publishedConfig);
                 widgetConfigMapping[initial["Configuration Name"]] = {id: publishedConfig.id, version: publishedConfig.version};
             }
             const config = widgetConfigMapping[initial["Configuration Name"]];
     
             // create the messenger deployment
-            const deployment = await createWidgetDeploy(initial["Deployment Name"], config.id, config.version, flowId);
+            const body = {
+                "name": initial["Deployment Name"],
+                "description": "",
+                "configuration": { "id": config.id, "version": config.version },
+                "allowAllDomains": true,
+                "allowedDomains": [],
+                "flow": { "id": flowId },
+                "status": "Active"
+            }    
+            const deployment = await createItem("/api/v2/webdeployments/deployments/", body);
             createdObjects.push(deployment);
         }
         return createdObjects;
