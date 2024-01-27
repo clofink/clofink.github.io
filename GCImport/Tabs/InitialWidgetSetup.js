@@ -152,7 +152,11 @@ function showWidgetsPage() {
         for (let key in inputObj) {
             if (validConfigProperties.hasOwnProperty(key)) {
                 if (key === "Languages") {
-                    inputObj[key] = inputObj[key].split(",");
+                    const tempList = [];
+                    for (let languageCode of inputObj[key].split(",")) {
+                        tempList.push(languageCode.trim());
+                    }
+                    inputObj[key] = tempList;
                 }
                 if (key === "Conversation Disconnect") {
                     newObj["messenger.apps.conversations.conversationDisconnect"] = disconnectValues[inputObj[key]];
