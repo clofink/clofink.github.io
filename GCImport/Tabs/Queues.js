@@ -190,7 +190,7 @@ function showQueuesPage() {
         const queue = {};
         // loop through each key and understand where it fits into the queue model to recreate
         for (let key in inputObj) {
-            if (!inputObj[key]) continue;
+            if (inputObj[key] === undefined || inputObj[key] === null) continue;
     
             let exampleCurrent = example;
             let queueCurrent = queue;
