@@ -28,14 +28,7 @@ function showQueuesPage() {
     ]);
     addElements([label, startButton, logoutButton, helpSection], container);
     return container;
-    
-    async function createQueue(configObj) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/routing/queues`;
-        const body = parseInput(configObj);
-        const result = await fetch(url, {method: "POST", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-        return result.json();
-    }
-    
+        
     function importQueuesWrapper() {
         showLoading(importQueues);
     }
@@ -83,7 +76,7 @@ function showQueuesPage() {
                     }
                 }
                 const mappedQueue = resolveMapping(queue);
-                results.push(createQueue({...mappedQueue, ...newFields}));
+                results.push(createItem("/api/v2/routing/queues", parseInput({...mappedQueue, ...newFields})));
             }
         }
         return Promise.all(results);
