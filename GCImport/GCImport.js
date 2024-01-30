@@ -44,44 +44,46 @@ function addElements(elements, target, position) {
 function sendEvent(element, event) {
     element.dispatchEvent(new Event(event));
 }
+function clearElement(element) {
+    while (element.children.length > 0) {
+        element.children[0].remove();
+    }
+}
 
 function showLoginPage() {
-    const conversationPage = `
-    <div id="userInputs">
-        <label>Client ID: 
-            <input type="text" name="clientId">
-        </label>
-        <label>Environment: 
-            <select name="environment">
-                <option>mypurecloud.com</option>
-                <option>use2.us-gov-pure.cloud</option>
-                <option selected>usw2.pure.cloud</option>
-                <option>cac1.pure.cloud</option>
-                <option>mypurecloud.ie</option>
-                <option>euw2.pure.cloud</option>
-                <option>mypurecloud.de</option>
-                <option>aps1.pure.cloud</option>
-                <option>mypurecloud.jp</option>
-                <option>apne2.pure.cloud</option>
-                <option>mypurecloud.com.au</option>
-                <option>sae1.pure.clou</option>
-            </select>
-        </label>
-        <button id="login">Log In</button>
-    </div>`;
-    document.getElementById('page').innerHTML = conversationPage;
-    document.getElementById('login').addEventListener('click', login);
+    const urls = ["usw2.pure.cloud", "mypurecloud.com", "use2.us-gov-pure.cloud", "cac1.pure.cloud", "mypurecloud.ie", "euw2.pure.cloud", "mypurecloud.de", "aps1.pure.cloud", "mypurecloud.jp", "apne2.pure.cloud", "mypurecloud.com.au", "sae1.pure.cloud"]
+    const inputsWrapper = newElement('div', {id: "userInputs"});
+    const clientIdLabel = newElement('label');
+    clientIdLabel.innerText = "Client ID: ";
+    const clientInput = newElement('input', {name: "clientId"});
+    addElement(clientInput, clientIdLabel);
+    const environmentLabel = newElement('label');
+    environmentLabel.innerText = "Environment: ";
+    const environmentSelect = newElement('select', {name: "environment"});
+    for (let url of urls) {
+        const option = newElement('option');
+        option.innerText = url;
+        addElement(option, environmentSelect);
+    }
+    addElement(environmentSelect, environmentLabel);
+    const loginButton = newElement("button", {id: "login"});
+    loginButton.innerText = "Log In";
+    registerElement(loginButton, "click", login);
+    const parent = eById('page');
+    clearElement(parent);
+    addElements([clientIdLabel, environmentLabel, loginButton], inputsWrapper);
+    addElement(inputsWrapper, parent);
 }
 
 function showMainMenu() {
-    const mainBody = `
-    <div id="tabList"></div>
-    <div id="tabContent">
-    </div>`;
-    document.getElementById('page').innerHTML = mainBody;
+    const page = eById('page');
+    clearElement(page);
+    const tabList = newElement('div', {id: "tabList"});
+    const tabContent = newElement('div', {id: "tabContent"});
+    addElements([tabList, tabContent], page);
     getOrgDetails().then(function(result) {
         document.getElementById("header").innerText = `Current Org Name: ${result.name} (${result.thirdPartyOrgName}) Current Org ID: ${result.id}`
-    }).catch(function(error) {console.error(error)});
+    }).catch(function(error) {console.error(error); logout();});
     showTabs();
 }
 
@@ -160,12 +162,10 @@ function loadFile(event) {
 
 function showTabs() {
     const tabList = eById('tabList');
-    while (tabList.children.length > 0) {
-        tabList.children[0].remove();
-    }
+    clearElement(tabList);
 
     for (let i = 0; i < window.tabs.length; i++) {
-        addElement(tabs[i], eById('tabList'));
+        addElement(tabs[i], tabList);
         if (i === 0) tabs[i].click();
     }
 }
