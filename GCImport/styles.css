@@ -8,6 +8,7 @@
     height: 0;
 }
 summary {
+    cursor: pointer;
     user-select: none;
     margin-top: .5em;
 }
@@ -20,6 +21,7 @@ summary {
     border-bottom: none;
     background-color: lightgrey;
     user-select: none;
+    cursor: pointer;
 }
 .tabHeader.selected {
     background-color: white;
