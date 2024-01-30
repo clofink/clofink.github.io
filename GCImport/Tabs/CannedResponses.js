@@ -3,16 +3,13 @@ addTab("Canned Responses", showCannedResponsePage);
 function showCannedResponsePage() {
     window.requiredFields = ["Name", "Library", "Type", "Content"];
     const container = newElement('div', {id: "userInputs"});
-    const label = newElement('label');
-    label.innerText = "Canned Responses CSV: ";
+    const label = newElement('label', {innerText: "Canned Responses CSV: "});
     const fileInput = newElement('input', {type: "file", accept: ".csv"});
     addElement(fileInput, label);
     registerElement(fileInput, "change", loadFile);
-    const startButton = newElement('button');
-    startButton.innerText = "Start";
+    const startButton = newElement('button', {innerText: "Start"});
     registerElement(startButton, "click", importCannedWrapper);
-    const logoutButton = newElement("button");
-    logoutButton.innerText = "Logout";
+    const logoutButton = newElement("button", {innerText: "Logout"});
     registerElement(logoutButton, "click", logout);
     const helpSection = addHelp([
         `Must have "response-management" scope`, 

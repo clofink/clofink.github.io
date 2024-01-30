@@ -28,6 +28,7 @@ function newElement(type, params) {
     const newElem = document.createElement(type);
     for (let param in params) {
         if (param === "class") newElem.classList.add(...params[param]);
+        else if (param === "innerText") newElem.innerText = params[param];
         else newElem.setAttribute(param, params[param])
     }
     return newElem;
@@ -53,21 +54,17 @@ function clearElement(element) {
 function showLoginPage() {
     const urls = ["usw2.pure.cloud", "mypurecloud.com", "use2.us-gov-pure.cloud", "cac1.pure.cloud", "mypurecloud.ie", "euw2.pure.cloud", "mypurecloud.de", "aps1.pure.cloud", "mypurecloud.jp", "apne2.pure.cloud", "mypurecloud.com.au", "sae1.pure.cloud"]
     const inputsWrapper = newElement('div', {id: "userInputs"});
-    const clientIdLabel = newElement('label');
-    clientIdLabel.innerText = "Client ID: ";
+    const clientIdLabel = newElement('label', {innerText: "Client ID: "});
     const clientInput = newElement('input', {name: "clientId"});
     addElement(clientInput, clientIdLabel);
-    const environmentLabel = newElement('label');
-    environmentLabel.innerText = "Environment: ";
+    const environmentLabel = newElement('label', {innerText: "Environment: "});
     const environmentSelect = newElement('select', {name: "environment"});
     for (let url of urls) {
-        const option = newElement('option');
-        option.innerText = url;
+        const option = newElement('option', {innerText: url});
         addElement(option, environmentSelect);
     }
     addElement(environmentSelect, environmentLabel);
-    const loginButton = newElement("button", {id: "login"});
-    loginButton.innerText = "Log In";
+    const loginButton = newElement("button", {id: "login", innerText: "Log In"});
     registerElement(loginButton, "click", login);
     const parent = eById('page');
     clearElement(parent);
@@ -82,20 +79,20 @@ function showMainMenu() {
     const tabContent = newElement('div', {id: "tabContent"});
     addElements([tabList, tabContent], page);
     getOrgDetails().then(function(result) {
-        document.getElementById("header").innerText = `Current Org Name: ${result.name} (${result.thirdPartyOrgName}) Current Org ID: ${result.id}`
-    }).catch(function(error) {console.error(error); logout();});
+        eById("header").innerText = `Current Org Name: ${result.name} (${result.thirdPartyOrgName}) Current Org ID: ${result.id}`
+    }).catch(function(error) {log(error, "error"); logout();});
     showTabs();
 }
 
 function login() {
-    window.localStorage.setItem('environment', document.querySelector('[name="environment"]').value);
-    window.location.replace(`https://login.${window.localStorage.getItem('environment')}/oauth/authorize?response_type=token&client_id=${document.querySelector('[name="clientId"]').value}&redirect_uri=${encodeURIComponent(location.origin + location.pathname)}`);
+    window.localStorage.setItem('environment', qs('[name="environment"]').value);
+    window.location.replace(`https://login.${window.localStorage.getItem('environment')}/oauth/authorize?response_type=token&client_id=${qs('[name="clientId"]').value}&redirect_uri=${encodeURIComponent(location.origin + location.pathname)}`);
 }
 
 function logout() {
     window.localStorage.removeItem('auth');
     window.localStorage.removeItem('environment');
-    document.getElementById('header').innerText = "Current Org Name: Current Org ID:";
+    eById('header').innerText = "Current Org Name: Current Org ID:";
     showLoginPage();
 }
 
@@ -172,12 +169,10 @@ function showTabs() {
 
 function addHelp(textList) {
     const details = newElement('details');
-    const summary = newElement("summary");
-    summary.innerText = "Help";
+    const summary = newElement("summary", {innerText: "Help"});
     const listContainer = newElement("ul");
     for (let text of textList) {
-        const listItem = newElement('li');
-        listItem.innerText = text;
+        const listItem = newElement('li', {innerText: text});
         addElement(listItem, listContainer);
     }
     addElements([summary, listContainer], details);
@@ -213,11 +208,10 @@ function addTab(tabName, renderCallback) {
         }
         newTab.classList.add("selected");
         const tabContainer = eById("tabContent");
-        tabContainer.innerHTML = "";
+        clearElement(tabContainer);
         addElement(renderCallback(), tabContainer);
     }
-    const newTab = newElement("div", {class: ["tabHeader"]});
-    newTab.innerText = tabName;
+    const newTab = newElement("div", {class: ["tabHeader"], innerText: tabName});
     registerElement(newTab, "click", tabSelected);
     tabs.push(newTab);
     if (eById("tabList")) showTabs();

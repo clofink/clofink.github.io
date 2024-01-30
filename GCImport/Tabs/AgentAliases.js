@@ -4,16 +4,13 @@ function showAgentAliasPage() {
     window.requiredFields = ["Email", "Alias"];
 
     const container = newElement('div', {id: "userInputs"});
-    const label = newElement('label');
-    label.innerText = "Agent Aliases CSV: ";
+    const label = newElement('label', {innerText: "Agent Aliases CSV: "});
     const fileInput = newElement('input', {type: "file", accept: ".csv"});
     addElement(fileInput, label);
     registerElement(fileInput, "change", loadFile);
-    const startButton = newElement('button');
-    startButton.innerText = "Start";
+    const startButton = newElement('button', {innerText: "Start"});
     registerElement(startButton, "click", importAgentAliasesWrapper);
-    const logoutButton = newElement("button");
-    logoutButton.innerText = "Logout";
+    const logoutButton = newElement("button", {innerText: "Logout"});
     registerElement(logoutButton, "click", logout);
     const helpSection = addHelp([
         `Must have "users" scope`, 

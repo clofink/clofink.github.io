@@ -4,16 +4,13 @@ function showSkillsPage() {
     window.requiredFields = ["Name"];
 
     const container = newElement('div', {id: "userInputs"});
-    const label = newElement('label');
-    label.innerText = "Skills CSV: ";
+    const label = newElement('label', {innerText: "Skills CSV: "});
     const fileInput = newElement('input', {type: "file", accept: ".csv"});
     addElement(fileInput, label);
     registerElement(fileInput, "change", loadFile);
-    const startButton = newElement('button');
-    startButton.innerText = "Start";
+    const startButton = newElement('button', {innerText: "Start"});
     registerElement(startButton, "click", importSkillsWrapper);
-    const logoutButton = newElement("button");
-    logoutButton.innerText = "Logout";
+    const logoutButton = newElement("button", {innerText: "Logout"});
     registerElement(logoutButton, "click", logout);
     const helpSection = addHelp([
         `Must have "routing" scope`, 

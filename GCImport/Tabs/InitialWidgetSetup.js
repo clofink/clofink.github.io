@@ -4,16 +4,13 @@ function showWidgetsPage() {
     window.requiredFields = ["Configuration Name", "Inbound Flow Name", "Deployment Name"];
 
     const container = newElement('div', { id: "userInputs" });
-    const label = newElement('label');
-    label.innerText = "Widgets CSV: ";
+    const label = newElement('label', {innerText: "Widgets CSV: "});
     const fileInput = newElement('input', { type: "file", accept: ".csv" });
     addElement(fileInput, label);
     registerElement(fileInput, "change", loadFile);
-    const startButton = newElement('button');
-    startButton.innerText = "Start";
+    const startButton = newElement('button', {innerText: "Start"});
     registerElement(startButton, "click", importWidgetsWrapper);
-    const logoutButton = newElement("button");
-    logoutButton.innerText = "Logout";
+    const logoutButton = newElement("button", {innerText: "Logout"});
     registerElement(logoutButton, "click", logout);
     const helpSection = addHelp([
         `Must have "webdeployments" and "architect" scopes`, 

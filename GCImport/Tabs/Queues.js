@@ -4,16 +4,13 @@ function showQueuesPage() {
     window.requiredFields = ["Name"];
 
     const container = newElement('div', {id: "userInputs"});
-    const label = newElement('label');
-    label.innerText = "Queues CSV: ";
+    const label = newElement('label', {innerText: "Queues CSV: "});
     const fileInput = newElement('input', {type: "file", accept: ".csv"});
     addElement(fileInput, label);
     registerElement(fileInput, "change", loadFile);
-    const startButton = newElement('button');
-    startButton.innerText = "Start";
+    const startButton = newElement('button', {innerText: "Start"});
     registerElement(startButton, "click", importQueuesWrapper);
-    const logoutButton = newElement("button");
-    logoutButton.innerText = "Logout";
+    const logoutButton = newElement("button", {innerText: "Logout"});
     registerElement(logoutButton, "click", logout);
     const helpSection = addHelp([
         `Must have "routing" scope`, 
@@ -205,7 +202,7 @@ function showQueuesPage() {
                     queueCurrent = queueCurrent[parts[i]];
                 }
                 else {
-                    console.error(`No matching key found for ${parts[i]}`);
+                    log(`No matching key found for ${parts[i]}`, "error");
                 }
             }
         }
