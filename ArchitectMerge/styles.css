@@ -1,0 +1,30 @@
+#taskContainer {
+    display: inline-block;
+}
+
+.displaySection {
+    display: inline-block;
+    height: 20em;
+    text-align: center;
+}
+
+.section1, .section3 {
+    border: 1px #000000 solid;
+    height: 20em;
+    overflow-y: scroll;
+    text-align: left;
+    width: 100%;
+}
+
+.section2 {
+    width: 16%;
+    text-align: center;
+    overflow: hidden;
+}
+.section2 button {
+    width: 75%;
+    margin-bottom: .5em;
+}
+body {
+    margin: .5em;
+}
