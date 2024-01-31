@@ -19,8 +19,6 @@ function copyChecked(element) {
     const source = element.dataset.copyFrom;
     const dest = element.dataset.copyTo;
     for (let taskId of getCheckedTaskIds(eById(source))) {
-        log(window[source]);
-        log(window[dest]);
         copyTaskFromAToB(window[source], window[dest], taskId);
     }
     refreshTable();
@@ -38,7 +36,8 @@ function copyAll(element) {
 
 function downloadFlow(element) {
     if (element instanceof Event) element = element.target;
-    createAndLoadJSON(qs('#flow1Tasks .collection').innerText, encodeDigitalBotFlow(window[element.dataset.Source]));
+    const selectedFlow = window[element.dataset.source];
+    createAndLoadJSON(selectedFlow.name, encodeDigitalBotFlow(selectedFlow));
 }
 
 function loadAndDisplay() {
@@ -117,11 +116,10 @@ function readFile(event) {
             try {
                 let fileContents = decodeDigitalBotFlow(data.target.result);
                 log(fileContents);
-                log(fileLocation);
                 window[fileLocation] = fileContents;
             }
             catch (error) {
-                console.error(error);
+                log(error, "error");
                 throw `${file.name} does not contain valid JSON.`;
             }
         })
