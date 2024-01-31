@@ -1,11 +1,13 @@
 #taskContainer {
     display: inline-block;
+    margin-top: 1em;
 }
 
 .displaySection {
     display: inline-block;
     height: 20em;
     text-align: center;
+    width: calc(40vw - .8em);
 }
 
 .section1, .section3 {
@@ -14,10 +16,25 @@
     overflow-y: scroll;
     text-align: left;
     width: 100%;
+    margin-bottom: .5em;
+}
+
+.collection-item {
+    padding: .5em;
+    user-select: none;
+    cursor: pointer;
+}
+
+.collection-item input {
+    margin-right: .5em;
+}
+
+:nth-child(odd of .collection-item) {
+    background-color: #ebebeb;
 }
 
 .section2 {
-    width: 16%;
+    width: 20vw;
     text-align: center;
     overflow: hidden;
 }
