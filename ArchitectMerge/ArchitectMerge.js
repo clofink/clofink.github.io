@@ -11,15 +11,17 @@ registerElement(eById("copyCheckedLTR"), "click", copyChecked);
 registerElement(eById("copyAllRTL"), "click", copyAll);
 registerElement(eById("copyAllLTR"), "click", copyAll);
 
-window.flowInput1;
-window.flowInput2;
+window.flow1Tasks;
+window.flow2Tasks;
 
 function copyChecked(element) {
     if (element instanceof Event) element = element.target;
     const source = element.dataset.copyFrom;
     const dest = element.dataset.copyTo;
     for (let taskId of getCheckedTaskIds(eById(source))) {
-        copyTaskFromAToB(flowInput1File, flowInput2File, taskId);
+        log(window[source]);
+        log(window[dest]);
+        copyTaskFromAToB(window[source], window[dest], taskId);
     }
     refreshTable();
 }
@@ -28,16 +30,15 @@ function copyAll(element) {
     if (element instanceof Event) element = element.target;
     const source = element.dataset.copyFrom;
     const dest = element.dataset.copyTo;
-    for (let taskId of getAllTaskIds(source)) {
-        copyTaskFromAToB(flowInput2File, flowInput1File, taskId);
+    for (let taskId of getAllTaskIds(eById(source))) {
+        copyTaskFromAToB(window[source], window[dest], taskId);
     }
     refreshTable();
 }
 
 function downloadFlow(element) {
     if (element instanceof Event) element = element.target;
-
-    createAndLoadJSON(qs('#flow1Tasks .collection').innerText, encodeDigitalBotFlow(flowInput1File));
+    createAndLoadJSON(qs('#flow1Tasks .collection').innerText, encodeDigitalBotFlow(window[element.dataset.Source]));
 }
 
 function loadAndDisplay() {
@@ -45,7 +46,7 @@ function loadAndDisplay() {
         element.style.display = 'none';
     })
     // check if the file input is "ready"
-    if (!window.flowInput1File || !window.flowInput2File) {
+    if (!window.flow1Tasks || !window.flow2Tasks) {
         throw 'missing neccessary .i3DigitalBotFlow files';
     }
 
@@ -111,11 +112,13 @@ function readFile(event) {
         }
         const file = event.target.files[0];
         const reader = new FileReader();
+        const fileLocation = event.target.dataset.file;
         reader.addEventListener('load', function(data) {
             try {
                 let fileContents = decodeDigitalBotFlow(data.target.result);
                 log(fileContents);
-                window[`${event.target.id}`] = fileContents;
+                log(fileLocation);
+                window[fileLocation] = fileContents;
             }
             catch (error) {
                 console.error(error);
@@ -146,11 +149,9 @@ function createAndLoadJSON(fileName, result) {
 
 function getCheckedTaskIds(collectionList) {
     let selectedTaskIds = [];
-    collectionList.querySelectorAll('li').forEach(function(element) {
-        if (element.classList.contains('collection-item')) {
-            if (element.querySelector('input').checked) {
-                selectedTaskIds.push(element.getAttribute('data-task-id'));
-            }
+    qsa('.collection-item', collectionList).forEach(function(element) {
+        if (qs('input', element).checked) {
+            selectedTaskIds.push(element.dataset.taskId);
         }
     })
     return selectedTaskIds;
@@ -158,10 +159,8 @@ function getCheckedTaskIds(collectionList) {
 
 function getAllTaskIds(collectionList) {
     let selectedTaskIds = [];
-    collectionList.querySelectorAll('li').forEach(function(element) {
-        if (element.classList.contains('collection-item')) {
-            selectedTaskIds.push(element.getAttribute('data-task-id'));
-        }
+    qsa('.collection-item', collectionList).forEach(function(element) {
+        selectedTaskIds.push(element.dataset.taskId);
     })
     return selectedTaskIds;
 }
@@ -172,17 +171,17 @@ function refreshTable() {
     clearElement(flow1List);
     clearElement(flow2List);
 
-    flow1List.appendChild(createHeader(flowInput1File.name));
-    const list1 = newElement('ul', {class: ["collection"]})
-    for (let task of flowInput1File.flowSequenceItemList) {
+    flow1List.appendChild(createHeader(flow1Tasks.name));
+    const list1 = newElement('div', {class: ["collection"]})
+    for (let task of flow1Tasks.flowSequenceItemList) {
         if (task.__type === "Task") {
             addElement(createTaskListing(task.name, task.id), list1);
         }
     }
     addElement(list1, flow1List);
-    flow2List.appendChild(createHeader(flowInput2File.name));
-    const list2 = newElement('ul', {class: ["collection"]})
-    for (let task of flowInput2File.flowSequenceItemList) {
+    flow2List.appendChild(createHeader(flow2Tasks.name));
+    const list2 = newElement('div', {class: ["collection"]})
+    for (let task of flow2Tasks.flowSequenceItemList) {
         if (task.__type === "Task") {
             addElement(createTaskListing(task.name, task.id), list2);
         }
@@ -196,13 +195,11 @@ function createHeader(flowName) {
 }
 
 function createTaskListing(taskName, taskId) {
-    const listItem = newElement('li', {class: ["collection-item"], "data-task-id": taskId});
-    const labelElem = newElement('label');
+    const labelElem = newElement('label', {class: ["collection-item"], "data-task-id": taskId});
     const inputElem = newElement('input', {type: "checkbox"});
     const spanElem = newElement('span', {innerText: taskName});
     addElements([inputElem, spanElem], labelElem);
-    addElement(labelElem, listItem);
-    return listItem;
+    return labelElem;
 }
 
 function getUsedSlotNames(task) {

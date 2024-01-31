@@ -21,10 +21,27 @@
     text-align: center;
     overflow: hidden;
 }
+
 .section2 button {
     width: 75%;
     margin-bottom: .5em;
 }
+
 body {
     margin: .5em;
+}
+
+.header {
+    text-align: center;
+    font-size: large;
+    margin-top: .5em;
+    margin-bottom: .5em;
+}
+
+ul {
+    margin-block-start: 0;
+}
+
+.collection label {
+    display: block;
 }

@@ -11,10 +11,10 @@
     <div class="container">
         <div class="inputContainer">
             <label>
-                <input id="flowInput1" accept=".i3DigitalBotFlow" type="file">
+                <input id="flowInput1" data-file="flow1Tasks" accept=".i3DigitalBotFlow" type="file">
             </label>
             <label>
-                <input id="flowInput2" accept=".i3DigitalBotFlow" type="file">
+                <input id="flowInput2" data-file="flow2Tasks" accept=".i3DigitalBotFlow" type="file">
             </label>
             <button id="startButton">Load Tasks</button>
             <div id="taskContainer" class="visibleWhenDone" style="display:None">
@@ -22,21 +22,21 @@
                     <div id="flow1Tasks" class="section1">
 
                     </div>
-                    <button id='downloadLeft'>Download Left</button>
-                </div><!--
-                --><div id="taskActions" class="displaySection section2">
+                    <button id='downloadLeft' data-source="flow1Tasks">Download Left</button>
+                </div>
+                <div id="taskActions" class="displaySection section2">
                     <div id="taskButtons">
                         <button id="copyCheckedRTL" data-copy-from="flow2Tasks" data-copy-to="flow1Tasks">&lt; Copy</button>
                         <button id="copyCheckedLTR" data-copy-from="flow1Tasks" data-copy-to="flow2Tasks">Copy &gt;</button>
                         <button id="copyAllRTL" data-copy-from="flow2Tasks" data-copy-to="flow1Tasks">&lt;&lt; Copy All</button>
                         <button id="copyAllLTR" data-copy-from="flow1Tasks" data-copy-to="flow2Tasks">Copy All &gt;&gt;</button>
                     </div>
-                </div><!--
-                --><div class="displaySection">
+                </div>
+                <div class="displaySection">
                     <div id="flow2Tasks" class="section3">
 
                     </div>
-                    <button id='downloadRight'>Download Right</button>
+                    <button id='downloadRight' data-source="flow2Tasks">Download Right</button>
                 </div>
             </div>
         </div>
