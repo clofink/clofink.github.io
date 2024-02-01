@@ -351,12 +351,16 @@ function displayPopulationInfo(peopleList) {
     if (tableExists('populationTable')) {
         clearTable('populationTable');
     }
-    let populationInfoDiv = eById('populationInfo');
-    let headers = ['Name', 'Age', 'Race', 'Birth Year', 'Death Year', 'Gender', 'Gender Preference', 'Number of Children', 'Worth', 'Job Title', 'Years in Job', 'Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
-    let table = createTable(headers);
+    const populationInfoDiv = eById('populationInfo');
+    const headers = ['Name', 'Age', 'Race', 'Birth Year', 'Death Year', 'Gender', 'Gender Preference', 'Number of Children', 'Worth', 'Job Title', 'Years in Job', 'Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
+    const table = createTable(headers);
     table.id = 'populationTable'
+    addElement(fillPeopleTable(peopleList, table), populationInfoDiv);
+}
+
+function fillPeopleTable(peopleList, table) {
     for (let person of peopleList) {
-        let rowData = [];
+        const rowData = [];
         rowData.push(person.getFullName());
         rowData.push(person.getAge());
         rowData.push(person.getRace());
@@ -368,19 +372,19 @@ function displayPopulationInfo(peopleList) {
         rowData.push(person.getValue() ? person.getValue() : 0);
         rowData.push(person.getJob() ? person.getJob().getTitle() : '-');
         rowData.push(person.getJob() ? person.getJob().getYearsInPosition() : 0);
-        let personStats = person.getStats();
+        const personStats = person.getStats();
         rowData.push(personStats.STR);
         rowData.push(personStats.DEX);
         rowData.push(personStats.CON);
         rowData.push(personStats.INT);
         rowData.push(personStats.WIS);
         rowData.push(personStats.CHA);
-        let dataRow = createDataRow(rowData);
-        dataRow.addEventListener('click', logMorePersonInfo);
+        const dataRow = createDataRow(rowData);
+        registerElement(dataRow, "click", logMorePersonInfo);
         dataRow.id = person.getPersonId();
-        table.appendChild(dataRow);
+        addElement(dataRow, table);
     }
-    populationInfoDiv.appendChild(table);
+    return table;
 }
 
 function logMorePersonInfo(event) {
@@ -657,31 +661,7 @@ function rebuildTableRows(sortedPopulation) {
     for (let dataRow of dataRows) {
         table.removeChild(dataRow.parentElement);
     }
-    for (let person of sortedPopulation) {
-        const rowData = [];
-        rowData.push(person.getFullName());
-        rowData.push(person.getAge());
-        rowData.push(person.getRace());
-        rowData.push(person.getBirthYear());
-        rowData.push(person.getDeathYear() ? person.getDeathYear() : '-');
-        rowData.push(person.getGender());
-        rowData.push(person.getGenderPreference());
-        rowData.push(person.getChildren().length);
-        rowData.push(person.getValue() ? person.getValue() : 0);
-        rowData.push(person.getJob() ? person.getJob().getTitle() : '-');
-        rowData.push(person.getJob() ? person.getJob().getYearsInPosition() : 0);
-        const personStats = person.getStats();
-        rowData.push(personStats.STR);
-        rowData.push(personStats.DEX);
-        rowData.push(personStats.CON);
-        rowData.push(personStats.INT);
-        rowData.push(personStats.WIS);
-        rowData.push(personStats.CHA);
-        const dataRow= createDataRow(rowData);
-        registerElement(dataRow, "click", logMorePersonInfo);
-        dataRow.id = person.getPersonId();
-        addElement(dataRow, table);
-    }
+    fillPeopleTable(sortedPopulation, table);
 }
 
 function createDataRow(data) {
