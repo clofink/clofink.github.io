@@ -697,7 +697,6 @@ function yearPasses(town) {
     for (let person of currentLivingPeople) {
         // only get the person's person ID once
         let personId = person.getPersonId();
-        let isPersonDead = person.getIsDead();
         // collect taxes from all residents
         if (person.getValue() > 0) {
             let taxes = calculateTaxes(person.getValue(), town.getTaxRate());
@@ -713,7 +712,7 @@ function yearPasses(town) {
             person.setValue(person.getValue() - expenses);
         }    
         let currentAge = person.getAge();
-        if (isPersonDead) {
+        if (person.getIsDead()) {
             continue;
         }
         // 36 chances a year to meet people (once every ~10 days)
@@ -730,7 +729,7 @@ function yearPasses(town) {
             if (promotionSeekChance === 0) lookForBetterJob(person, town);
         }
         // if they don't have a job, let them find one
-        if (!isPersonDead && !person.getJob() && currentAge > person.getAdolescence() && currentAge <= person.getRetirementAge()) {
+        if (!person.getIsDead() && !person.getJob() && currentAge > person.getAdolescence() && currentAge <= person.getRetirementAge()) {
             findAJob(person, town);
         }
         // this is for having kids
@@ -804,7 +803,7 @@ function yearPasses(town) {
             person.addLifeEvent(`${town.getCurrentYear()}: ${person.getGender() == 'male' ? 'He' : 'She'} retired from ${person.getGender() == 'male' ? 'his' : 'her'} job as a ${person.getJob().getTitle()}`);
             person.retire();
         }
-        if (!isPersonDead && currentAge > person.getAdolescence() && !person.getHouse()) {
+        if (!person.getIsDead() && currentAge > person.getAdolescence() && !person.getHouse()) {
             // check for a house in buildings or make one
             // only find a house if the owner of where you live is not your spouse or you do not live in a house
             if (!person.getHouse() && (person.getSpouse() && !person.getSpouse().getHouse())) {
