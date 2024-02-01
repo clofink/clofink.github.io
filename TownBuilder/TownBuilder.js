@@ -1,5 +1,4 @@
 var population = [];
-var tree;
 var newTown;
 
 function getPersonById(personId, personList) {
@@ -64,43 +63,14 @@ function doesRandomEventHappen(percentage) {
     return false
 }
 
-// create a tree with the passed person as the root node
-// formatting for https://treehouse.gartner.io/
-// https://github.com/ErikGartner/dTree
-function formatForDisplay(person) {
-    let formattedPerson = {};
-    formattedPerson.name = `${person.getFullName()} (${person.getBirthYear()}${person.getDeathYear() ? " - " + person.getDeathYear() : ""})`;
-    formattedPerson.class = person.getGender() == 'male'? 'man' : 'woman';
-    if (person.getSpouse()) {
-        let spouse = person.getSpouse();
-        formattedPerson.marriages = [];
-        let marriage = {};
-        marriage.spouse = {};
-        marriage.spouse.name = `${spouse.getFullName()} (${spouse.getBirthYear()}${spouse.getDeathYear() ? " - " + spouse.getDeathYear() : ""})`;
-        marriage.spouse.class = person.getSpouse().getGender() == 'male'? 'man' : 'woman';
-        if (person.getChildren().length > 0) {
-            marriage.children = [];
-            for (let child of person.getChildren()) {
-                marriage.children.push(formatForDisplay(child));
-            }
-        }
-        formattedPerson.marriages.push(marriage);
-    }
-    return formattedPerson;
-}
-
 var randomFunction;
 
 function generateNewTown() {
-    let seed = qs('[name="randomSeed"]').value;
-    if (seed) {
-        randomFunction = new alea(seed);
-    }
-    else {
-        let generatedSeed = Math.random().toString(36).substr(2, 9);
-        randomFunction = new alea(generatedSeed);
-        qs('[name="randomSeed"]').value = generatedSeed;
-    }
+    const seedElem = qs('[name="randomSeed"]');
+    const seed = seedElem.value || Math.random().toString(36).substring(2, 11);
+    seedElem.value = seed;
+    randomFunction = new alea(seed);
+
     newTown = new Town(getUserInputValues());
     populateTown(newTown);
     // need to add jobs to the town. is it worth generating jobs just to check the requirements function?? 
@@ -140,7 +110,6 @@ function generateNewTown() {
         }
     }
     let yearsToRun = getUserInputValues().currentYear - newTown.getYearOfIncorporation();
-    log(`Running for ${yearsToRun} years`);
     for (let t = 0; t < yearsToRun; t++) {
         yearPasses(newTown);
     }
@@ -677,6 +646,7 @@ function processLifeEvents(person, town) {
     const currentAge = person.getAge();
     const personId = person.id;
     const spouse = person.getSpouse();
+    const gender = person.getGender();
     // list of life events and handlers for them
 
     // pay/make money
@@ -687,18 +657,18 @@ function processLifeEvents(person, town) {
         meetOtherPeople(person, town);
     }
     // job/promotion search
-    jobSearch(person, town);
+    jobSearch(person, town, currentAge);
     // marriage
     if (currentAge >= person.getAdolescence() && !spouse) {
-        tryToGetMarried(person, town);
+        tryToGetMarried(person, town, gender);
     }
     // buy a house
     houseHunt(person, town, currentAge, spouse);
     // have kids
-    haveOrAdoptKids(person, town, spouse);
+    haveOrAdoptKids(person, town, spouse, gender);
     // retire
     if (currentAge > person.getRetirementAge() && person.getJob()) {
-        person.addLifeEvent(`${town.getCurrentYear()}: ${person.getGender() == 'male' ? 'He' : 'She'} retired from ${person.getGender() == 'male' ? 'his' : 'her'} job as a ${person.getJob().getTitle()}`);
+        person.addLifeEvent(`${town.getCurrentYear()}: ${gender == 'male' ? 'He' : 'She'} retired from ${gender == 'male' ? 'his' : 'her'} job as a ${person.getJob().getTitle()}`);
         person.retire();
     }
     // if a person is in the orphanage when they are 18, they leave
@@ -730,9 +700,8 @@ function personalFinances(person, town) {
     }
 }
 
-function jobSearch(person, town) {
+function jobSearch(person, town, currentAge) {
     const myJob = person.getJob();
-    const currentAge = person.getAge();
     if (myJob) {
         person.addValue(myJob.getSalary());
         myJob.setYearsInPosition(myJob.getYearsInPosition() + 1);
@@ -745,11 +714,10 @@ function jobSearch(person, town) {
     }
 }
 
-function haveOrAdoptKids(person, town, spouse) {
+function haveOrAdoptKids(person, town, spouse, personGender) {
     const currentYear = town.getCurrentYear();
     if (spouse && !spouse.getIsDead()) {
         // if they're a same-sex couple, check for available adoptions
-        const personGender = person.getGender();
         const spouseGender = spouse.getGender();
         if (personGender == spouseGender) {
             // make sure there are people in the orphanage
@@ -957,27 +925,29 @@ function meetOtherPeople(person, town) {
     }
 }
 
-function tryToGetMarried(person, town) {
-    let newSpouse = findAPartner(person, town.getLivingPopulation());
+function tryToGetMarried(person, town, gender) {
+    let newSpouse = findAPartner(person, town.getLivingPopulation(), gender);
     if (newSpouse) {
         person.setSpouse(newSpouse);
-        person.addLifeEvent(`${town.getCurrentYear()}: ${person.getGender() == 'male' ? 'He' : 'She'} married ${newSpouse.getFullName()}`);
+        person.addLifeEvent(`${town.getCurrentYear()}: ${gender == 'male' ? 'He' : 'She'} married ${newSpouse.getFullName()}`);
         newSpouse.addLifeEvent(`${town.getCurrentYear()}: ${newSpouse.getGender() == 'male' ? 'He' : 'She'} married ${person.getFullName()}`);
         // if they have a house
-        if (person.getHouse()) {
+        const currentHouse = person.getHouse();
+        const spouseHouse = newSpouse.getHouse();
+        if (currentHouse) {
             // and their spouse has a house
-            if (newSpouse.getHouse()) {
+            if (spouseHouse) {
                 // remove the spouse's house
-                newSpouse.getHouse().removeOwner();
+                spouseHouse.removeOwner();
                 newSpouse.setHouse(undefined);
             }
             // then add their spouse to their house
-            addPersonToHouse(newSpouse, person.getHouse());
+            addPersonToHouse(newSpouse, currentHouse);
         }
         // if they do not have a house and their spouse does
-        else if (newSpouse.getHouse()) {
+        else if (spouseHouse) {
             // then add them to their spouses house
-            addPersonToHouse(person, newSpouse.getHouse());
+            addPersonToHouse(person, spouseHouse);
         }
     }
 }
@@ -1058,14 +1028,14 @@ function makePersonHouseOwner(person, house) {
     addPersonToHouse(person, house);
 }
 
-function findAPartner(person, population) {
+function findAPartner(person, population, gender) {
     // only looping through people they have met and eliminating based on reputation quick
     // log(`Checking for ${person.getFullName()}`);
     for (let potentialPartnerId in person.getReputations()) {
         if (person.getReputationByPersonId(potentialPartnerId) < 5) {
             continue;
         }
-        let potentialPartner = getPersonById(potentialPartnerId, population);
+        const potentialPartner = getPersonById(potentialPartnerId, population);
         if (!potentialPartner) {
             continue;
         }
@@ -1083,10 +1053,10 @@ function findAPartner(person, population) {
             continue;
         }
         // make sure they're a matching gender preference
-        if (potentialPartner.getGender() != person.getGenderPreference()) {
+        if (potentialPartner.getGender() !== person.getGenderPreference()) {
             continue;
         }
-        if (person.getGender() != potentialPartner.getGenderPreference()) {
+        if (gender !== potentialPartner.getGenderPreference()) {
             continue;
         }
         // makes sure they are not a cousin or sibling (or aunt/uncle)
@@ -1206,56 +1176,6 @@ function lookForBetterJob(person, town) {
             jobBuilding.addResident(person);
         }
         break;
-    }
-}
-
-function checkForPromotion(person, town) {
-    for (let job of town.getJobMarket()) {
-        if (job.getPerson()) {
-            continue;
-        }
-        // This is not complete, still need to fully figure out re-assigning a building owner or abandoning it when a new job appears
-        if (job.getSalary() > person.getJob().getSalary()) {
-            let previousJob = person.getJob();
-            if (previousJob.getBuildingRequired() && previousJob.getBuilding()) {
-                let previousJobBuilding = previousJob.getBuilding();
-                if (previousJobBuilding.getOwner() == person) {
-                    if (previousJobBuilding.getResidents().length > 1) {
-                        for (let resident of previousJobBuilding.getResidents()) {
-                            if (resident != person) {
-                                previousJobBuilding.setOwner(resident);
-                                break;
-                            }
-                        }
-                    }
-                    else {
-                        previousJobBuilding.removeOwner();
-                    }
-                }
-            }
-            job.setYearsInPosition(0);
-            person.setJob(job);
-            job.setPerson(person);
-            previousJob.removePerson();
-            person.addLifeEvent(`${town.getCurrentYear()}: ${person.getGender() == 'male' ? 'He' : 'She'} got promoted from ${previousJob.getTitle()} to ${job.getTitle()}`);
-            if (job.getBuildingRequired() && !job.getBuilding()) {
-                // if you're getting a job that requires a building and doesn't have one
-                // create one
-                job.createBuilding();
-                let jobBuilding = job.getBuilding();
-                town.addBuilding(jobBuilding);
-                jobBuilding.setOwner(person);
-                jobBuilding.addResident(person);
-            }
-            if (job.getBuildingRequired() && job.getBuilding()) {
-                let jobBuilding = job.getBuilding();
-                if (!jobBuilding.getOwner()) {
-                    jobBuilding.setOwner(person);
-                }
-                jobBuilding.addResident(person);
-            }
-            break;
-        }
     }
 }
 
