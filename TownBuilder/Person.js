@@ -125,8 +125,9 @@ class Person {
     addValue(value) {
         this.value = this.value + value;
     }
-    decreasePersonReputation(personId) {
-        this.reputations[personId] ? this.reputations[personId]-- : this.reputations[personId] = -1;
+    decreasePersonReputation(personId, value) {
+        value = value || 1;
+        this.reputations[personId] ? this.reputations[personId] -= value : this.reputations[personId] = -value;
     }
     determineInheritence() {
         // currently, I am not subtracting from their wealth
@@ -298,8 +299,9 @@ class Person {
     getValue() {
         return this.value;
     }
-    increasePersonReputation(personId) {
-        this.reputations[personId] ? this.reputations[personId]++ : this.reputations[personId] = 1;
+    increasePersonReputation(personId, value) {
+        value = value || 1;
+        this.reputations[personId] ? this.reputations[personId] += value : this.reputations[personId] = value;
     }
     makeId() {
         return randomFunction().toString(36).substr(2, 9);
