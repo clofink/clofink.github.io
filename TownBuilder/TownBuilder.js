@@ -148,7 +148,7 @@ function populateTown(town) {
     for (let i = 0; i < town.getNumberOfFounders(); i++) {
         // let newPerson = new Human({ageRange: [0,5], currentYear: town.getCurrentYear()});
         let newPerson = createPerson(getRandomItemInList(townRaces), {currentYear: town.getCurrentYear()});
-        newPerson.addLifeEvent(`${newPerson.getBirthYear()}: ${newPerson.getGender() == 'male' ? 'He' : 'She'} was born`);
+        newPerson.addLifeEvent(newPerson.getBirthYear(), "{P} was born");
         newPerson.setStats(assignStats(rollStats()));
         town.addToPopulation(newPerson)
     }
@@ -645,30 +645,32 @@ function createDataRow(data) {
 function processLifeEvents(person, town) {
     const currentAge = person.getAge();
     const personId = person.id;
-    const spouse = person.getSpouse();
     const gender = person.getGender();
+    const currentYear = town.getCurrentYear();
+    let spouse = person.getSpouse();
+    let currentJob = person.getJob();
     // list of life events and handlers for them
 
     // pay/make money
     personalFinances(person, town);
     // meet people
-    let meetChance = person.getJob() ? person.getJob().getMeetChance() : 36;
+    let meetChance = currentJob ? currentJob.getMeetChance() : 36;
     for (let p = 0; p < meetChance; p++) {
-        meetOtherPeople(person, town);
+        meetOtherPeople(person, town.getLivingPopulation(), currentYear);
     }
     // job/promotion search
-    jobSearch(person, town, currentAge);
+    currentJob = jobSearch(person, town, currentAge, currentJob);
     // marriage
     if (currentAge >= person.getAdolescence() && !spouse) {
-        tryToGetMarried(person, town, gender);
+        spouse = tryToGetMarried(person, town, gender);
     }
     // buy a house
     houseHunt(person, town, currentAge, spouse);
     // have kids
     haveOrAdoptKids(person, town, spouse, gender);
     // retire
-    if (currentAge > person.getRetirementAge() && person.getJob()) {
-        person.addLifeEvent(`${town.getCurrentYear()}: ${gender == 'male' ? 'He' : 'She'} retired from ${gender == 'male' ? 'his' : 'her'} job as a ${person.getJob().getTitle()}`);
+    if (currentAge > person.getRetirementAge() && currentJob) {
+        person.addLifeEvent(town.getCurrentYear(), `{P} retired from {PP} job as a ${currentJob.getTitle()}`);
         person.retire();
     }
     // if a person is in the orphanage when they are 18, they leave
@@ -685,33 +687,34 @@ function processLifeEvents(person, town) {
 
 function personalFinances(person, town) {
     // collect taxes from all residents
-    if (person.getValue() > 0) {
-        const taxes = calculateTaxes(person.getValue(), town.getTaxRate());
-        person.setValue(person.getValue() - taxes);
+    const currentValue = person.getValue();
+    if (currentValue > 0) {
+        const taxes = calculateTaxes(currentValue, town.getTaxRate());
+        person.setValue(currentValue - taxes);
         town.addToCoffers(taxes);
     }
     // calculate personal expenses
+    const valueAfterTaxes = person.getValue();
     const expenses = calculateExpenses(person);
-    if ((person.getValue() - expenses) < 0) {
+    if ((valueAfterTaxes - expenses) < 0) {
         person.setValue(0);
     }
     else {
-        person.setValue(person.getValue() - expenses);
+        person.setValue(valueAfterTaxes - expenses);
     }
 }
 
-function jobSearch(person, town, currentAge) {
-    const myJob = person.getJob();
+function jobSearch(person, town, currentAge, myJob) {
     if (myJob) {
         person.addValue(myJob.getSalary());
         myJob.setYearsInPosition(myJob.getYearsInPosition() + 1);
-        const promotionSeekChance = getRandomNumberInRange(0, 3);
-        if (promotionSeekChance === 0) lookForBetterJob(person, town);
+        if (doesRandomEventHappen(25)) lookForBetterJob(person, town);
     }
     // if they don't have a job, let them find one
     else if (currentAge > person.getAdolescence() && currentAge <= person.getRetirementAge()) {
-        findAJob(person, town);
+        myJob = findAJob(person, town);
     }
+    return myJob;
 }
 
 function haveOrAdoptKids(person, town, spouse, personGender) {
@@ -729,9 +732,9 @@ function haveOrAdoptKids(person, town, spouse, personGender) {
                     orphan.setParents([person, spouse]);
                     // FIXME: this doesn't deal with siblings???
                     person.addChild(orphan);
-                    orphan.addLifeEvent(`${currentYear}: ${orphan.getGender() == 'male' ? 'He' : 'She'} was adopted by ${orphan.getParents()[0].getFullName()} and ${orphan.getParents()[1].getFullName()}`);
-                    person.addLifeEvent(`${currentYear}: ${personGender == 'male' ? 'He' : 'She'} adopted ${orphan.getFullName()}`);
-                    spouse.addLifeEvent(`${currentYear}: ${spouseGender == 'male' ? 'He' : 'She'} adopted ${orphan.getFullName()}`);
+                    orphan.addLifeEvent(currentYear, `{P} was adopted by ${person.getFullName()} and ${spouse.getFullName()}`);
+                    person.addLifeEvent(currentYear, `{P} adopted ${orphan.getFullName()}`);
+                    spouse.addLifeEvent(currentYear, `{P} adopted ${orphan.getFullName()}`);
                     break;
                 }
             }
@@ -759,9 +762,9 @@ function haveOrAdoptKids(person, town, spouse, personGender) {
                     newChild.setParents([person, spouse]);
                     newChild.setStats(calculateAverateStats(person.getStats(), spouse.getStats()));
                     person.addChild(newChild);
-                    newChild.addLifeEvent(`${currentYear}: ${newChild.getGender() == 'male' ? 'He' : 'She'} was born`);
-                    person.addLifeEvent(`${currentYear}: ${personGender == 'male' ? 'He' : 'She'} had a child named ${newChild.getFullName()}`);
-                    spouse.addLifeEvent(`${currentYear}: ${spouseGender == 'male' ? 'He' : 'She'} had a child named ${newChild.getFullName()}`);
+                    newChild.addLifeEvent(currentYear, "{P} was born");
+                    person.addLifeEvent(currentYear, `{P} had a child named ${newChild.getFullName()}`);
+                    spouse.addLifeEvent(currentYear, `{P} had a child named ${newChild.getFullName()}`);
                 } 
             }
         }
@@ -795,7 +798,7 @@ function houseHunt(person, town, currentAge, spouse) {
                 person.setValue(person.getValue() - newHouse.getCost());
             }
 
-            person.addLifeEvent(`${town.getCurrentYear()}: ${person.getGender() == 'male' ? 'He' : 'She'} bought a house`);
+            person.addLifeEvent(town.getCurrentYear(), "{P} bought a house");
             // now we can add spouse and children to the house
             const theirNewHouse = person.getHouse();
             if (theirNewHouse) {
@@ -855,20 +858,22 @@ function newVisitorArrives(town) {
         newPerson = createPerson(getRandomItemInList(townRaces), {ageRange: [16, 50], currentYear: town.getCurrentYear()});
     }
     newPerson.setStats(assignStats(rollStats()));
-    newPerson.addLifeEvent(`${newPerson.getBirthYear()}: ${newPerson.getGender() == 'male' ? 'He' : 'She'} was born`);
-    newPerson.addLifeEvent(`${town.getCurrentYear()}: ${newPerson.getGender() == 'male' ? 'He' : 'She'} entered town`);
+    newPerson.addLifeEvent(newPerson.getBirthYear(), "{P} was born");
+    newPerson.addLifeEvent(town.getCurrentYear(), "{P} entered town");
     town.addToPopulation(newPerson);
 }
 
-function meetOtherPeople(person, town) {
-    let meetPerson = getRandomPerson(town.getLivingPopulation());
+function meetOtherPeople(person, population, currentYear) {
+    let meetPerson = getRandomPerson(population);
     // can't meet dead people
     if (meetPerson.getIsDead()) {
         return;
     }
     // only get the meetPerson's person ID once
-    let meetPersonId = meetPerson.getPersonId();
-    let personId = person.getPersonId();
+    const meetPersonId = meetPerson.getPersonId();
+    const personId = person.getPersonId();
+    const personName = person.getFullName();
+    const meetPersonName = meetPerson.getFullName();
     // can't meet yourself
     if (meetPersonId == personId) {
         return;
@@ -914,14 +919,14 @@ function meetOtherPeople(person, town) {
     if (newReputation == 20 && person.getBestFriends().indexOf(meetPerson) == -1) {
         person.addBestFriend(meetPerson);
         meetPerson.addBestFriend(person);
-        person.addLifeEvent(`${town.getCurrentYear()}: ${person.getGender() == 'male' ? 'He' : 'She'} became best friends with ${meetPerson.getFullName()}`);
-        meetPerson.addLifeEvent(`${town.getCurrentYear()}: ${meetPerson.getGender() == 'male' ? 'He' : 'She'} became best friends with ${person.getFullName()}`);
+        person.addLifeEvent(currentYear, `{P} became best friends with ${meetPersonName}`);
+        meetPerson.addLifeEvent(currentYear, `{P} became best friends with ${personName}`);
     }
     if (newReputation == -20 && person.getEnemies().indexOf(meetPerson) == -1) {
         person.addEnemy(meetPerson);
         meetPerson.addEnemy(person);
-        person.addLifeEvent(`${town.getCurrentYear()}: ${person.getGender() == 'male' ? 'He' : 'She'} became enemies with ${meetPerson.getFullName()}`);
-        meetPerson.addLifeEvent(`${town.getCurrentYear()}: ${meetPerson.getGender() == 'male' ? 'He' : 'She'} became enemies with ${person.getFullName()}`);
+        person.addLifeEvent(currentYear, `{P} became enemies with ${meetPersonName}`);
+        meetPerson.addLifeEvent(currentYear, `{P} became enemies with ${personName}`);
     }
 }
 
@@ -929,8 +934,8 @@ function tryToGetMarried(person, town, gender) {
     let newSpouse = findAPartner(person, town.getLivingPopulation(), gender);
     if (newSpouse) {
         person.setSpouse(newSpouse);
-        person.addLifeEvent(`${town.getCurrentYear()}: ${gender == 'male' ? 'He' : 'She'} married ${newSpouse.getFullName()}`);
-        newSpouse.addLifeEvent(`${town.getCurrentYear()}: ${newSpouse.getGender() == 'male' ? 'He' : 'She'} married ${person.getFullName()}`);
+        person.addLifeEvent(town.getCurrentYear(), `{P} married ${newSpouse.getFullName()}`);
+        newSpouse.addLifeEvent(town.getCurrentYear(), `{P} married ${person.getFullName()}`);
         // if they have a house
         const currentHouse = person.getHouse();
         const spouseHouse = newSpouse.getHouse();
@@ -950,30 +955,32 @@ function tryToGetMarried(person, town, gender) {
             addPersonToHouse(person, spouseHouse);
         }
     }
+    return newSpouse;
 }
 
 function passAway(person, town) {
-    person.addLifeEvent(`${town.getCurrentYear()}: ${person.getGender() == 'male' ? 'He' : 'She'} died`);
+    const personName = person.getFullName();
+    person.addLifeEvent(town.getCurrentYear(), "{P} died");
     if (person.getSpouse() && !person.getSpouse().getIsDead()) {
-        person.getSpouse().addLifeEvent(`${town.getCurrentYear()}: ${person.getSpouse().getGender() == 'male' ? 'His' : 'Her'} spouse ${person.getFullName()} died`);
+        person.getSpouse().addLifeEvent(town.getCurrentYear(), `{PP} spouse ${personName} died`);
     }
     if (person.getChildren()) {
         for (let child of person.getChildren()) {
             if (!child.getIsDead()) {
-                child.addLifeEvent(`${town.getCurrentYear()}: ${child.getGender() == 'male' ? 'His' : 'Her'} ${person.getGender() == 'male' ? 'father' : 'mother'} (${person.getFullName()}) died`);
+                child.addLifeEvent(town.getCurrentYear(), `{PP} ${person.getGender() == 'male' ? 'father' : 'mother'} ${personName} died`);
             }
         }
     }
     if (person.getParents()) {
         for (let parent of person.getParents()) {
             if (!parent.getIsDead()) {
-                parent.addLifeEvent(`${town.getCurrentYear()}: ${parent.getGender() == 'male' ? 'His' : 'Her'} child ${person.getFullName()} died`);
+                parent.addLifeEvent(town.getCurrentYear(), `{PP} child ${personName} died`);
             }
         }
     }
     for (let bestFriend of person.getBestFriends()) {
         if (!bestFriend.getIsDead()) {
-            bestFriend.addLifeEvent(`${town.getCurrentYear()}: ${bestFriend.getGender() == 'male' ? 'His' : 'Her'} best friend ${person.getFullName()} died`);
+            bestFriend.addLifeEvent(town.getCurrentYear(), `{PP} best friend ${personName} died`);
         }
     }
     town.removePerson(person);
@@ -983,7 +990,7 @@ function passAway(person, town) {
         if (person.getChildren().length > 0) {
             for (let child of person.getChildren()) {
                 if (child.getAge() < child.getAdolescence()) {
-                    child.addLifeEvent(`${town.getCurrentYear()}: ${child.getGender() == 'male' ? 'His' : 'Her'} was put up for adoption`);
+                    child.addLifeEvent(town.getCurrentYear(), `{P} was put up for adoption`);
                     town.addOrphan(child);
                 }
             }
@@ -1096,9 +1103,6 @@ function calculateExpenses(person) {
 }
 
 function findAJob(person, town) {
-    if (person.getJob()) {
-        return;
-    }
     for (let job of town.getJobMarket()) {
         // make sure the job isn't already done by someone
         if (job.getPerson()) {
@@ -1112,7 +1116,7 @@ function findAJob(person, town) {
         job.setYearsInPosition(0);
         person.setJob(job);
         job.setPerson(person);
-        person.addLifeEvent(`${town.getCurrentYear()}: ${person.getGender() == 'male' ? 'He' : 'She'} became a ${job.getTitle()}`);
+        person.addLifeEvent(town.getCurrentYear(), `{P} became a ${job.getTitle()}`);
         if (job.getBuildingRequired() && !job.getBuilding()) {
             // if you're getting a job that requires a building and doesn't have one
             // create one
@@ -1129,7 +1133,7 @@ function findAJob(person, town) {
             }
             jobBuilding.addResident(person);
         }
-        break;
+        return job;
     }
 }
 
@@ -1158,7 +1162,7 @@ function lookForBetterJob(person, town) {
         // if we take a new job, we need to be removed from the old one
         currentJob.removePerson();
         prospectiveJob.setPerson(person);
-        person.addLifeEvent(`${town.getCurrentYear()}: ${person.getGender() == 'male' ? 'He' : 'She'} became a ${prospectiveJob.getTitle()}`);
+        person.addLifeEvent(town.getCurrentYear(), `{P} became a ${prospectiveJob.getTitle()}`);
         if (prospectiveJob.getBuildingRequired() && !prospectiveJob.getBuilding()) {
             // if you're getting a job that requires a building and doesn't have one
             // create one

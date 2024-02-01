@@ -8,6 +8,9 @@ class Person {
     enemies = [];
     gender;
     genderPreference;
+    pronoun;
+    objectPronoun;
+    possessivePronoun;
     house;
     houseHistory = [];
     isDead;
@@ -42,10 +45,16 @@ class Person {
         else {
             this.gender = this.randomGender();
         }
-        if (this.getGender() == 'male') {
+        if (this.gender == 'male') {
+            this.pronoun = "he";
+            this.objectPronoun = "him";
+            this.possessivePronoun = "his";
             this.genderPreference = doesRandomEventHappen(80) ? 'female' : 'male';
         }
-        if (this.getGender() == 'female') {
+        if (this.gender == 'female') {
+            this.pronoun = "she";
+            this.objectPronoun = "her";
+            this.possessivePronoun = "her";
             this.genderPreference = doesRandomEventHappen(80) ? 'male' : 'female';
         }
         if (options.name) {
@@ -98,8 +107,14 @@ class Person {
     addToHouseHistory(house) {
         this.houseHistory.push(house);
     }
-    addLifeEvent(event) {
-        this.lifeEvents.push(event);
+    addLifeEvent(year, event) {
+        // {P} (he/she)
+        // {OP} him/her
+        // {PP} posessive pronoun (hers/his)
+        event = event.replaceAll(/\{P\}/g, this.pronoun);
+        event = event.replaceAll(/\{OP\}/g, this.objectPronoun);
+        event = event.replaceAll(/\{PP\}/g, this.possessivePronoun);
+        this.lifeEvents.push(`${year}: ${capitalizeFirstLetter(event)}`);
     }
     addParent(parent) {
         this.parents.push(parent);
