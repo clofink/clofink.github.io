@@ -673,11 +673,186 @@ function createDataRow(data) {
     return (dataRow)
 }
 
+function processLifeEvents(person, town) {
+    const currentAge = person.getAge();
+    const personId = person.id;
+    const spouse = person.getSpouse();
+    // list of life events and handlers for them
+
+    // pay/make money
+    personalFinances(person, town);
+    // meet people
+    let meetChance = person.getJob() ? person.getJob().getMeetChance() : 36;
+    for (let p = 0; p < meetChance; p++) {
+        meetOtherPeople(person, town);
+    }
+    // job/promotion search
+    jobSearch(person, town);
+    // marriage
+    if (currentAge >= person.getAdolescence() && !spouse) {
+        tryToGetMarried(person, town);
+    }
+    // buy a house
+    houseHunt(person, town, currentAge, spouse);
+    // have kids
+    haveOrAdoptKids(person, town, spouse);
+    // retire
+    if (currentAge > person.getRetirementAge() && person.getJob()) {
+        person.addLifeEvent(`${town.getCurrentYear()}: ${person.getGender() == 'male' ? 'He' : 'She'} retired from ${person.getGender() == 'male' ? 'his' : 'her'} job as a ${person.getJob().getTitle()}`);
+        person.retire();
+    }
+    // if a person is in the orphanage when they are 18, they leave
+    if (getPersonById(personId, town.getOrphanage()) && currentAge > person.getAdolescence()) {
+        town.removeFromOrphanage(person);
+    }
+    // die
+    if (person.getDeathChanceAtAge()) {
+        passAway(person, town);
+    }
+    // age
+    person.setAge(currentAge + 1);
+}
+
+function personalFinances(person, town) {
+    // collect taxes from all residents
+    if (person.getValue() > 0) {
+        const taxes = calculateTaxes(person.getValue(), town.getTaxRate());
+        person.setValue(person.getValue() - taxes);
+        town.addToCoffers(taxes);
+    }
+    // calculate personal expenses
+    const expenses = calculateExpenses(person);
+    if ((person.getValue() - expenses) < 0) {
+        person.setValue(0);
+    }
+    else {
+        person.setValue(person.getValue() - expenses);
+    }
+}
+
+function jobSearch(person, town) {
+    const myJob = person.getJob();
+    const currentAge = person.getAge();
+    if (myJob) {
+        person.addValue(myJob.getSalary());
+        myJob.setYearsInPosition(myJob.getYearsInPosition() + 1);
+        const promotionSeekChance = getRandomNumberInRange(0, 3);
+        if (promotionSeekChance === 0) lookForBetterJob(person, town);
+    }
+    // if they don't have a job, let them find one
+    else if (currentAge > person.getAdolescence() && currentAge <= person.getRetirementAge()) {
+        findAJob(person, town);
+    }
+}
+
+function haveOrAdoptKids(person, town, spouse) {
+    const currentYear = town.getCurrentYear();
+    if (spouse && !spouse.getIsDead()) {
+        // if they're a same-sex couple, check for available adoptions
+        const personGender = person.getGender();
+        const spouseGender = spouse.getGender();
+        if (personGender == spouseGender) {
+            // make sure there are people in the orphanage
+            const availableOrphans = town.getOrphanage();
+            if (availableOrphans.length > 0 && person.getChildren().length < 4) {
+                for (let orphan of availableOrphans) {
+                    if (orphan.getIsDead()) continue;
+                    town.removeFromOrphanage(orphan);
+                    orphan.setParents([person, spouse]);
+                    // FIXME: this doesn't deal with siblings???
+                    person.addChild(orphan);
+                    orphan.addLifeEvent(`${currentYear}: ${orphan.getGender() == 'male' ? 'He' : 'She'} was adopted by ${orphan.getParents()[0].getFullName()} and ${orphan.getParents()[1].getFullName()}`);
+                    person.addLifeEvent(`${currentYear}: ${personGender == 'male' ? 'He' : 'She'} adopted ${orphan.getFullName()}`);
+                    spouse.addLifeEvent(`${currentYear}: ${spouseGender == 'male' ? 'He' : 'She'} adopted ${orphan.getFullName()}`);
+                    break;
+                }
+            }
+        }
+        // this is to check that the couple can have kids together, will work out a system for same sex couples
+        else {
+            // only the mother can have the baby
+            const mother = personGender == 'female' ? person : spouse;
+            const motherAge = mother.getAge();
+            if (motherAge >= mother.getAdolescence() && motherAge < mother.getRetirementAge()) {
+                let haveKidsChance = 15;
+                const currentChildren = mother.getChildren().length;
+                if (currentChildren > 1) {
+                    haveKidsChance = 7.5;
+                }
+                if (currentChildren > 3) {
+                    haveKidsChance = 1.5;
+                }
+                if (currentChildren > 5) {
+                    haveKidsChance = 0.1;
+                }
+                if (doesRandomEventHappen(haveKidsChance)) {
+                    const newChild = createPerson(mother.getRace(), {currentYear: currentYear})
+                    town.addToPopulation(newChild);
+                    newChild.setParents([person, spouse]);
+                    newChild.setStats(calculateAverateStats(person.getStats(), spouse.getStats()));
+                    person.addChild(newChild);
+                    newChild.addLifeEvent(`${currentYear}: ${newChild.getGender() == 'male' ? 'He' : 'She'} was born`);
+                    person.addLifeEvent(`${currentYear}: ${personGender == 'male' ? 'He' : 'She'} had a child named ${newChild.getFullName()}`);
+                    spouse.addLifeEvent(`${currentYear}: ${spouseGender == 'male' ? 'He' : 'She'} had a child named ${newChild.getFullName()}`);
+                } 
+            }
+        }
+    }
+}
+
+function houseHunt(person, town, currentAge, spouse) {
+    const currentHouse = person.getHouse();
+    if (currentAge > person.getAdolescence() && !currentHouse) {
+        if (spouse && !spouse.getHouse()) {
+            let newHouse;
+            for (let building of town.getBuildings()) {
+                if (building.getBuildingName() !== 'Home' || building.getOwner()) {
+                    continue;
+                }
+                newHouse = building;
+                makePersonHouseOwner(person, newHouse);
+                break;
+            }
+            // check for house again after trying to get one from the existing houses
+            if (!newHouse) {
+                newHouse = new Home();
+                town.addBuilding(newHouse);
+                makePersonHouseOwner(person, newHouse);
+            }
+            // pay for the house
+            if ((person.getValue() - newHouse.getCost()) < 0) {
+                person.setValue(0);
+            }
+            else {
+                person.setValue(person.getValue() - newHouse.getCost());
+            }
+
+            person.addLifeEvent(`${town.getCurrentYear()}: ${person.getGender() == 'male' ? 'He' : 'She'} bought a house`);
+            // now we can add spouse and children to the house
+            const theirNewHouse = person.getHouse();
+            if (theirNewHouse) {
+                if (spouse && !spouse.getIsDead()) {
+                    if (spouse.getHouse()) {
+                        spouse.getHouse().removeOwner();
+                        log(`somehow their spouse has a house`);
+                    }
+                    addPersonToHouse(spouse, theirNewHouse);
+                }
+                for (let child of person.getChildren()) {
+                    if (!child.getIsDead() && !child.getHouse()) {
+                        addPersonToHouse(child, theirNewHouse);
+                    }
+                }
+            }
+        }
+    }
+}
+
 function yearPasses(town) {
     town.incrementCurrentYear();
     // check for adding new jobs to the job market here?
-    // try to add up to 5 jobs every year as long as the number of jobs in the marker is less than the number of people
-    if (town.getJobMarket().length < town.getLivingPopulation().length) {
+    // try to add up to 5 jobs every year as long as the number of jobs in the marker is less than 60% of people (to account for people too young/old to work)
+    if (town.getJobMarket().length < Math.round(town.getLivingPopulation().length * 0.6)) {
         for (let y = 0; y < 5; y++) {
             // only has a 60% chance of actually happening
             if (doesRandomEventHappen(40)) {
@@ -695,167 +870,10 @@ function yearPasses(town) {
     // make a copy of living population so I can remove people who die from it without messing up the loop
     let currentLivingPeople = [...town.getLivingPopulation()];
     for (let person of currentLivingPeople) {
-        // only get the person's person ID once
-        let personId = person.getPersonId();
-        // collect taxes from all residents
-        if (person.getValue() > 0) {
-            let taxes = calculateTaxes(person.getValue(), town.getTaxRate());
-            person.setValue(person.getValue() - taxes);
-            town.addToCoffers(taxes);
-        }
-        // calculate personal expenses
-        let expenses = calculateExpenses(person)
-        if ((person.getValue() - expenses) < 0) {
-            person.setValue(0);
-        }
-        else {
-            person.setValue(person.getValue() - expenses);
-        }    
-        let currentAge = person.getAge();
         if (person.getIsDead()) {
             continue;
         }
-        // 36 chances a year to meet people (once every ~10 days)
-        let meetChance = person.getJob() ? person.getJob().getMeetChance() : 36;
-        for (let p = 0; p < meetChance; p++) {
-            meetOtherPeople(person, town);
-        }
-        // if they have a job, increase their value (wealth) and look for promotion
-        if (person.getJob()) {
-            const myJob = person.getJob();
-            person.addValue(myJob.getSalary());
-            myJob.setYearsInPosition(myJob.getYearsInPosition() + 1);
-            const promotionSeekChance = getRandomNumberInRange(0, 3);
-            if (promotionSeekChance === 0) lookForBetterJob(person, town);
-        }
-        // if they don't have a job, let them find one
-        if (!person.getIsDead() && !person.getJob() && currentAge > person.getAdolescence() && currentAge <= person.getRetirementAge()) {
-            findAJob(person, town);
-        }
-        // this is for having kids
-        // checks if they have a spouse and their spouse is alive
-        if (person.getSpouse() && !person.getSpouse().getIsDead()) {
-            // if they're a same-sex couple, check for available adoptions
-            if (person.getGender() == person.getSpouse().getGender()) {
-                // make sure there are people in the orphanage
-                if (town.getOrphanage().length > 0) {
-                    if (person.getChildren().length < 4) {
-                        for (let orphan of town.getOrphanage()) {
-                            if (!orphan.getIsDead()) {
-                                town.removeFromOrphanage(orphan);
-                                orphan.setParents([person, person.getSpouse()]);
-                                // this doesn't deal with siblings???
-                                person.addChild(orphan);
-                                orphan.addLifeEvent(`${town.getCurrentYear()}: ${orphan.getGender() == 'male' ? 'He' : 'She'} was adopted by ${orphan.getParents()[0].getFullName()} and ${orphan.getParents()[1].getFullName()}`);
-                                person.addLifeEvent(`${town.getCurrentYear()}: ${person.getGender() == 'male' ? 'He' : 'She'} adopted ${orphan.getFullName()}`);
-                                person.getSpouse().addLifeEvent(`${town.getCurrentYear()}: ${person.getSpouse().getGender() == 'male' ? 'He' : 'She'} adopted ${orphan.getFullName()}`);
-                                break;
-                            }
-                        }    
-                    }
-                }
-            }
-            // this is to check that the couple can have kids together, will work out a system for same sex couples
-            if ((person.getGender() == 'male' && person.getSpouse().getGender() == 'female') || (person.getGender() == 'female' && person.getSpouse().getGender() == 'male')) {
-                // only the mother can have the baby, so make sure she is between 18 and 45
-                let mother = person.getGender() == 'female' ? person : person.getSpouse();
-                // removing check for "under 40" since menopause is iffy among races?
-                // using retirement age for now as a standin
-                if (mother.getAge() >= mother.getAdolescence() && mother.getAge() < mother.getRetirementAge()) {
-                    let haveKidsChance = 15;
-                    if (person.getChildren().length > 1) {
-                        haveKidsChance = 7.5;
-                    }
-                    if (person.getChildren().length > 3) {
-                        haveKidsChance = 1.5;
-                    }
-                    if (person.getChildren().length > 5) {
-                        haveKidsChance = 0.1;
-                    }
-                    if (doesRandomEventHappen(haveKidsChance)) {
-                        let newChild = createPerson(mother.getRace(), {currentYear: town.getCurrentYear()})
-                        town.addToPopulation(newChild);
-                        newChild.setParents([person, person.getSpouse()]);
-                        newChild.setStats(calculateAverateStats(person.getStats(), person.getSpouse().getStats()));
-                        person.addChild(newChild);
-                        newChild.addLifeEvent(`${newChild.getBirthYear()}: ${newChild.getGender() == 'male' ? 'He' : 'She'} was born`);
-                        person.addLifeEvent(`${town.getCurrentYear()}: ${person.getGender() == 'male' ? 'He' : 'She'} had a child named ${newChild.getFullName()}`);
-                        person.getSpouse().addLifeEvent(`${town.getCurrentYear()}: ${person.getSpouse().getGender() == 'male' ? 'He' : 'She'} had a child named ${newChild.getFullName()}`);
-                    } 
-                }
-            }
-        }
-        // if a person is in the orphanage when they are 18, they leave
-        if (getPersonById(personId, town.getOrphanage()) && currentAge > person.getAdolescence()) {
-            town.removeFromOrphanage(person);
-        }
-        // this is for getting married
-        // make sure they are 18 or older, male, and not currently married
-        if (currentAge >= person.getAdolescence() && !person.getSpouse()) {
-            tryToGetMarried(person, town);
-        }
-        if (person.getDeathChanceAtAge()) {
-            passAway(person, town);
-        }
-        // should increase their age last so it doesn't affect the current loop
-        // need to figure out a retirement age metric? Something like 65% of max age?
-        if (currentAge > person.getRetirementAge() && person.getJob()) {
-            person.addLifeEvent(`${town.getCurrentYear()}: ${person.getGender() == 'male' ? 'He' : 'She'} retired from ${person.getGender() == 'male' ? 'his' : 'her'} job as a ${person.getJob().getTitle()}`);
-            person.retire();
-        }
-        if (!person.getIsDead() && currentAge > person.getAdolescence() && !person.getHouse()) {
-            // check for a house in buildings or make one
-            // only find a house if the owner of where you live is not your spouse or you do not live in a house
-            if (!person.getHouse() && (person.getSpouse() && !person.getSpouse().getHouse())) {
-                let newHouse;
-                for (let building of town.getBuildings()) {
-                    if (building.getBuildingName() != 'Home') {
-                        continue;
-                    }
-                    if (building.getOwner()) {
-                        continue;
-                    }
-                    newHouse = building;
-                    makePersonHouseOwner(person, building);
-                    break;
-                }
-                // check for house again after trying to get one from the existing houses
-                if (!person.getHouse()) {
-                    newHouse = new Home();
-                    town.addBuilding(newHouse);
-                    makePersonHouseOwner(person, newHouse);
-                }
-                if ((person.getValue() - newHouse.getCost()) < 0) {
-                    person.setValue(0);
-                }
-                else {
-                    person.setValue(person.getValue() - newHouse.getCost());
-                }
-                person.addLifeEvent(`${town.getCurrentYear()}: ${person.getGender() == 'male' ? 'He' : 'She'} bought a house`);
-                // now we can add spouse and children to the house
-                // i am not sure why this check seems to be needed
-                if (person.getHouse()) {
-                    let theirNewHouse = person.getHouse();
-                    if (person.getSpouse()) {
-                        if (!person.getSpouse().getIsDead()) {
-                            if (person.getSpouse().getHouse()) {
-                                person.getSpouse().getHouse().removeOwner();
-                                log(`somehow their spouse has a house`);
-                            }
-                            addPersonToHouse(person.getSpouse(), theirNewHouse);
-                        }
-                        if (person.getChildren()) {
-                            for (let child of person.getChildren()) {
-                                if (!child.getIsDead() && !child.getHouse()) {
-                                    addPersonToHouse(child, theirNewHouse);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        person.setAge(currentAge + 1);
+        processLifeEvents(person, town);
     }
 }
 
@@ -1027,8 +1045,9 @@ function removePersonFromHouse(person, house) {
 
 function makePersonHouseOwner(person, house) {
     person.addToHouseHistory(house);
-    if (person.getHouse()) {
-        person.getHouse().removeOwner();
+    const currentHouse = person.getHouse();
+    if (currentHouse) {
+        currentHouse.removeOwner();
         person.setHouse(undefined);
     }
     if (house.getOwner()) {
@@ -1145,7 +1164,7 @@ function findAJob(person, town) {
 }
 
 function lookForBetterJob(person, town) {
-    let currentJob = person.getJob()
+    const currentJob = person.getJob()
     for (let prospectiveJob of town.getJobMarket()) {
         // make sure the job isn't already done by someone
         if (prospectiveJob.getPerson()) {
