@@ -982,7 +982,7 @@ function passAway(person, town) {
     if (person.getSpouse() && person.getSpouse().getIsDead()) {
         if (person.getChildren().length > 0) {
             for (let child of person.getChildren()) {
-                if (child.getAge() < 18) {
+                if (child.getAge() < child.getAdolescence()) {
                     child.addLifeEvent(`${town.getCurrentYear()}: ${child.getGender() == 'male' ? 'His' : 'Her'} was put up for adoption`);
                     town.addOrphan(child);
                 }
@@ -1084,7 +1084,7 @@ function calculateExpenses(person) {
     if (person.getChildren().length > 0) {
         // if they have kids, only count the alive ones who are under 18
         for (let child of person.getChildren()) {
-            if (!child.getIsDead() && child.getAge() < 18) {
+            if (!child.getIsDead() && child.getAge() < child.getAdolescence()) {
                 expenses += getRandomNumberInRange(500, 1000);
             }
         }
