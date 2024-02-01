@@ -12,8 +12,9 @@ function log(message, level) {
 function eById(id, target) {
     return (target || document).getElementById(id); 
 }
-function registerElement(element, event, callback) {
+function registerElement(element, event, callback, doCallback) {
     element.addEventListener(event, callback);
+    if (doCallback) sendEvent(element, event);
 }
 function unregisterElement(element, event, callback) {
     element.removeEventListener(event, callback);
@@ -27,9 +28,20 @@ function registerElements(elements, event, callback, doCallback) {
 function newElement(type, params) {
     const newElem = document.createElement(type);
     for (let param in params) {
-        if (param === "class") newElem.classList.add(...params[param]);
-        else if (param === "innerText") newElem.innerText = params[param];
-        else newElem.setAttribute(param, params[param])
+        switch (param) {
+            case "class":
+                newElem.classList.add(...params[param]);
+                break;
+            case "innerText":
+                newElem.innerText = params[param];
+                break;
+            case "innerHTML":
+                newElem.innerHTML = params[param];
+                break;
+            default:
+                newElem.setAttribute(param, params[param])
+                break;
+        }
     }
     return newElem;
 }
