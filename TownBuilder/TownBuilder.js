@@ -871,6 +871,8 @@ function meetOtherPeople(person, population, currentYear) {
     const personId = person.getPersonId();
     const personName = person.getFullName();
     const meetPersonName = meetPerson.getFullName();
+    const personAge = person.getAge();
+    const meetPersonAge = meetPerson.getAge();
     // can't meet yourself
     if (meetPersonId == personId) {
         return;
@@ -905,7 +907,7 @@ function meetOtherPeople(person, population, currentYear) {
     }
     if (doesRandomEventHappen(positiveInteractionChance)) {
         let value = 1;
-        if (doesRandomEventHappen(2)) {
+        if (personAge > person.getAdolescence() && meetPersonAge > meetPerson.getAdolescence() && doesRandomEventHappen(2)) {
             value = 3;
             const positiveInteractions = [
                 {to: "{P} gave a gift to", from: "{P} recevied a gift from"},
@@ -920,7 +922,7 @@ function meetOtherPeople(person, population, currentYear) {
     }
     else {
         let value = 1;
-        if (doesRandomEventHappen(2)) {
+        if (personAge > person.getAdolescence() && meetPersonAge > meetPerson.getAdolescence() && doesRandomEventHappen(2)) {
             value = 3;
             const negativeInteractions = [
                 {to: "{P} got in a fight with", from: "{P} got in a fight with"},
