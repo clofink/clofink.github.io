@@ -907,12 +907,35 @@ function meetOtherPeople(person, population, currentYear) {
         positiveInteractionChance = 5;
     }
     if (doesRandomEventHappen(positiveInteractionChance)) {
-        person.increasePersonReputation(meetPersonId);
-        meetPerson.increasePersonReputation(personId);
+        let value = 1;
+        if (doesRandomEventHappen(2)) {
+            value = 3;
+            const positiveInteractions = [
+                {to: "{P} gave a gift to", from: "{P} recevied a gift from"},
+                {to: "{P} did a favor for", from: "{P} had a favor done for {OP} by"},
+            ]
+            const positiveInteraction = getRandomItemInList(positiveInteractions);
+            person.addLifeEvent(currentYear, `${positiveInteraction.to} ${meetPersonName}`);
+            meetPerson.addLifeEvent(currentYear, `${positiveInteraction.from} ${personName}`);
+        }
+        person.increasePersonReputation(meetPersonId, value);
+        meetPerson.increasePersonReputation(personId, value);
     }
     else {
-        person.decreasePersonReputation(meetPersonId);
-        meetPerson.decreasePersonReputation(personId);
+        let value = 1;
+        if (doesRandomEventHappen(2)) {
+            value = 3;
+            const negativeInteractions = [
+                {to: "{P} got in a fight with", from: "{P} got in a fight with"},
+                {to: "{P} got caught telling a lie about", from: "{P} caught a lie told about {OP} by"},
+                {to: "{P} got caught stealing from", from: "{P} was stolen from by"},
+            ]
+            const negativeInteraction = getRandomItemInList(negativeInteractions);
+            person.addLifeEvent(currentYear, `${negativeInteraction.to} ${meetPersonName}`);
+            meetPerson.addLifeEvent(currentYear, `${negativeInteraction.from} ${personName}`);
+        }
+        person.decreasePersonReputation(meetPersonId, value);
+        meetPerson.decreasePersonReputation(personId, value);
     }
     let newReputation = person.getReputationByPersonId(meetPersonId);
     // only add this event if their reputation just became this value
