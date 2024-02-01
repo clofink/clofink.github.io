@@ -92,14 +92,14 @@ function formatForDisplay(person) {
 var randomFunction;
 
 function generateNewTown() {
-    let seed = document.querySelector('[name="randomSeed"]').value;
+    let seed = qs('[name="randomSeed"]').value;
     if (seed) {
         randomFunction = new alea(seed);
     }
     else {
         let generatedSeed = Math.random().toString(36).substr(2, 9);
         randomFunction = new alea(generatedSeed);
-        document.querySelector('[name="randomSeed"]').value = generatedSeed;
+        qs('[name="randomSeed"]').value = generatedSeed;
     }
     newTown = new Town(getUserInputValues());
     populateTown(newTown);
@@ -140,15 +140,15 @@ function generateNewTown() {
         }
     }
     let yearsToRun = getUserInputValues().currentYear - newTown.getYearOfIncorporation();
-    console.log(`Running for ${yearsToRun} years`);
+    log(`Running for ${yearsToRun} years`);
     for (let t = 0; t < yearsToRun; t++) {
         yearPasses(newTown);
     }
-    console.log(newTown);
-    document.getElementById('generate').classList.add('hidden');
-    document.getElementById('newTown').classList.remove('hidden');
-    document.getElementById('yearsToAdd').classList.remove('hidden');
-    document.getElementById('extendTownTime').classList.remove('hidden');
+    log(newTown);
+    eById('generate').classList.add('hidden');
+    eById('newTown').classList.remove('hidden');
+    eById('yearsToAdd').classList.remove('hidden');
+    eById('extendTownTime').classList.remove('hidden');
     if (tableExists('populationTable')) {
         clearTable('populationTable');
     }
@@ -159,14 +159,14 @@ function addYears() {
     if (!newTown) {
         return;
     }
-    let years = document.querySelector('input[name="yearsToAdd"]').value;
+    let years = qs('input[name="yearsToAdd"]').value;
     if (!years) {
         years = 50;
     }
     for (let t = 0; t < years; t++) {
         yearPasses(newTown);
     }
-    console.log(newTown);
+    log(newTown);
     if (tableExists('populationTable')) {
         clearTable('populationTable');
     }
@@ -187,7 +187,7 @@ function populateTown(town) {
 
 function getTownRaces() {
     let townRaces = [];
-    for (let raceSelector of document.querySelectorAll('.raceSelector')) {
+    for (let raceSelector of qsa('.raceSelector')) {
         townRaces.push(raceSelector.querySelector('select').value);
     }
     return townRaces;
@@ -297,7 +297,7 @@ function createPerson(race, options) {
 }
 
 function getUserInputValues() {
-    let userInputElements = document.querySelectorAll('#inputs input');
+    let userInputElements = qsa('#inputs input');
     let inputValues = {};
     for (let inputElement of userInputElements) {
         inputValues[inputElement.name] = inputElement.value;
@@ -309,7 +309,7 @@ function displayTownInfo(town) {
     if (tableExists('townTable')) {
         clearTable('townTable');
     }
-    let townInfoDiv = document.getElementById('townInfo');
+    let townInfoDiv = eById('townInfo');
     let headers = ['Population Type', 'Number of People'];
     let table = createTable(headers);
     table.id = 'townTable';
@@ -351,7 +351,7 @@ function displayPopulationInfo(peopleList) {
     if (tableExists('populationTable')) {
         clearTable('populationTable');
     }
-    let populationInfoDiv = document.getElementById('populationInfo');
+    let populationInfoDiv = eById('populationInfo');
     let headers = ['Name', 'Age', 'Race', 'Birth Year', 'Death Year', 'Gender', 'Gender Preference', 'Number of Children', 'Worth', 'Job Title', 'Years in Job', 'Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
     let table = createTable(headers);
     table.id = 'populationTable'
@@ -391,8 +391,8 @@ function logMorePersonInfo(event) {
     let parentRow = event.target.closest('tr');
     let nameElement = parentRow.getElementsByTagName('td')[0];
     let thisPerson = getPersonByName(nameElement.innerText, population);
-    console.log(formatBiography(thisPerson.getLifeEvents()));
-    console.log(thisPerson);
+    log(formatBiography(thisPerson.getLifeEvents()));
+    log(thisPerson);
 }
 
 function formatBiography(lifeEvents) {
@@ -418,7 +418,7 @@ function highlightFamily(event) {
     let thisPerson = getPersonById(personId, population);
     if (thisPerson.getParents()) {
         for (let parent of thisPerson.getParents()) {
-            let parentElement = document.getElementById(parent.getPersonId());
+            let parentElement = eById(parent.getPersonId());
             if (parentElement) {
                 if (parentElement.classList.contains('highlightParent')) {
                     parentElement.classList.remove('highlightParent');
@@ -431,7 +431,7 @@ function highlightFamily(event) {
     }
     if (thisPerson.getSiblings()) {
         for (let sibling of thisPerson.getSiblings()) {
-            let siblingElement = document.getElementById(sibling.getPersonId());
+            let siblingElement = eById(sibling.getPersonId());
             if (siblingElement) {
                 if (siblingElement.classList.contains('highlightSibling')) {
                     siblingElement.classList.remove('highlightSibling');
@@ -443,7 +443,7 @@ function highlightFamily(event) {
         }
     }
     if (thisPerson.getSpouse()) {
-        let spouseElement = document.getElementById(thisPerson.getSpouse().getPersonId());
+        let spouseElement = eById(thisPerson.getSpouse().getPersonId());
         if (spouseElement) {
             if (spouseElement.classList.contains('highlightSpouse')) {
                 spouseElement.classList.remove('highlightSpouse');
@@ -455,7 +455,7 @@ function highlightFamily(event) {
     }
     if (thisPerson.getChildren()) {
         for (let child of thisPerson.getChildren()) {
-            let childElement = document.getElementById(child.getPersonId());
+            let childElement = eById(child.getPersonId());
             if (childElement) {
                 if (childElement.classList.contains('highlightChild')) {
                     childElement.classList.remove('highlightChild');
@@ -472,9 +472,9 @@ function highlightFamily(event) {
  * Creates a table and calls the functions needed to populate it
 */
 function createTable(headers) {
-    var chatTable = document.createElement('table');
-    let headerRow = createHeaderRow(headers);
-    chatTable.appendChild(headerRow);
+    const chatTable = newElement('table');
+    const headerRow = createHeaderRow(headers);
+    addElement(headerRow, chatTable);
     return chatTable;
 }
 
@@ -483,7 +483,7 @@ function createTable(headers) {
  * @returns boolean table status
  */
  function tableExists(selector) {
-    if (document.getElementById(selector)) {
+    if (eById(selector)) {
         return true;
     }
     return false;
@@ -493,7 +493,7 @@ function createTable(headers) {
  * Clears the elements from within the maintable
 */
 function clearTable(selector) {
-    let oldChild = document.getElementById(selector);
+    let oldChild = eById(selector);
     oldChild.parentNode.removeChild(oldChild);
 }
 
@@ -503,13 +503,11 @@ function clearTable(selector) {
  * @returns {HTMLElement} header row
  */
 function createHeaderRow(headers) {
-    let headerRow = document.createElement('tr');
+    const headerRow = newElement('tr');
     for (i = 0; i < headers.length; i++) {
-        let tableValue = document.createElement('th');
-        tableValue.innerHTML = headers[i];
-        tableValue.setAttribute('sortDirection','asc');
-        tableValue.addEventListener('click', sortByHeader);
-        headerRow.appendChild(tableValue);
+        const tableValue = newElement('th', {innerHTML: headers[i], sortDirection: "asc"});
+        registerElement(tableValue, "click", sortByHeader);
+        addElement(tableValue, headerRow);
     }
     return (headerRow);
 }
@@ -654,13 +652,13 @@ function sortByHeader(event) {
 }
 
 function rebuildTableRows(sortedPopulation) {
-    let table = document.querySelector('#populationTable');
-    let dataRows = document.querySelectorAll('#populationTable tr td:first-of-type');
+    const table = qs('#populationTable');
+    const dataRows = qsa('#populationTable tr td:first-of-type');
     for (let dataRow of dataRows) {
         table.removeChild(dataRow.parentElement);
     }
     for (let person of sortedPopulation) {
-        let rowData = [];
+        const rowData = [];
         rowData.push(person.getFullName());
         rowData.push(person.getAge());
         rowData.push(person.getRace());
@@ -672,32 +670,31 @@ function rebuildTableRows(sortedPopulation) {
         rowData.push(person.getValue() ? person.getValue() : 0);
         rowData.push(person.getJob() ? person.getJob().getTitle() : '-');
         rowData.push(person.getJob() ? person.getJob().getYearsInPosition() : 0);
-        let personStats = person.getStats();
+        const personStats = person.getStats();
         rowData.push(personStats.STR);
         rowData.push(personStats.DEX);
         rowData.push(personStats.CON);
         rowData.push(personStats.INT);
         rowData.push(personStats.WIS);
         rowData.push(personStats.CHA);
-        let dataRow= createDataRow(rowData);
-        dataRow.addEventListener('click', logMorePersonInfo);
+        const dataRow= createDataRow(rowData);
+        registerElement(dataRow, "click", logMorePersonInfo);
         dataRow.id = person.getPersonId();
-        table.appendChild(dataRow);
+        addElement(dataRow, table);
     }
 }
 
 function createDataRow(data) {
-    let dataRow = document.createElement('tr');
-    for (let a = 0; a < data.length; a++) {
-        let tableValue = document.createElement('td');
-        tableValue.innerText = data[a];
-        dataRow.appendChild(tableValue);
+    const dataRow = newElement('tr');
+    for (let row of data) {
+        const tableValue = newElement('td', {innerText: row});
+        addElement(tableValue, dataRow);
     }
     return (dataRow)
 }
 
 function yearPasses(town) {
-    town.incrementCurrentYear()
+    town.incrementCurrentYear();
     // check for adding new jobs to the job market here?
     // try to add up to 5 jobs every year as long as the number of jobs in the marker is less than the number of people
     if (town.getJobMarket().length < town.getLivingPopulation().length) {
@@ -746,10 +743,11 @@ function yearPasses(town) {
         }
         // if they have a job, increase their value (wealth) and look for promotion
         if (person.getJob()) {
-            let myJob = person.getJob();
+            const myJob = person.getJob();
             person.addValue(myJob.getSalary());
             myJob.setYearsInPosition(myJob.getYearsInPosition() + 1);
-            lookForBetterJob(person, town);
+            const promotionSeekChance = getRandomNumberInRange(0, 3);
+            if (promotionSeekChance === 0) lookForBetterJob(person, town);
         }
         // if they don't have a job, let them find one
         if (!isPersonDead && !person.getJob() && currentAge > person.getAdolescence() && currentAge <= person.getRetirementAge()) {
@@ -863,7 +861,7 @@ function yearPasses(town) {
                         if (!person.getSpouse().getIsDead()) {
                             if (person.getSpouse().getHouse()) {
                                 person.getSpouse().getHouse().removeOwner();
-                                console.log(`somehow their spouse has a house`);
+                                log(`somehow their spouse has a house`);
                             }
                             addPersonToHouse(person.getSpouse(), theirNewHouse);
                         }
@@ -884,7 +882,7 @@ function yearPasses(town) {
 
 function newVisitorArrives(town) {
     let newPerson;
-    if (document.querySelector('[name="allowVisitors"]').checked == true) {
+    if (qs('[name="allowVisitors"]').checked == true) {
         newPerson = createPerson(getRandomRace(), {ageRange: [16, 50], currentYear: town.getCurrentYear()});
     }
     else {
@@ -1064,7 +1062,7 @@ function makePersonHouseOwner(person, house) {
 
 function findAPartner(person, population) {
     // only looping through people they have met and eliminating based on reputation quick
-    // console.log(`Checking for ${person.getFullName()}`);
+    // log(`Checking for ${person.getFullName()}`);
     for (let potentialPartnerId in person.getReputations()) {
         if (person.getReputationByPersonId(potentialPartnerId) < 5) {
             continue;
@@ -1278,17 +1276,17 @@ function getRandomItemInList(list) {
 }
 
 function addRace() {
-    let template = document.querySelector('#newRace');
-    let clonedTemplate = template.content.cloneNode(true);
-    let button = clonedTemplate.querySelector('.removeRace');
-    button.addEventListener('click', removeRace);
-    document.getElementById('races').appendChild(clonedTemplate);
+    const template = qs('#newRace');
+    const clonedTemplate = template.content.cloneNode(true);
+    const button = clonedTemplate.querySelector('.removeRace');
+    registerElement(button, "click", removeRace);
+    addElement(clonedTemplate, eById('races'));
 }
 
 function removeRace(event) {
     // if it is the last one, do not let it get removed
-    if (document.querySelectorAll('.raceSelector').length < 2) {
-        console.log('Cannot remove the last race. Must have at least one');
+    if (qsa('.raceSelector').length < 2) {
+        log('Cannot remove the last race. Must have at least one');
         return;
     }
     let elementToRemove = event.target.closest('.raceSelector');
@@ -1299,11 +1297,10 @@ function capitalizeFirstLetter(name) {
     return name[0].toUpperCase() + name.substring(1);
 }
 
-// this is the code that actually loads the inputs and creates a new town
-document.getElementById('generate').addEventListener('click', generateNewTown);
-document.getElementById('newTown').addEventListener('click', generateNewTown);
-document.getElementById('extendTownTime').addEventListener('click', addYears);
-document.getElementById('addRace').addEventListener('click', addRace);
+registerElement(eById('generate'), "click", generateNewTown);
+registerElement(eById('newTown'), "click", generateNewTown);
+registerElement(eById('extendTownTime'), "click", addYears);
+registerElement(eById('addRace'), "click", addRace);
 addRace();
 
 function rollStats() {
@@ -1332,7 +1329,7 @@ function calculateAverateStats(person1Stats, person2Stats) {
     for (const attribute of attributes) {
         // let newAverageStat = (person1Stats[attribute] + person2Stats[attribute]) / 2;
         let newAverageStat = getRandomNumberInRange(person1Stats[attribute], person2Stats[attribute]);
-        let chance = getRandomNumberInRange(0,99)
+        const chance = getRandomNumberInRange(0,99)
         if (chance >= 0 && chance < 10) {
             // make sure it is never above 20
             (newAverageStat + 1) < 20 ? newAverageStat += 1 : newAverageStat = 20;
