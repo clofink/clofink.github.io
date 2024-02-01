@@ -269,7 +269,7 @@ class Person {
         return this.residentOf;
     }
     getRetirementAge() {
-        return Math.floor(this.maxAge * 0.70);
+        return Math.floor(this.maxAge * 0.80);
     }
     getSiblings() {
         return this.siblings;
