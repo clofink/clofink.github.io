@@ -642,17 +642,17 @@ function createDataRow(data) {
     return (dataRow)
 }
 
-function processLifeEvents(person, town) {
+function processLifeEvents(person, town, currentYear) {
     const currentAge = person.getAge();
     const personId = person.id;
     const gender = person.getGender();
-    const currentYear = town.getCurrentYear();
     let spouse = person.getSpouse();
     let currentJob = person.getJob();
+    let house = person.getHouse();
     // list of life events and handlers for them
 
     // pay/make money
-    personalFinances(person, town);
+    personalFinances(person, town, house);
     // meet people
     let meetChance = currentJob ? currentJob.getMeetChance() : 36;
     for (let p = 0; p < meetChance; p++) {
@@ -665,7 +665,7 @@ function processLifeEvents(person, town) {
         spouse = tryToGetMarried(person, town, gender);
     }
     // buy a house
-    houseHunt(person, town, currentAge, spouse);
+    house = houseHunt(person, town, currentAge, spouse, house);
     // have kids
     haveOrAdoptKids(person, town, spouse, gender);
     // retire
@@ -685,17 +685,15 @@ function processLifeEvents(person, town) {
     person.setAge(currentAge + 1);
 }
 
-function personalFinances(person, town) {
-    // collect taxes from all residents
+function personalFinances(person, town, house) {
     const currentValue = person.getValue();
     if (currentValue > 0) {
         const taxes = calculateTaxes(currentValue, town.getTaxRate());
         person.setValue(currentValue - taxes);
         town.addToCoffers(taxes);
     }
-    // calculate personal expenses
     const valueAfterTaxes = person.getValue();
-    const expenses = calculateExpenses(person);
+    const expenses = calculateExpenses(person, house);
     if ((valueAfterTaxes - expenses) < 0) {
         person.setValue(0);
     }
@@ -771,8 +769,7 @@ function haveOrAdoptKids(person, town, spouse, personGender) {
     }
 }
 
-function houseHunt(person, town, currentAge, spouse) {
-    const currentHouse = person.getHouse();
+function houseHunt(person, town, currentAge, spouse, currentHouse) {
     if (currentAge > person.getAdolescence() && !currentHouse) {
         if (spouse && !spouse.getHouse()) {
             let newHouse;
@@ -815,12 +812,15 @@ function houseHunt(person, town, currentAge, spouse) {
                     }
                 }
             }
+            currentHouse = newHouse;
         }
     }
+    return currentHouse;
 }
 
 function yearPasses(town) {
     town.incrementCurrentYear();
+    const currentYear = town.getCurrentYear();
     // check for adding new jobs to the job market here?
     // try to add up to 5 jobs every year as long as the number of jobs in the marker is less than 60% of people (to account for people too young/old to work)
     if (town.getJobMarket().length < Math.round(town.getLivingPopulation().length * 0.6)) {
@@ -836,30 +836,27 @@ function yearPasses(town) {
     }
     if (doesRandomEventHappen(10)) {
         // new random adult stranger comes to town (how to tell if they're an adult since the race will be random?)
-        newVisitorArrives(town);
+        newVisitorArrives(town, currentYear);
     }
     // make a copy of living population so I can remove people who die from it without messing up the loop
     let currentLivingPeople = [...town.getLivingPopulation()];
     for (let person of currentLivingPeople) {
-        if (person.getIsDead()) {
-            continue;
-        }
-        processLifeEvents(person, town);
+        processLifeEvents(person, town, currentYear);
     }
 }
 
-function newVisitorArrives(town) {
+function newVisitorArrives(town, currentYear) {
     let newPerson;
     if (qs('[name="allowVisitors"]').checked == true) {
-        newPerson = createPerson(getRandomRace(), {ageRange: [16, 50], currentYear: town.getCurrentYear()});
+        newPerson = createPerson(getRandomRace(), {ageRange: [16, 50], currentYear: currentYear});
     }
     else {
         let townRaces = getTownRaces();
-        newPerson = createPerson(getRandomItemInList(townRaces), {ageRange: [16, 50], currentYear: town.getCurrentYear()});
+        newPerson = createPerson(getRandomItemInList(townRaces), {ageRange: [16, 50], currentYear: currentYear});
     }
     newPerson.setStats(assignStats(rollStats()));
     newPerson.addLifeEvent(newPerson.getBirthYear(), "{P} was born");
-    newPerson.addLifeEvent(town.getCurrentYear(), "{P} entered town");
+    newPerson.addLifeEvent(currentYear, "{P} entered town");
     town.addToPopulation(newPerson);
 }
 
@@ -984,6 +981,9 @@ function tryToGetMarried(person, town, gender) {
 function passAway(person, town) {
     const personName = person.getFullName();
     person.addLifeEvent(town.getCurrentYear(), "{P} died");
+    if (getPersonById(person.id, town.getOrphanage())) {
+        town.removeFromOrphanage(person);
+    }
     if (person.getSpouse() && !person.getSpouse().getIsDead()) {
         person.getSpouse().addLifeEvent(town.getCurrentYear(), `{PP} spouse ${personName} died`);
     }
@@ -1107,20 +1107,20 @@ function findAPartner(person, population, gender) {
     }
 }
 
-function calculateExpenses(person) {
-    // what contributes to a person's expense
-    // if they own a house (property taxes)
+function calculateExpenses(person, house) {
     let expenses = 0;
-    if (person.getChildren().length > 0) {
+    const children = person.getChildren();
+
+    if (children.length > 0) {
         // if they have kids, only count the alive ones who are under 18
-        for (let child of person.getChildren()) {
+        for (let child of children) {
             if (!child.getIsDead() && child.getAge() < child.getAdolescence()) {
                 expenses += getRandomNumberInRange(500, 1000);
             }
         }
     }
-    if (person.getHouse()) {
-        expenses += Math.floor(person.getHouse().getCost() * 0.1);
+    if (house) {
+        expenses += Math.floor(house.getCost() * 0.1);
     }
     return expenses;
 }
