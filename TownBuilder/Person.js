@@ -341,8 +341,8 @@ class Person {
         return possibleLastNames[getRandomNumberInRange(0, possibleLastNames.length - 1)];
     }
     retire() {
-        let myJob = this.job;
-        let jobBuilding = myJob.getBuilding();
+        const myJob = this.job;
+        const jobBuilding = myJob.getBuilding();
         if (jobBuilding) {
             jobBuilding.removeResident(this);
             if (jobBuilding.getOwner() == this) {
