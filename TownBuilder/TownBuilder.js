@@ -9,36 +9,6 @@ function getPersonById(personId, personList) {
     }
 }
 
-function getByAge(age, personList) {
-    let results = [];
-    for (let person of personList) {
-        if (person.getAge() == age && !person.getIsDead()) {
-            results.push(person);
-        }
-    }
-    return results;
-}
-
-function sortByAge(a, b) {
-    if (a.age > b.age) {
-        return -1;
-    }
-    if (b.age > a.age) {
-        return 1;
-    }
-    return 0;
-}
-
-function sortByReputation(a, b) {
-    if (a.reputation > b.reputation) {
-        return -1;
-    }
-    if (b.reputation > a.reputation) {
-        return 1;
-    }
-    return 0;
-}
-
 function getPersonByName(name, personList) {
     for (let person of personList) {
         if (person.getFullName() == name) {
@@ -119,7 +89,7 @@ function generateNewTown() {
     eById('yearsToAdd').classList.remove('hidden');
     eById('extendTownTime').classList.remove('hidden');
     if (tableExists('populationTable')) {
-        clearTable('populationTable');
+        clearElement(eById('populationInfo'));
     }
     displayTownInfo(newTown);
 }
@@ -137,7 +107,7 @@ function addYears() {
     }
     log(newTown);
     if (tableExists('populationTable')) {
-        clearTable('populationTable');
+        clearElement(eById('populationInfo'));
     }
     displayTownInfo(newTown);
 }
@@ -276,7 +246,7 @@ function getUserInputValues() {
 
 function displayTownInfo(town) {
     if (tableExists('townTable')) {
-        clearTable('townTable');
+        clearElement(eById('townInfo'));
     }
     let townInfoDiv = eById('townInfo');
     let headers = ['Population Type', 'Number of People'];
@@ -318,7 +288,7 @@ function swapSelectedPopulation(event) {
 
 function displayPopulationInfo(peopleList) {
     if (tableExists('populationTable')) {
-        clearTable('populationTable');
+        clearElement(eById('populationInfo'));
     }
     const populationInfoDiv = eById('populationInfo');
     const headers = ['Name', 'Age', 'Race', 'Birth Year', 'Death Year', 'Gender', 'Gender Preference', 'Number of Children', 'Worth', 'Job Title', 'Years in Job', 'Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
@@ -460,14 +430,6 @@ function createTable(headers) {
         return true;
     }
     return false;
-}
-
-/**
- * Clears the elements from within the maintable
-*/
-function clearTable(selector) {
-    let oldChild = eById(selector);
-    oldChild.parentNode.removeChild(oldChild);
 }
 
 /**
