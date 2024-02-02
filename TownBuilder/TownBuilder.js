@@ -626,7 +626,7 @@ function jobSearch(person, town, currentAge, myJob) {
     if (myJob) {
         person.addValue(myJob.getSalary());
         myJob.setYearsInPosition(myJob.getYearsInPosition() + 1);
-        if (doesRandomEventHappen(25)) lookForBetterJob(person, town);
+        if (doesRandomEventHappen(25)) return lookForBetterJob(person, town);
     }
     // if they don't have a job, let them find one
     else if (currentAge > person.getAdolescence() && currentAge <= person.getRetirementAge()) {
@@ -1021,7 +1021,7 @@ function findAPartner(person, population, gender) {
             continue;
         }
         // make sure they are within 15 years age difference
-        let permissiveAgeDiff = Math.floor((person.getMaxAge() - person.getAdolescence()) / 5);
+        const permissiveAgeDiff = Math.floor((person.getMaxAge() - person.getAdolescence()) / 5);
         if (!(Math.abs(potentialPartner.getAge() - person.getAge()) <= permissiveAgeDiff)) {
             continue;
         }
@@ -1106,6 +1106,13 @@ function lookForBetterJob(person, town) {
         person.setJob(prospectiveJob);
         // if we take a new job, we need to be removed from the old one
         currentJob.removePerson();
+        const currentJobBuilding = currentJob.getBuilding();
+        if (currentJobBuilding) {
+            currentJobBuilding.removeResident(person);
+            if(currentJobBuilding.getOwner() === person) {
+                currentJobBuilding.removeOwner();
+            }
+        }
         prospectiveJob.setPerson(person);
         person.addLifeEvent(town.getCurrentYear(), `{P} became a ${prospectiveJob.getTitle()}`);
         if (prospectiveJob.getBuildingRequired() && !prospectiveJob.getBuilding()) {
@@ -1124,7 +1131,7 @@ function lookForBetterJob(person, town) {
             }
             jobBuilding.addResident(person);
         }
-        break;
+        return prospectiveJob;
     }
 }
 
