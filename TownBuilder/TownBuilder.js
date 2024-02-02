@@ -953,13 +953,13 @@ function meetOtherPeople(person, population, currentYear) {
     }
     let newReputation = person.getReputationByPersonId(meetPersonId);
     // only add this event if their reputation just became this value
-    if (newReputation == 20 && person.getBestFriends().indexOf(meetPerson) == -1) {
+    if (newReputation >= 20 && person.getBestFriends().indexOf(meetPerson) === -1) {
         person.addBestFriend(meetPerson);
         meetPerson.addBestFriend(person);
         person.addLifeEvent(currentYear, `{P} became best friends with ${meetPersonName}`);
         meetPerson.addLifeEvent(currentYear, `{P} became best friends with ${personName}`);
     }
-    if (newReputation == -20 && person.getEnemies().indexOf(meetPerson) == -1) {
+    if (newReputation <= -20 && person.getEnemies().indexOf(meetPerson) === -1) {
         person.addEnemy(meetPerson);
         meetPerson.addEnemy(person);
         person.addLifeEvent(currentYear, `{P} became enemies with ${meetPersonName}`);
