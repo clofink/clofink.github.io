@@ -80,9 +80,8 @@ class Person {
         this.bestFriends.push(person);
     }
     addChild(child) {
-        // console.log(`${this.getFullName()} has had a child named ${child.getFullName()} at ${this.getAge()}`)
         this.children.push(child);
-        let parentSpouse = this.spouse;
+        const parentSpouse = this.spouse;
         child.setLastName(this.lastName);
         if (parentSpouse) {
             if (!parentSpouse.getChildren().includes(child)) {
@@ -110,7 +109,7 @@ class Person {
     addLifeEvent(year, event) {
         // {P} (he/she)
         // {OP} him/her
-        // {PP} posessive pronoun (hers/his)
+        // {PP} posessive pronoun (her/his)
         event = event.replaceAll(/\{P\}/g, this.pronoun);
         event = event.replaceAll(/\{OP\}/g, this.objectPronoun);
         event = event.replaceAll(/\{PP\}/g, this.possessivePronoun);
@@ -123,7 +122,7 @@ class Person {
         this.siblings.push(sibling);
     }
     addValue(value) {
-        this.value = this.value + value;
+        this.value = this.value + value > 0 ? this.value + value : 0;
     }
     decreasePersonReputation(personId, value) {
         value = value || 1;

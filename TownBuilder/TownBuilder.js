@@ -606,20 +606,11 @@ function processLifeEvents(person, town, currentYear) {
 }
 
 function personalFinances(person, town, house) {
-    const currentValue = person.getValue();
-    if (currentValue > 0) {
-        const taxes = calculateTaxes(currentValue, town.getTaxRate());
-        person.setValue(currentValue - taxes);
-        town.addToCoffers(taxes);
-    }
-    const valueAfterTaxes = person.getValue();
+    const taxes = calculateTaxes(currentValue, town.getTaxRate());
+    person.addValue(-taxes);
+    town.addToCoffers(taxes);
     const expenses = calculateExpenses(person, house);
-    if ((valueAfterTaxes - expenses) < 0) {
-        person.setValue(0);
-    }
-    else {
-        person.setValue(valueAfterTaxes - expenses);
-    }
+    person.addValue(-expenses);
 }
 
 function jobSearch(person, town, currentAge, myJob) {
@@ -657,10 +648,8 @@ function haveOrAdoptKids(person, town, spouse, personGender) {
                 }
             }
         }
-        // this is to check that the couple can have kids together, will work out a system for same sex couples
         else {
-            // only the mother can have the baby
-            const mother = personGender == 'female' ? person : spouse;
+            const mother = personGender === 'female' ? person : spouse;
             const motherAge = mother.getAge();
             if (motherAge >= mother.getAdolescence() && motherAge < mother.getRetirementAge()) {
                 let haveKidsChance = 15;
@@ -708,12 +697,7 @@ function houseHunt(person, town, currentAge, spouse, currentHouse) {
                 makePersonHouseOwner(person, newHouse);
             }
             // pay for the house
-            if ((person.getValue() - newHouse.getCost()) < 0) {
-                person.setValue(0);
-            }
-            else {
-                person.setValue(person.getValue() - newHouse.getCost());
-            }
+            person.addValue(-newHouse.getCost());
 
             person.addLifeEvent(town.getCurrentYear(), "{P} bought a house");
             // now we can add spouse and children to the house
