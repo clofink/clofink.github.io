@@ -606,7 +606,7 @@ function processLifeEvents(person, town, currentYear) {
 }
 
 function personalFinances(person, town, house) {
-    const taxes = calculateTaxes(currentValue, town.getTaxRate());
+    const taxes = calculateTaxes(person.getValue(), town.getTaxRate());
     person.addValue(-taxes);
     town.addToCoffers(taxes);
     const expenses = calculateExpenses(person, house);
@@ -729,9 +729,8 @@ function yearPasses(town) {
     // try to add up to 5 jobs every year as long as the number of jobs in the marker is less than 60% of people (to account for people too young/old to work)
     if (town.getJobMarket().length < Math.round(town.getLivingPopulation().length * 0.6)) {
         for (let y = 0; y < 5; y++) {
-            // only has a 60% chance of actually happening
-            if (doesRandomEventHappen(40)) {
-                let newJob = createJob(getRandomJobName());
+            if (doesRandomEventHappen(50)) {
+                const newJob = createJob(getRandomJobName());
                 if (newJob.meetsRequirements(town)) {
                     town.addJobToMarket(newJob);
                 }
@@ -750,14 +749,8 @@ function yearPasses(town) {
 }
 
 function newVisitorArrives(town, currentYear) {
-    let newPerson;
-    if (qs('[name="allowVisitors"]').checked == true) {
-        newPerson = createPerson(getRandomRace(), {ageRange: [16, 50], currentYear: currentYear});
-    }
-    else {
-        let townRaces = getTownRaces();
-        newPerson = createPerson(getRandomItemInList(townRaces), {ageRange: [16, 50], currentYear: currentYear});
-    }
+    const newPersonRace = qs('[name="allowVisitors"]').checked ? getRandomRace() : getRandomItemInList(getTownRaces());
+    const newPerson = createPerson(newPersonRace, {ageRange: [16, 50], currentYear: currentYear});
     newPerson.setStats(assignStats(rollStats()));
     newPerson.addLifeEvent(newPerson.getBirthYear(), "{P} was born");
     newPerson.addLifeEvent(currentYear, "{P} entered town");
