@@ -217,6 +217,19 @@ class Person {
     getEnemies() {
         return this.enemies;
     }
+    getFamilyMembers() {
+        const familyMembers = [];
+        for (let parent of this.parents) {
+            familyMembers.push(parent);
+            for (let parentSibling of parent.getSiblings()) {
+                familyMembers.push(parentSibling);
+                for (let cousin of parentSibling.getChildren()) {
+                    familyMembers.push(cousin);
+                }
+            }
+        }
+        return familyMembers.concat(this.siblings);
+    }
     getFather() {
         for (let parent of this.parents) {
             if (parent.getGender() == 'male') {
