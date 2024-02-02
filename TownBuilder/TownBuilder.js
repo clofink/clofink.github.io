@@ -133,106 +133,64 @@ function getTownRaces() {
 }
 
 function createJob(jobName) {
-    let job;
     switch(jobName) {
         case 'Mayor':
-            job = new Mayor();
-            break;
+            return new Mayor();
         case 'Farmer':
-            job = new Farmer();
-            break;
+            return new Farmer();
         case 'Guard':
-            job = new Guard();
-            break;
+            return new Guard();
         case 'Patrol':
-            job = new Patrol();
-            break;
+            return new Patrol();
         case 'Smith':
-            job = new Smith();
-            break;
+            return new Smith();
         case 'Healer':
-            job = new Healer();
-            break;
+            return new Healer();
         case 'Baker':
-            job = new Baker();
-            break;
+            return new Baker();
         case 'Barkeep':
-            job = new Barkeep();
-            break;
+            return new Barkeep();
         case 'Innkeeper':
-            job = new Innkeeper();
-            break;
+            return new Innkeeper();
         case 'Leatherworker':
-            job = new Leatherworker();
-            break;
+            return new Leatherworker();
         default:
             break;
     }
-    return job;
-}
-
-function getFamilyMembers(person) {
-    let familyMembers = [];
-    for (let parent of person.getParents()) {
-        familyMembers.push(parent);
-        for (let parentSibling of parent.getSiblings()) {
-            familyMembers.push(parentSibling);
-            for (let cousin of parentSibling.getChildren()) {
-                familyMembers.push(cousin);
-            }
-        }
-    }
-    return familyMembers.concat(person.getSiblings());
 }
 
 function createPerson(race, options) {
     options = options || {};
-    let person;
     switch (race) {
         case 'tabaxi':
-            person = new Tabaxi(options);
-            break;
+            return new Tabaxi(options);
         case 'warforged':
-            person = new Warforged(options);
-            break;
+            return new Warforged(options);
         case 'tortle':
-            person = new Tortle(options);
-            break;
+            return new Tortle(options);
         case 'goliath':
-            person = new Goliath(options);
-            break;
+            return new Goliath(options);
         case 'dragonborn':
-            person = new Dragonborn(options);
-            break;
+            return new Dragonborn(options);
         case 'dwarf':
-            person  = new Dwarf(options);
-            break;
+            return new Dwarf(options);
         case 'elf':
-            person = new Elf(options);
-            break;
+            return new Elf(options);
         case 'gnome':
-            person = new Gnome(options);
-            break;
+            return new Gnome(options);
         case 'halfling':
-            person = new Halfling(options);
-            break;
+            return new Halfling(options);
         case 'halfelf':
-            person = new Halfelf(options);
-            break;
+            return new Halfelf(options);
         case 'halforc':
-            person = new Halforc(options);
-            break;
+            return new Halforc(options);
         case 'human':
-            person = new Human(options);
-            break;
+            return new Human(options);
         case 'tiefling':
-            person = new Tiefling(options);
-            break;
+            return new Tiefling(options);
         default:
-            person = new Human(options);
-            break;
+            return new Human(options);
     }
-    return person;
 }
 
 function getUserInputValues() {
@@ -1055,7 +1013,7 @@ function findAPartner(person, population, gender) {
         }
         // makes sure they are not a cousin or sibling (or aunt/uncle)
         // this is better than just checking last name (and removes issues with accidental same last names)
-        if (getFamilyMembers(person).indexOf(potentialPartner) != -1) {
+        if (person.getFamilyMembers().indexOf(potentialPartner) != -1) {
             continue;
         }
         // make sure the partner is over their age of adolescence
