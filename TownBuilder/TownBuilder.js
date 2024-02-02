@@ -566,10 +566,10 @@ function processLifeEvents(person, town, currentYear) {
     const lifeEvents = [
         {check: needsAJob, action: findAJob, type: "job"},
         {check: wantsABetterJob, action: lookForBetterJob, type: "job"},
-        {check: wantsToGetMarried, action: findAPartner, type: "spouse"},
+        {check: wantsToGetMarried, action: tryToGetMarried, type: "spouse"},
+        {check: canBuyHouse, action: houseHunt, type: "house"},
         {check: canHaveKids, action: haveKid},
         {check: wantsToAdopt, action: adoptKid},
-        {check: canBuyHouse, action: houseHunt, type: "house"},
         {check: canRetire, action: retire, type: "job"},
         {check: canLeaveOrphanage, action: leaveOrphanage}
     ]
@@ -588,30 +588,23 @@ function processLifeEvents(person, town, currentYear) {
         meetOtherPeople(person, town.getLivingPopulation(), currentYear);
     }
 
-    // person, spouse, currentAge, currentJob, gender, town
-    if (needsAJob()) {
-        currentJob = findAJob();
-    }
-    if (wantsABetterJob()) {
-        currentJob = lookForBetterJob();
-    }
-    if (wantsToGetMarried()) {
-        spouse = tryToGetMarried();
-    }
-    if (canBuyHouse()) {
-        house = houseHunt();
-    }
-    if (canHaveKids()) {
-        haveKid();
-    }
-    if (wantsToAdopt()) {
-        adoptKid();
-    }
-    if (canRetire()) {
-        currentJob = retire();
-    }
-    if (canLeaveOrphanage()) {
-        leaveOrphanage();
+    for (let event of lifeEvents) {
+        if (event.check()) {
+            const result = event.action();
+            switch (event.type) {
+                case "job":
+                    currentJob = result;
+                    break;
+                case "spouse":
+                    spouse = result;
+                    break;
+                case "house":
+                    house = result;
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     // die
@@ -666,7 +659,6 @@ function processLifeEvents(person, town, currentYear) {
         if (spouse && spouse.getHouse()) return false;
         return true;
     }
-    
     
     function leaveOrphanage() {
         town.removeFromOrphanage(person);
@@ -836,7 +828,7 @@ function processLifeEvents(person, town, currentYear) {
         }
     }
     function tryToGetMarried() {
-        let newSpouse = findAPartner(person, town.getLivingPopulation(), gender);
+        const newSpouse = findAPartner(person, town.getLivingPopulation(), gender);
         if (newSpouse) {
             person.setSpouse(newSpouse);
             person.addLifeEvent(town.getCurrentYear(), `{P} married ${newSpouse.getFullName()}`);
