@@ -593,6 +593,8 @@ function processLifeEvents(person, town, currentYear) {
         meetOtherPeople(person, town.getLivingPopulation(), currentYear);
     }
 
+    shuffleArray(lifeEvents);
+
     for (let event of lifeEvents) {
         if (event.check()) {
             const result = event.action();
@@ -627,7 +629,7 @@ function processLifeEvents(person, town, currentYear) {
     }
     function canLeaveOrphanage() {
         if (currentAge < person.getAdolescence()) return false;
-        if (!getPersonById(person.id, town.getOrphanage())) return false;
+        if (!getPersonById(person.personId, town.getOrphanage())) return false;
         return true;
     }
     function canRetire() {
@@ -763,13 +765,13 @@ function processLifeEvents(person, town, currentYear) {
                 // if you're getting a job that requires a building and doesn't have one
                 // create one
                 job.createBuilding();
-                let jobBuilding = job.getBuilding();
+                const jobBuilding = job.getBuilding();
                 town.addBuilding(jobBuilding);
                 jobBuilding.setOwner(person);
                 jobBuilding.addResident(person);
             }
             if (job.getBuildingRequired() && job.getBuilding()) {
-                let jobBuilding = job.getBuilding();
+                const jobBuilding = job.getBuilding();
                 if (!jobBuilding.getOwner()) {
                     jobBuilding.setOwner(person);
                 }
@@ -828,6 +830,7 @@ function processLifeEvents(person, town, currentYear) {
             }
             return prospectiveJob;
         }
+        return currentJob;
     }
     function tryToGetMarried() {
         const newSpouse = findAPartner(person, town.getLivingPopulation(), gender);
@@ -1001,7 +1004,7 @@ function meetOtherPeople(person, population, currentYear) {
 function passAway(person, town) {
     const personName = person.getFullName();
     person.addLifeEvent(town.getCurrentYear(), "{P} died");
-    if (getPersonById(person.id, town.getOrphanage())) {
+    if (getPersonById(person.personId, town.getOrphanage())) {
         town.removeFromOrphanage(person);
     }
     const spouse = person.getSpouse();
