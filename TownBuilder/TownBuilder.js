@@ -585,9 +585,16 @@ function processLifeEvents(person, town, currentYear) {
         spouse = tryToGetMarried(person, town, gender);
     }
     // buy a house
-    house = houseHunt(person, town, currentAge, spouse, house);
+    if (canBuyHouse(person, house, spouse, currentAge)) {
+        house = houseHunt(person, town, spouse);
+    }
     // have kids
-    haveOrAdoptKids(person, town, spouse, gender);
+    if (canHaveKids(person, spouse, currentAge)) {
+        haveKid(person, spouse, town, currentYear);
+    }
+    else if (wantsToAdopt(person, spouse, currentAge)) {
+        adoptKid(person, spouse, town, currentYear);
+    }
     // retire
     if (currentAge > person.getRetirementAge() && currentJob) {
         person.addLifeEvent(town.getCurrentYear(), `{P} retired from {PP} job as a ${currentJob.getTitle()}`);
@@ -626,100 +633,103 @@ function jobSearch(person, town, currentAge, myJob) {
     return myJob;
 }
 
-function haveOrAdoptKids(person, town, spouse, personGender) {
-    const currentYear = town.getCurrentYear();
-    if (spouse && !spouse.getIsDead()) {
-        // if they're a same-sex couple, check for available adoptions
-        const spouseGender = spouse.getGender();
-        if (personGender == spouseGender) {
-            // make sure there are people in the orphanage
-            const availableOrphans = town.getOrphanage();
-            if (availableOrphans.length > 0 && person.getChildren().length < 4) {
-                for (let orphan of availableOrphans) {
-                    if (orphan.getIsDead()) continue;
-                    town.removeFromOrphanage(orphan);
-                    orphan.setParents([person, spouse]);
-                    // FIXME: this doesn't deal with siblings???
-                    person.addChild(orphan);
-                    orphan.addLifeEvent(currentYear, `{P} was adopted by ${person.getFullName()} and ${spouse.getFullName()}`);
-                    person.addLifeEvent(currentYear, `{P} adopted ${orphan.getFullName()}`);
-                    spouse.addLifeEvent(currentYear, `{P} adopted ${orphan.getFullName()}`);
-                    break;
-                }
-            }
-        }
-        else {
-            const mother = personGender === 'female' ? person : spouse;
-            const motherAge = mother.getAge();
-            if (motherAge >= mother.getAdolescence() && motherAge < mother.getRetirementAge()) {
-                let haveKidsChance = 15;
-                const currentChildren = mother.getChildren().length;
-                if (currentChildren > 1) {
-                    haveKidsChance = 7.5;
-                }
-                if (currentChildren > 3) {
-                    haveKidsChance = 1.5;
-                }
-                if (currentChildren > 5) {
-                    haveKidsChance = 0.1;
-                }
-                if (doesRandomEventHappen(haveKidsChance)) {
-                    const newChild = createPerson(mother.getRace(), {currentYear: currentYear})
-                    town.addToPopulation(newChild);
-                    newChild.setParents([person, spouse]);
-                    newChild.setStats(calculateAverateStats(person.getStats(), spouse.getStats()));
-                    person.addChild(newChild);
-                    newChild.addLifeEvent(currentYear, "{P} was born");
-                    person.addLifeEvent(currentYear, `{P} had a child named ${newChild.getFullName()}`);
-                    spouse.addLifeEvent(currentYear, `{P} had a child named ${newChild.getFullName()}`);
-                } 
-            }
+function canHaveKids(person, spouse, currentAge) {
+    if (!person.getGender() === "female") return false;
+    if (!spouse || spouse.getIsDead() || spouse.getGender() !== "male") return false;
+    if (currentAge < person.getAdolescence() || currentAge > person.getRetirementAge()) return false;
+    return true;
+}
+
+function wantsToAdopt(person, spouse, currentAge) {
+    if (!spouse || spouse.getIsDead()) return false;
+    if (currentAge < person.getAdolescence() || currentAge > person.getRetirementAge()) return false;
+    if (person.getChildren().length > 4) return false;
+    return doesRandomEventHappen(50);
+}
+
+function haveKid(person, spouse, town, currentYear) {
+    let haveKidsChance = 15;
+    const currentChildren = person.getChildren().length;
+    if (currentChildren > 1) {
+        haveKidsChance = 15;
+    }
+    if (currentChildren > 3) {
+        haveKidsChance = 3;
+    }
+    if (currentChildren > 5) {
+        haveKidsChance = 1;
+    }
+    if (doesRandomEventHappen(haveKidsChance)) {
+        const newChild = createPerson(person.getRace(), {currentYear: currentYear})
+        town.addToPopulation(newChild);
+        newChild.setParents([person, spouse]);
+        newChild.setStats(calculateAverateStats(person.getStats(), spouse.getStats()));
+        person.addChild(newChild);
+        newChild.addLifeEvent(currentYear, "{P} was born");
+        person.addLifeEvent(currentYear, `{P} had a child named ${newChild.getFullName()}`);
+        spouse.addLifeEvent(currentYear, `{P} had a child named ${newChild.getFullName()}`);
+    }
+}
+
+function adoptKid(person, spouse, town, currentYear) {
+    const availableOrphans = town.getOrphanage();
+    if (availableOrphans.length > 0) {
+        for (let orphan of availableOrphans) {
+            if (orphan.getIsDead()) continue;
+            town.removeFromOrphanage(orphan);
+            orphan.setParents([person, spouse]);
+            // FIXME: this doesn't deal with siblings???
+            person.addChild(orphan);
+            orphan.addLifeEvent(currentYear, `{P} was adopted by ${person.getFullName()} and ${spouse.getFullName()}`);
+            person.addLifeEvent(currentYear, `{P} adopted ${orphan.getFullName()}`);
+            spouse.addLifeEvent(currentYear, `{P} adopted ${orphan.getFullName()}`);
+            break;
         }
     }
 }
 
-function houseHunt(person, town, currentAge, spouse, currentHouse) {
-    if (currentAge > person.getAdolescence() && !currentHouse) {
-        if (spouse && !spouse.getHouse()) {
-            let newHouse;
-            for (let building of town.getBuildings()) {
-                if (building.getBuildingName() !== 'Home' || building.getOwner()) {
-                    continue;
-                }
-                newHouse = building;
-                makePersonHouseOwner(person, newHouse);
-                break;
-            }
-            // check for house again after trying to get one from the existing houses
-            if (!newHouse) {
-                newHouse = new Home();
-                town.addBuilding(newHouse);
-                makePersonHouseOwner(person, newHouse);
-            }
-            // pay for the house
-            person.addValue(-newHouse.getCost());
+function canBuyHouse(person, house, spouse, currentAge) {
+    if (currentAge <= person.getAdolescence()) return false;
+    if (house) return false;
+    if (spouse && spouse.getHouse()) return false;
+    return true;
+}
 
-            person.addLifeEvent(town.getCurrentYear(), "{P} bought a house");
-            // now we can add spouse and children to the house
-            const theirNewHouse = person.getHouse();
-            if (theirNewHouse) {
-                if (spouse && !spouse.getIsDead()) {
-                    if (spouse.getHouse()) {
-                        spouse.getHouse().removeOwner();
-                        log(`somehow their spouse has a house`);
-                    }
-                    addPersonToHouse(spouse, theirNewHouse);
-                }
-                for (let child of person.getChildren()) {
-                    if (!child.getIsDead() && !child.getHouse()) {
-                        addPersonToHouse(child, theirNewHouse);
-                    }
-                }
-            }
-            currentHouse = newHouse;
+function houseHunt(person, town, spouse) {
+    let newHouse;
+    for (let building of town.getBuildings()) {
+        if (building.getBuildingName() !== 'Home' || building.getOwner()) {
+            continue;
+        }
+        newHouse = building;
+        person.addLifeEvent(town.getCurrentYear(), "{P} bought a house");
+        break;
+    }
+    // check for house again after trying to get one from the existing houses
+    if (!newHouse) {
+        newHouse = new Home();
+        town.addBuilding(newHouse);
+        person.addLifeEvent(town.getCurrentYear(), "{P} built a house");
+    }
+    makePersonHouseOwner(person, newHouse);
+    // pay for the house
+    person.addValue(-newHouse.getCost());
+
+    // now we can add spouse and children to the house
+    if (spouse && !spouse.getIsDead()) {
+        const currentSpouseHouse = spouse.getHouse();
+        if (currentSpouseHouse) {
+            currentSpouseHouse.removeOwner();
+            spouse.setHouse(undefined);
+        }
+        addPersonToHouse(spouse, newHouse);
+    }
+    for (let child of person.getChildren()) {
+        if (!child.getIsDead() && !child.getHouse()) {
+            addPersonToHouse(child, newHouse);
         }
     }
-    return currentHouse;
+    return newHouse;
 }
 
 function yearPasses(town) {
@@ -926,12 +936,12 @@ function calculateTaxes(value, taxRate) {
 
 function addPersonToHouse(person, house) {
     // if they are already a resident somewhere, remove them from the residence
-    if (person.getResidency() && person.getResidency() != house) {
-        person.getResidency().removeResident(person);
-        person.setResidency(undefined);
+    const currentResidency = person.getResidency();
+    if (currentResidency && currentResidency !== house) {
+        currentResidency.removeResident(person);
     }
     // only add them as a resident if they are not already in the list of residents
-    if (house.getResidents().indexOf(person) == -1) {
+    if (house.getResidents().indexOf(person) === -1) {
         house.addResident(person);
     }
     person.setResidency(house);
