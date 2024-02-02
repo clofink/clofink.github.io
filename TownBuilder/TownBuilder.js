@@ -957,8 +957,8 @@ function meetOtherPeople(person, population, currentYear) {
                 {to: "{P} did a favor for", from: "{P} had a favor done for {OP} by"},
             ]
             const positiveInteraction = getRandomItemInList(positiveInteractions);
-            person.addLifeEvent(currentYear, `${positiveInteraction.to} ${meetPersonName}`);
-            meetPerson.addLifeEvent(currentYear, `${positiveInteraction.from} ${personName}`);
+            // person.addLifeEvent(currentYear, `${positiveInteraction.to} ${meetPersonName}`);
+            // meetPerson.addLifeEvent(currentYear, `${positiveInteraction.from} ${personName}`);
         }
         person.increasePersonReputation(meetPersonId, value);
         meetPerson.increasePersonReputation(personId, value);
@@ -973,8 +973,8 @@ function meetOtherPeople(person, population, currentYear) {
                 {to: "{P} got caught stealing from", from: "{P} was stolen from by"},
             ]
             const negativeInteraction = getRandomItemInList(negativeInteractions);
-            person.addLifeEvent(currentYear, `${negativeInteraction.to} ${meetPersonName}`);
-            meetPerson.addLifeEvent(currentYear, `${negativeInteraction.from} ${personName}`);
+            // person.addLifeEvent(currentYear, `${negativeInteraction.to} ${meetPersonName}`);
+            // meetPerson.addLifeEvent(currentYear, `${negativeInteraction.from} ${personName}`);
         }
         person.decreasePersonReputation(meetPersonId, value);
         meetPerson.decreasePersonReputation(personId, value);
