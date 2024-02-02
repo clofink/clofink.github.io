@@ -208,7 +208,10 @@ function displayTownInfo(town) {
         clearElement(eById('townInfo'));
     }
     let townInfoDiv = eById('townInfo');
-    let headers = ['Population Type', 'Number of People'];
+    let headers = [
+        {displayName: 'Population Type'},
+        {displayName: 'Number of People'}
+    ];
     let table = createTable(headers);
     table.id = 'townTable';
     let totalPopRow = createDataRow(['Total Population', town.getPopulation().length])
@@ -250,8 +253,27 @@ function displayPopulationInfo(peopleList) {
         clearElement(eById('populationInfo'));
     }
     const populationInfoDiv = eById('populationInfo');
-    const headers = ['Name', 'Age', 'Race', 'Birth Year', 'Death Year', 'Gender', 'Gender Preference', 'Number of Children', 'Worth', 'Job Title', 'Years in Job', 'Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
-    const table = createTable(headers);
+
+    const headers = [
+        {displayName: 'Name', sortBy: "name"}, 
+        {displayName: 'Age', sortBy: "age"},
+        {displayName: 'Race', sortBy: "race"},
+        {displayName: 'Birth Year', sortBy: "birthYear"},
+        {displayName: 'Death Year', sortBy: "deathYear"},
+        {displayName: 'Gender', sortBy: "gender"},
+        {displayName: 'Gender Preference', sortBy: "genderPreference"},
+        {displayName: '# Children', sortBy: "children"},
+        {displayName: 'Worth', sortBy: "value"},
+        {displayName: 'Job Title', sortBy: "title"},
+        {displayName: 'Years in Job', sortBy: "yearsInPos"},
+        {displayName: 'Strength', sortBy: "STR"},
+        {displayName: 'Dexterity', sortBy: "DEX"},
+        {displayName: 'Constitution', sortBy: "CON"},
+        {displayName: 'Intelligence', sortBy: "INT"},
+        {displayName: 'Wisdom', sortBy: "WIS"},
+        {displayName: 'Charisma', sortBy: "CHA"},
+    ]
+    const table = createTable(headers, true);
     table.id = 'populationTable'
     addElement(fillPeopleTable(peopleList, table), populationInfoDiv);
 }
@@ -373,9 +395,9 @@ function highlightFamily(event) {
 /**
  * Creates a table and calls the functions needed to populate it
 */
-function createTable(headers) {
+function createTable(headers, sortBy) {
     const chatTable = newElement('table');
-    const headerRow = createHeaderRow(headers);
+    const headerRow = createHeaderRow(headers, sortBy);
     addElement(headerRow, chatTable);
     return chatTable;
 }
@@ -396,11 +418,11 @@ function createTable(headers) {
  * @param {Array} headers - list of header names
  * @returns {HTMLElement} header row
  */
-function createHeaderRow(headers) {
+function createHeaderRow(headers, sortBy) {
     const headerRow = newElement('tr');
-    for (i = 0; i < headers.length; i++) {
-        const tableValue = newElement('th', {innerHTML: headers[i], sortDirection: "asc"});
-        registerElement(tableValue, "click", sortByHeader);
+    for (let header of headers) {
+        const tableValue = newElement('th', {innerHTML: header.displayName, "data-sort-direction": "asc", "data-sort-by": header.sortBy});
+        if (sortBy) registerElement(tableValue, "click", sortByHeader);
         addElement(tableValue, headerRow);
     }
     return (headerRow);
@@ -411,72 +433,17 @@ function createHeaderRow(headers) {
  * @param {} event - automatically provided by event handler
  */
 function sortByHeader(event) {
-    let sortBy = event.target.innerText;
     let sortedPopulation = [...population];
-    let sortDirection = event.target.getAttribute('sortDirection');
-    switch(sortBy) {
-        case "Name":
-            sortBy = 'name';
-            break;
-        case "Age":
-            sortBy = 'age';
-            break;
-        case "Birth Year":
-            sortBy = 'birthYear';
-            break;
-        case "Gender":
-            sortBy = 'gender';
-            break;
-        case "Gender Preference":
-            sortBy = 'genderPreference';
-            break;
-        case "Death Year":
-            sortBy = 'deathYear';
-            break;
-        case "Number of Children":
-            sortBy = 'children';
-            break;
-        case 'Worth':
-            sortBy = 'value';
-            break;
-        case 'Job Title':
-            sortBy = 'title';
-            break;
-        case 'Years in Job':
-            sortBy = 'yearsInPos';
-            break;
-        case 'Race':
-            sortBy = 'race';
-            break;
-        case 'Strength':
-            sortBy = 'STR';
-            break;
-        case 'Constitution':
-            sortBy = 'CON';
-            break;
-        case 'Dexterity':
-            sortBy = 'DEX';
-            break;
-        case 'Intelligence':
-            sortBy = 'INT';
-            break;
-        case 'Wisdom':
-            sortBy = 'WIS';
-            break;
-        case 'Charisma':
-            sortBy = 'CHA';
-            break;
-        default:
-            sortBy = 'personId';
-            break;
-    }
-    if (sortDirection == 'asc') {
+    const sortBy = event.target.dataset.sortBy || "personId";
+    const sortDirection = event.target.dataset.sortDirection;
+
+    if (sortDirection === 'asc') {
         sortedPopulation.sort(customSortAsc);
-        event.target.setAttribute('sortDirection', 'desc');
+        event.target.setAttribute('data-sort-direction', 'desc');
     }
-    else if (sortDirection == 'desc') {
+    else if (sortDirection === 'desc') {
         sortedPopulation.sort(customSortDesc);
-        event.target.setAttribute('sortDirection', 'asc');
+        event.target.setAttribute('data-sort-direction', 'asc');
     }
     rebuildTableRows(sortedPopulation);
 
