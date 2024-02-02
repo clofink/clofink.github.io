@@ -62,3 +62,11 @@ function clearElement(element) {
         element.children[0].remove();
     }
 }
+function generateRange(low, high) {
+    if (low > high) return [];
+    const range = [];
+    for (low; low < high; low++) {
+        range.push(low);
+    }
+    return range;
+}
