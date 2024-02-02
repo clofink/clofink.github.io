@@ -30,6 +30,7 @@ class Person {
     spouse;
     value = 0;
     stats = {};
+    haveKidsChance;
 
     constructor(options) {
         options = options || {};
@@ -258,6 +259,9 @@ class Person {
     getJob() {
         return this.job;
     }
+    getKidsChance() {
+        return this.haveKidsChance;
+    }
     getLastName() {
         return this.lastName;
     }
@@ -404,6 +408,7 @@ class Dragonborn extends Person {
     race = 'dragonborn';
     maxAge = 80;
     adolescence = 15;
+    haveKidsChance = 20;
 
     getFullName() {
         // return full name with any modifiers needed
@@ -490,6 +495,7 @@ class Dwarf extends Person {
     race = 'dwarf';
     maxAge = 350;
     adolescence = 50;
+    haveKidsChance = 5;
 
     randomFirstName() {
         const nameList1 = ["Ad", "Am", "Arm", "Baer", "Daer", "Bal", "Ban", "Bar", "Bel", "Ben", "Ber", "Bhal", "Bhar", "Bhel", "Bram", "Bran", "Brom", "Brum", "Bun", "Dal", "Dar", "Dol", "Dul", "Eb", "Em", "Erm", "Far", "Gal", "Gar", "Ger", "Gim", "Gral", "Gram", "Gran", "Grem", "Gren", "Gril", "Gry", "Gul", "Har", "Hjal", "Hjol", "Hjul", "Hor", "Hul", "Hur", "Kar", "Khar", "Kram", "Krom", "Krum", "Mag", "Mal", "Mel", "Mor", "Muir", "Mur", "Rag", "Ran", "Reg", "Rot", "Thal", "Thar", "Thel", "Ther", "Tho", "Thor", "Thul", "Thur", "Thy", "Tor", "Ty", "Um", "Urm", "Von"];
@@ -555,6 +561,7 @@ class Elf extends Person {
     race = 'elf';
     maxAge = 750;
     adolescence = 100;
+    haveKidsChance = 5;
 
     randomFirstName() {
         if (this.gender == 'male') {
@@ -634,6 +641,7 @@ class Gnome extends Person {
     race = 'gnome';
     maxAge = 425;
     adolescence = 40;
+    haveKidsChance = 3;
 
     randomFirstName() {
         if (this.gender == 'male') {
@@ -716,179 +724,11 @@ class Gnome extends Person {
     }
 }
 
-class Halfelf extends Person {
-    race = 'halfelf';
-    maxAge = 180;
-    adolescence = 20;
-
-    randomFirstName() {
-        if (this.gender == 'male') {
-            const nameList1 = ["Al", "Aro", "Bar", "Bel", "Cor", "Cra", "Dav", "Dor", "Eir", "El", "Fal", "Fril", "Gaer", "Gra", "Hal", "Hor", "Ian", "Ilo", "Jam", "Kev", "Kri", "Leo", "Lor", "Mar", "Mei", "Nil", "Nor", "Ori", "Os", "Pan", "Pet", "Quo", "Raf", "Ri", "Sar", "Syl", "Tra", "Tyr", "Uan", "Ul", "Van", "Vic", "Wal", "Wil", "Xan", "Xav", "Yen", "Yor", "Zan", "Zyl"];
-            const nameList2 = ["avor", "ben", "borin", "coril", "craes", "deyr", "dithas", "elor", "enas", "faelor", "faerd", "finas", "fyr", "gotin", "gretor", "homin", "horn", "kas", "koris", "lamir", "lanann", "lumin", "minar", "morn", "nan", "neak", "neiros", "orin", "ovar", "parin", "phanis", "qarim", "qinor", "reak", "ril", "ros", "sariph", "staer", "torin", "tumil", "valor", "voril", "warith", "word", "xian", "xiron", "yeras", "ynor", "zaphir", "zaren"];
-            const randomNum1 = Math.floor(randomFunction() * nameList1.length);
-            const randomNum2 = Math.floor(randomFunction() * nameList2.length);
-            return nameList1[randomNum1] + nameList2[randomNum2];
-        }
-        if (this.gender == 'female') {
-            const nameList3 = ["Alu", "Aly", "Ar", "Bren", "Byn", "Car", "Co", "Dar", "Del", "El", "Eli", "Fae", "Fha", "Gal", "Gif", "Haly", "Ho", "Ile", "Iro", "Jen", "Jil", "Kri", "Kys", "Les", "Lora", "Ma", "Mar", "Mare", "Neri", "Nor", "Ol", "Ophi", "Phaye", "Pri", "Qi", "Que", "Rel", "Res", "Sael", "Saf", "Syl", "Ther", "Tyl", "Una", "Uri", "Ven", "Vyl", "Win", "Wol", "Xil", "Xyr", "Yes", "Yll", "Zel", "Zin"];
-            const nameList4 = ["aerys", "anys", "bellis", "bwynn", "cerys", "charis", "diane", "dove", "elor", "enyphe", "faen", "fine", "galyn", "gwynn", "hana", "hophe", "kaen", "kilia", "lahne", "lynn", "mae", "malis", "mythe", "nalore", "noa", "nys", "ona", "phira", "pisys", "qarin", "qwyn", "rila", "rora", "seris", "stine", "sys", "thana", "theris", "tihne", "trana", "viel", "vyre", "walyn", "waris", "xaris", "xipha", "yaries", "yra", "zenya", "zira"];
-            const randomNum1 = Math.floor(randomFunction() * nameList3.length);
-            const randomNum2 = Math.floor(randomFunction() * nameList4.length);
-            return nameList3[randomNum1] + nameList4[randomNum2];
-        }
-    }
-    getFullName() {
-        return this.name;
-    }
-}
-
-class Halfling extends Person {
-    race = 'halfling'
-    maxAge = 250;
-    adolescence = 20;
-
-    randomFirstName() {
-        if (this.gender == 'male') {
-            const nameList1 = ["An", "Ar", "Bar", "Bel", "Con", "Cor", "Dan", "Dav", "El", "Er", "Fal", "Fin", "Flyn", "Gar", "Go", "Hal", "Hor", "Ido", "Ira", "Jan", "Jo", "Kas", "Kor", "La", "Lin", "Mar", "Mer", "Ne", "Nor", "Ori", "Os", "Pan", "Per", "Pim", "Quin", "Quo", "Ri", "Ric", "San", "Shar", "Tar", "Te", "Ul", "Uri", "Val", "Vin", "Wen", "Wil", "Xan", "Xo", "Yar", "Yen", "Zal", "Zen"];
-            const nameList2 = ["ace", "amin", "bin", "bul", "dak", "dal", "der", "don", "emin", "eon", "fer", "fire", "gin", "hace", "horn", "kas", "kin", "lan", "los", "min", "mo", "nad", "nan", "ner", "orin", "os", "pher", "pos", "ras", "ret", "ric", "rich", "rin", "ry", "ser", "sire", "ster", "ton", "tran", "umo", "ver", "vias", "von", "wan", "wrick", "yas", "yver", "zin", "zor", "zu"];
-            const randomNum1 = Math.floor(randomFunction() * nameList1.length);
-            const randomNum2 = Math.floor(randomFunction() * nameList2.length);
-            return nameList1[randomNum1] + nameList2[randomNum2];        
-        }
-        if (this.gender == 'female') {
-            const nameList3 = ["An", "Ari", "Bel", "Bre", "Cal", "Chen", "Dar", "Dia", "Ei", "Eo", "Eli", "Era", "Fay", "Fen", "Fro", "Gel", "Gra", "Ha", "Hil", "Ida", "Isa", "Jay", "Jil", "Kel", "Kith", "Le", "Lid", "Mae", "Mal", "Mar", "Ne", "Ned", "Odi", "Ora", "Pae", "Pru", "Qi", "Qu", "Ri", "Ros", "Sa", "Shae", "Syl", "Tham", "Ther", "Tryn", "Una", "Uvi", "Va", "Ver", "Wel", "Wi", "Xan", "Xi", "Yes", "Yo", "Zef", "Zen"];
-            const nameList4 = ["alyn", "ara", "brix", "byn", "caryn", "cey", "da", "dove", "drey", "elle", "eni", "fice", "fira", "grace", "gwen", "haly", "jen", "kath", "kis", "leigh", "la", "lie", "lile", "lienne", "lyse", "mia", "mita", "ne", "na", "ni", "nys", "ola", "ora", "phina", "prys", "rana", "ree", "ri", "ris", "sica", "sira", "sys", "tina", "trix", "ula", "vira", "vyre", "wyn", "wyse", "yola", "yra", "zana", "zira"];
-            const randomNum1 = Math.floor(randomFunction() * nameList3.length);
-            const randomNum2 = Math.floor(randomFunction() * nameList4.length);
-            return nameList3[randomNum1] + nameList4[randomNum2];        
-        }
-    }
-    randomLastName() {
-        const nameList12 = ["amber", "apple", "autumn", "barley", "big", "boulder", "bramble", "bright", "bronze", "brush", "cherry", "cinder", "clear", "cloud", "common", "copper", "deep", "dust", "earth", "elder", "ember", "fast", "fat", "fern", "flint", "fog", "fore", "free", "glen", "glow", "gold", "good", "grand", "grass", "great", "green", "haven", "heart", "high", "hill", "hog", "humble", "keen", "laughing", "lea", "leaf", "light", "little", "lone", "long", "lunar", "marble", "mild", "mist", "moon", "moss", "night", "nimble", "proud", "quick", "raven", "reed", "river", "rose", "rumble", "shadow", "silent", "silver", "smooth", "soft", "spring", "still", "stone", "stout", "strong", "summer", "sun", "swift", "tall", "tea", "ten", "thistle", "thorn", "toss", "true", "twilight", "under", "warm", "whisper", "wild", "wise"];
-        const nameList13 = ["ace", "barrel", "beam", "belly", "berry", "bloom", "blossom", "bluff", "bottle", "bough", "brace", "braid", "branch", "brand", "bridge", "brook", "brush", "cheeks", "cloak", "cobble", "creek", "crest", "dance", "dancer", "dew", "dream", "earth", "eye", "eyes", "feet", "fellow", "finger", "fingers", "flow", "flower", "foot", "found", "gather", "glide", "grove", "hand", "hands", "hare", "heart", "hill", "hollow", "kettle", "lade", "leaf", "man", "mane", "mantle", "meadow", "moon", "mouse", "pot", "rabbit", "seeker", "shadow", "shine", "sky", "song", "spark", "spell", "spirit", "step", "stride", "sun", "surge", "top", "topple", "vale", "water", "whistle", "willow", "wind", "wood", "woods"];
-        const randomNum1 = randomFunction() * nameList12.length | 0;
-        let randomNum2 = randomFunction() * nameList13.length | 0;
-        while (nameList12[randomNum1] === nameList13[randomNum2]) {
-            randomNum2 = randomFunction() * nameList13.length | 0;
-        }
-        return capitalizeFirstLetter(nameList12[randomNum1] + nameList13[randomNum2]);    
-    }
-}
-
-class Halforc extends Person {
-    race = 'halforc';
-    maxAge = 75;
-    adolescence = 14;
-
-    randomFirstName() {
-        if (this.gender == 'male') {
-            const nameList1 = ["Ag", "Agg", "Ar", "Arn", "As", "At", "Atr", "B", "Bar", "Bel", "Bor", "Br", "Brak", "C", "Cr", "D", "Dor", "Dr", "Dur", "G", "Gal", "Gan", "Gar", "Gna", "Gor", "Got", "Gr", "Gram", "Grim", "Grom", "Grum", "Gul", "H", "Hag", "Han", "Har", "Hog", "Hon", "Hor", "Hun", "Hur", "K", "Kal", "Kam", "Kar", "Kel", "Kil", "Kom", "Kor", "Kra", "Kru", "Kul", "Kur", "Lum", "M", "Mag", "Mahl", "Mak", "Mal", "Mar", "Mog", "Mok", "Mor", "Mug", "Muk", "Mura", "N", "Oggu", "Ogu", "Ok", "Oll", "Or", "Rek", "Ren", "Ron", "Rona", "S", "Sar", "Sor", "T", "Tan", "Th", "Thar", "Ther", "Thr", "Thur", "Trak", "Truk", "Ug", "Uk", "Ukr", "Ull", "Ur", "Urth", "Urtr", "Z", "Za", "Zar", "Zas", "Zav", "Zev", "Zor", "Zur", "Zus"];
-            const nameList2 = ["a", "a", "a", "o", "o", "e", "i", "u", "u", "u"];
-            const nameList3 = ["bak", "bar", "bark", "bash", "bur", "burk", "d", "dak", "dall", "dar", "dark", "dash", "dim", "dur", "durk", "g", "gak", "gall", "gar", "gark", "gash", "glar", "gul", "gur", "m", "mak", "mar", "marsh", "mash", "mir", "mur", "n", "nar", "nars", "nur", "rak", "rall", "rash", "rim", "rimm", "rk", "rsh", "rth", "ruk", "sk", "tar", "tir", "tur", "z", "zall", "zar", "zur"];
-            const randomNum1 = Math.floor(randomFunction() * nameList1.length);
-            const randomNum2 = Math.floor(randomFunction() * nameList2.length);
-            const randomNum3 = Math.floor(randomFunction() * nameList3.length);
-            return nameList1[randomNum1] + nameList2[randomNum2] + nameList3[randomNum3];
-        }
-        if (this.gender == 'female') {
-            const nameList4 = ["Al", "Ar", "Br", "Ek", "El", "Fal", "Fel", "Fol", "Ful", "G", "Gaj", "Gar", "Gij", "Gor", "Gr", "Gry", "Gyn", "Hur", "K", "Kar", "Kat", "Ker", "Ket", "Kir", "Kot", "Kur", "Kut", "Lag", "M", "Mer", "Mir", "Mor", "N", "Ol", "Oot", "Puy", "R", "Rah", "Rahk", "Ras", "Rash", "Raw", "Roh", "Rohk", "S", "Sam", "San", "Sem", "Sen", "Sh", "Shay", "Sin", "Sum", "Sun", "Tam", "Tem", "Tu", "Tum", "Ub", "Um", "Ur", "Van", "Zan", "Zen", "Zon", "Zun"];
-            const nameList5 = ["a", "a", "o", "o", "e", "i", "i", "u"];
-            const nameList6 = ["d", "da", "dar", "dur", "g", "gar", "gh", "gri", "gu", "sh", "sha", "shi", "gum", "gume", "gur", "ki", "mar", "mi", "mira", "me", "mur", "ne", "ner", "nir", "nar", "nchu", "ni", "nur", "ral", "rel", "ri", "rook", "ti", "tah", "tir", "tar", "tur", "war", "z", "zar", "zara", "zi", "zur", "zura", "zira"];
-            const randomNum1 = Math.floor(randomFunction() * nameList4.length);
-            const randomNum2 = Math.floor(randomFunction() * nameList5.length);
-            const randomNum3 = Math.floor(randomFunction() * nameList6.length);
-            return nameList4[randomNum1] + nameList5[randomNum2] + nameList6[randomNum3];
-        }
-    }
-    getFullName() {
-        return this.name;
-    }
-}
-
-class Human extends Person {
-    race = 'human';
-    maxAge = 100;
-    adolescence = 18;
-}
-
-class Tiefling extends Person {
-    race = 'tiefling';
-    maxAge = 110;
-    adolescence = 18;
-
-    getFullName() {
-        return this.name;
-    }
-    randomFirstName() {
-        if (doesRandomEventHappen(50)) {
-            const nameList3 = ["Achievement", "Adventure", "Aid", "Ambition", "Anguish", "Art", "Ashes", "Atonement", "Awe", "Bliss", "Bright", "Carrion", "Carrior", "Chant", "Cheer", "Cherish", "Closed", "Comfort", "Compassion", "Confidence", "Content", "Courage", "Creed", "Cunning", "Darkness", "Death", "Debauchery", "Deceit", "Delight", "Desire", "Despair", "Devotion", "Dexterity", "Different", "Doom", "Doubt", "Dread", "Ecstasy", "End", "Enduring", "Ennui", "Entropy", "Essential", "Esteem", "Eternal", "Euphoria", "Excellence", "Exceptional", "Exciting", "Expert", "Expertise", "Expressive", "Extreme", "Faith", "Fear", "Flawed", "Free", "Freedom", "Fresh", "Gentle", "Gladness", "Glee", "Gloom", "Glory", "Gluttony", "Grief", "Happiness", "Happy", "Harmony", "Hate", "Hatred", "Hero", "Hope", "Horror", "Hunt", "Hymn", "Ideal", "Ignominy", "Immortal", "Innovation", "Interesting", "Journey", "Joy", "Laughter", "Life", "Light", "Love", "Loyal", "Lust", "Mantra", "Master", "Mastery", "Mayhem", "Misery", "Mockery", "Murder", "Muse", "Music", "Mystery", "Normal", "Nowhere", "Odd", "Open", "Optimal", "Pain", "Panic", "Passion", "Perfect", "Piety", "Pleasure", "Poetry", "Possession", "Promise", "Psalm", "Pure", "Quest", "Random", "Rare", "Recovery", "Redemption", "Regular", "Relentless", "Respect", "Reverence", "Revulsion", "Sadness", "Sanctity", "Silence", "Skilled", "Sly", "Song", "Sorrow", "Suffering", "Temerity", "Terror", "Timeless", "Torment", "Tragedy", "Trickery", "Trouble", "Trust", "Truth", "Uncommon", "Unlocked", "Vice", "Virtue", "Void", "Voyage", "Weary", "Winning", "Wit", "Woe"];
-            const randomNum1 = randomFunction() * nameList3.length | 0;
-            return nameList3[randomNum1];
-        }
-        if (this.gender == 'male') {
-            var nameList1 = ["Aet", "Ak", "Am", "Aran", "And", "Ar", "Ark", "Bar", "Car", "Cas", "Dam", "Dhar", "Eb", "Ek", "Er", "Gar", "Gu", "Gue", "Hor", "Ia", "Ka", "Kai", "Kar", "Kil", "Kos", "Ky", "Loke", "Mal", "Male", "Mav", "Me", "Mor", "Neph", "Oz", "Ral", "Re", "Rol", "Sal", "Sha", "Sir", "Ska", "The", "Thy", "Thyne", "Ur", "Uri", "Val", "Xar", "Zar", "Zer", "Zher", "Zor"];
-            var nameList2 = ["adius", "akas", "akos", "char", "cis", "cius", "dos", "emon", "ichar", "il", "ilius", "ira", "lech", "lius", "lyre", "marir", "menos", "meros", "mir", "mong", "mos", "mus", "non", "rai", "rakas", "rakir", "reus", "rias", "ris", "rius", "ron", "ros", "rus", "rut", "shoon", "thor", "thos", "thus", "us", "venom", "vir", "vius", "xes", "xik", "xikas", "xire", "xius", "xus", "zer", "zire"];
-            const randomNum1 = randomFunction() * nameList1.length | 0;
-            const randomNum2 = randomFunction() * nameList2.length | 0;
-            return nameList1[randomNum1] + nameList2[randomNum2];        
-        }
-        if (this.gender == 'female') {
-            var nameList4 = ["Af", "Agne", "Ani", "Ara", "Ari", "Aria", "Bel", "Bri", "Cre", "Da", "Di", "Dim", "Dor", "Ea", "Fri", "Gri", "His", "In", "Ini", "Kal", "Le", "Lev", "Lil", "Ma", "Mar", "Mis", "Mith", "Na", "Nat", "Ne", "Neth", "Nith", "Ori", "Pes", "Phe", "Qu", "Ri", "Ro", "Sa", "Sar", "Seiri", "Sha", "Val", "Vel", "Ya", "Yora", "Yu", "Za", "Zai", "Ze"];
-            var nameList5 = ["bis", "borys", "cria", "cyra", "dani", "doris", "faris", "firith", "goria", "grea", "hala", "hiri", "karia", "ki", "laia", "lia", "lies", "lista", "lith", "loth", "lypsis", "lyvia", "maia", "meia", "mine", "narei", "nirith", "nise", "phi", "pione", "punith", "qine", "rali", "rissa", "seis", "solis", "spira", "tari", "tish", "uphis", "vari", "vine", "wala", "wure", "xibis", "xori", "yis", "yola", "za", "zes"];
-            const randomNum1 = randomFunction() * nameList4.length | 0;
-            const randomNum2 = randomFunction() * nameList5.length | 0;
-            return nameList4[randomNum1] + nameList5[randomNum2];        
-        }
-    }
-}
-
-class Tabaxi extends Person {
-    race = 'tabaxi';
-    maxAge = 100;
-    adolescence = 18;
-
-    randomFirstName() {
-        const nameList1 = ["Afternoon Nap (Nap)", "Animal in the Woods (Woods)", "Answered Riddle (Riddle)", "Art of Shadows (Art)", "Aura of Passion (Aura)", "Aurora of Winter (Aurora)", "Autumn Harvest (Autumn)", "Beats of a Heart (Beats)", "Beauty of Summer (Summer)", "Beauty's Eye (Beauty)", "Belly of a Beast (Beast)", "Berry Bush (Bush)", "Big Heart (Big)", "Bird Feather (Bird)", "Bite Marks (Bite)", "Blank Board (Board)", "Blank Canvas (Canvas)", "Blazing Fire (Blaze)", "Blossoms in Summer (Blossom)", "Branch of a River (River)", "Breath of Fresh Air (Breath)", "Broken Chain (Chain)", "Bubble of a Cauldron (Bubble)", "Burden of Chains (Chains)", "Burning Desire (Desire)", "Burning Fire (Fire)", "Bush in the Forest (Forest)", "Bushy Branch (Branch)", "Busy Bee (Bee)", "Cadence of Water (Cadence)", "Cake of Chocolate (Cake)", "Call of a Bird (Bird)", "Call of the Owl (Owl)", "Call to Action (Action)", "Candle in the Dark (Candle)", "Cannon on Deck (Cannon)", "Carriage on the Road (Road)", "Clanking Bottle (Clank)", "Cloaking Dagger (Dagger)", "Cloud in the Sky (Sky)", "Coursing River (River)", "Cover of Clouds (Cover)", "Crescent Moon (Moon)", "Dangling Button (Button)", "Dangling Lace (Lace)", "Daydream at Night (Dream)", "Dew on the Grass (Dew)", "Dream of Days (Dream)", "Drifting Cloud (Cloud)", "Drifting Snowflake (Snowflake)", "Drop in a Pond (Drop)", "Dust of Chalk (Dust)", "Dust on the Road (Dust)", "Eclipse of the Moon (Eclipse)", "Edge of the World (Edge)", "End of Winter (Winter)", "Endless Time (Time)", "Fall of Water (Water)", "Fallen Twig (Twig)", "Fang of a Snake (Fang)", "Feather in the Wind (Feather)", "Fire in the Distance (Fire)", "Fish in the River (River)", "Flame of Passion (Passion)", "Flame of the Spirit (Flame)", "Flickering Fire (Fire)", "Flickering Flame (Flame)", "Flight of a Robin (Robin)", "Flow of the River (Flow)", "Flower in the Field (Flower)", "Flower of Ivory (Ivory)", "Forgotten Link (Link)", "Four-Leaf Clover (Clover)", "Fragrance of Spring (Spring)", "Friend of Foe (Friend)", "Gale of the Storm (Gale)", "Game of Chance (Game)", "Garden of Flowers (Flower)", "Gift of a Guest (Gift)", "Glow of the Sun (Sun)", "Grass of Spring (Grass)", "Guest at Home (Guest)", "Guide of Life (Guide)", "Hawk Feather (Hawk)", "Hen of the Flock (Hen)", "Hidden Depths (Depth)", "Hidden Treasure (Treasure)", "Hide of the Beast (Hide)", "High Noon (Noon)", "Honey of Bees (Honey)", "Hot Flame (Flame)", "Hot as Fire (Fire)", "Ice in Summer (Ice)", "Ice on the Lake (Ice)", "Ink on Skin (Ink)", "Jewel of the Mountain (Jewel)", "Kite in the Wind (Kite)", "Leaf on the Water (Leaf)", "Leaping Frog (Frog)", "Light in the Morning (Light)", "Lightning After Thunder (Lightning)", "Little Flower (Little)", "Lock on an Open Door (Lock)", "Locket on a Heart (Locket)", "Looping Coil (Coil)", "Loose String (String)", "Luck of the Draw (Luck)", "Marble in the Sky (Marble)", "Mark of Life (Mark)", "Melting of Snow (Snow)", "Mirror's Reflection (Mirror)", "Mist in the Morning (Mist)", "Mountain Boulder (Boulder)", "Needle in Hay (Needle)", "Night of Dreams (Night)", "Open Gates (Gate)", "Owl in the Morning (Owl)", "Page of a Book (Page)", "Paint on a Canvas (Paint)", "Patch in the Forest (Patch)", "Paw of a Bear (Paw)", "Peak of Mountains (Peak)", "Piece of the Puzzle (Piece)", "Plume in the Wind (Plume)", "Plume of Smoke (Smoke)", "Poem of Summer (Poem)", "Print of a Boot (Boot)", "Print of an Animal (Animal)", "Quill in the Grass (Quill)", "Rain in Summer (Rain)", "Rain of Fall (Rain)", "Rainbow After Rain (Rainbow)", "Rays of the Sun (Ray)", "Remnants of History (Remnant)", "Rhythm of Drums (Rhythm)", "Ringing of Bells (Bell)", "Rinkling Chains (Chains)", "Roar of a Bear (Roar)", "Rope in a Knot (Knot)", "Rustling of a Deer (Deer)", "Sailing Ship (Ship)", "Sand of the Beach (Sand)", "Sands of Time (Sand)", "Scarf in Summer (Scarf)", "Scratch on Wood (Scratch)", "Screech of Bats (Bat)", "Sea of Opportunity (Sea)", "Second Chance (Chance)", "Serpent Scale (Scale)", "Shadow of a Star (Shadow)", "Shadows in the Wind (Shadow)", "Sky Full of Stars (Sky)", "Sky of a Sunset (Sky)", "Sleight Hand (Hand)", "Smooth as Silk (Silk)", "Snapping Branch (Snap)", "Snow of the Mountain (Snow)", "Solstice of Summer (Solstice)", "Song of Paradise (Song)", "Sound of the Drum (Drum)", "Spark of Life (Spark)", "Sparkle of Light (Sparkle)", "Spell of Rain (Spell)", "Spots of a Leopard (Spot)", "Spring Blossom (Spring)", "Spring Winds (Spring)", "Star in the Morning (Star)", "Steady Rock (Rock)", "Stitch of Fabric (Stitch)", "Stone in Water (Stone)", "Storm at Sea (Sea)", "Storm on the Horizon (Storm)", "Strength of Love (Love)", "Stripes of a Tiger (Tiger)", "Stroke of a Brush (Brush)", "Summer Afternoon (Summer)", "Sunshine at Night (Sunshine)", "Tale of Wonder (Tale)", "Taste of Fruit (Taste)", "Three Tree (Three)", "Thrill of Life (Thrill)", "Thunder in the Morning (Thunder)", "Ticking Clock (Clock)", "Tome of Secrets (Tome)", "Top Card (Card)", "Trail in the Woods (Trail)", "Tree Blossom (Blossom)", "Tree in the Woods (Tree)", "Tricking Treat (Trick)", "Two River (River)", "Unpulled Cart (Cart)", "Unread Book (Book)", "Veil of Shadows (Veil)", "Veil of a Mask (Veil)", "Wave on the Shore (Wave)", "Windy Shore (Shore)", "Wing of an Angel (Angel)", "Winter Breath (Winter)", "Wish Upon a Star (Wish)", "Wonder of the World (Wonder)"];
-        const nameList2 = ["Active", "Agile", "Amused", "Amusing", "Ancient", "Angelic", "Arctic", "Austere", "Bizarre", "Bold", "Brash", "Brave", "Bright", "Bronze", "Cheeky", "Clever", "Curious", "Defiant", "Dynamic", "Eager", "Elegant", "Elite", "Emerald", "Ethereal", "Faint", "Fine", "Five", "Flawless", "Four", "Fragile", "Fragrant", "Free", "Fresh", "Gentle", "Gold", "Golden", "Grand", "Half", "Happy", "Hearty", "Hidden", "Humble", "Hushed", "Icy", "Jade", "Jolly", "Kind", "Lazy", "Light", "Little", "Lone", "Lost", "Lucky", "Magic", "Mellow", "Merry", "Misty", "Mystery", "Nimble", "Odd", "Opal", "Prime", "Proud", "Pure", "Quick", "Quiet", "Quirky", "Radiant", "Rare", "Ruby", "Sapphire", "Secret", "Serene", "Seven", "Shady", "Silent", "Single", "Six", "Smooth", "Stout", "Subtle", "Sweet", "Swift", "Three", "Tranquil", "True", "Twin", "Two", "Velvet", "Vibrant", "Violet", "Wild"];
-        const nameList3 = ["Animal", "Aspect", "Bat", "Beach", "Bear", "Beast", "Beauty", "Beetle", "Bell", "Berry", "Bird", "Bit", "Bite", "Block", "Board", "Boat", "Book", "Boot", "Bottle", "Brain", "Branch", "Breath", "Brush", "Bubble", "Bush", "Button", "Cable", "Cake", "Candle", "Candy", "Cannon", "Canvas", "Card", "Carriage", "Cart", "Chain", "Chains", "Chalk", "Chance", "Child", "Clock", "Cloud", "Clover", "Coil", "Deer", "Device", "Dream", "Drop", "Dust", "Edge", "Fang", "Feather", "Fire", "Fish", "Flame", "Flower", "Frog", "Game", "Garden", "Gate", "Gift", "Glove", "Grass", "Guest", "Guide", "Hen", "Hide", "Honey", "Ice", "Ink", "Jewel", "Kite", "Knot", "Lace", "Leaf", "Light", "Lightning", "Link", "Lock", "Locket", "Love", "Luck", "Marble", "Mark", "Mask", "Mirror", "Needle", "Night", "Owl", "Page", "Patch", "Path", "Peak", "Piece", "Plume", "Poem", "Quill", "Quilt", "Rain", "Riddle", "River", "Robin", "Rock", "Scale", "Scarf", "Scratch", "Sea", "Shadow", "Shoe", "Shore", "Silk", "Smoke", "Snow", "Snowflake", "Song", "Spark", "Sparkle", "Spell", "Star", "Stitch", "Stone", "Storm", "Straw", "Stream", "String", "Stripe", "Tale", "Thing", "Thrill", "Thunder", "Timber", "Time", "Tome", "Trail", "Tree", "Trick", "Veil", "Wave", "Wind", "Wing", "Wish", "Wonder"];
-        if (doesRandomEventHappen(50)) {
-            const randomNum1 = randomFunction() * nameList1.length | 0;
-            return nameList1[randomNum1];
-        }
-        const randomNum1 = randomFunction() * nameList2.length | 0;
-        const randomNum2 = randomFunction() * nameList3.length | 0;
-        const nameType = randomFunction() * 2 | 0;
-        if (nameType === 0) {
-            return nameList2[randomNum1] + " " + nameList3[randomNum2] + " (" + nameList2[randomNum1] + ")";
-        } else {
-            return nameList2[randomNum1] + " " + nameList3[randomNum2] + " (" + nameList3[randomNum2] + ")";
-        }
-    }
-    getFullName() {
-        return this.name;
-    }
-}
-
-class Warforged extends Person {
-    race = 'warforged';
-    // warforged have no max age??? but the average age is between 2 and 30????
-    maxAge = 100;
-    adolescence = 18;
-
-    randomFirstName() {
-        const nameList1 = ["Abider", "Achiever", "Actor", "Adapter", "Adviser", "Aegis", "Agent", "Animal", "Apparatus", "Armament", "Artist", "Audience", "Author", "Awakener", "Basher", "Bastion", "Battler", "Bear", "Beast", "Beauty", "Beetle", "Bender", "Binder", "Blade", "Book", "Booster", "Boot", "Bouncer", "Brain", "Brander", "Brawler", "Breaker", "Bringer", "Browser", "Bruiser", "Buffet", "Bug", "Builder", "Bulwark", "Calmer", "Candle", "Cannon", "Carer", "Carriage", "Carrier", "Cart", "Carver", "Case", "Caster", "Catcher", "Chain", "Chains", "Challenger", "Champion", "Chaperon", "Charger", "Chaser", "Chopper", "Claymore", "Cleaver", "Climber", "Clock", "Club", "Clubber", "Coil", "Commander", "Controller", "Cook", "Counter", "Creator", "Creature", "Creese", "Crew", "Croaker", "Crow", "Crumbler", "Crusher", "Curator", "Curtana", "Custodian", "Cutlas", "Cutlass", "Cutter", "Dagger", "Data", "Dealer", "Decipherer", "Defender", "Definer", "Delver", "Designer", "Destroyer", "Diagnoser", "Director", "Dirk", "Diver", "Doctor", "Dozer", "Dreamer", "Drifter", "Driver", "Drone", "Echo", "Edge", "Enchanter", "Epee", "Eraser", "Estoc", "Etcher", "Examiner", "Expert", "Falchion", "Familiar", "Fighter", "Figure", "Fire", "Five", "Flail", "Flame", "Fluke", "Foil", "Follower", "Forger", "Four", "Friend", "Fumbler", "Gasher", "Gauger", "Ghost", "Giant", "Gift", "Glaive", "Glancer", "Griller", "Grunter", "Guardian", "Guest", "Guide", "Hacker", "Hammer", "Handler", "Heart", "Help", "Hook", "Horn", "Host", "Hummer", "Hunter", "Image", "Inspector", "Iron", "Judge", "Junior", "Jury", "Katana", "Kid", "Killer", "Knife", "Knocker", "Kris", "Launcher", "Leaper", "Lifter", "Lock", "Locket", "Lurker", "Mace", "Machine", "Mark", "Marker", "Mask", "Masker", "Mauler", "Melter", "Menace", "Mentor", "Merger", "Metal", "Mime", "Mistake", "Model", "Molder", "Murderer", "Nameless", "Needle", "Nemo", "Novice", "Nurse", "Observer", "Officer", "Ogler", "One", "Ornament", "Painter", "Passenger", "Patient", "Patriot", "Pierce", "Pilot", "Pious", "Player", "Porter", "Preacher", "Pretender", "Prize", "Probe", "Protector", "Prowler", "Punisher", "Query", "Ravager", "Reader", "Reckoner", "Relic", "Render", "Rescuer", "Responder", "Reviewer", "Rider", "Rune", "Saber", "Sabre", "Safeguard", "Salvager", "Saviour", "Scimitar", "Scorcher", "Scratcher", "Scrubber", "Searcher", "Security", "Seeker", "Senior", "Senser", "Sentinel", "Sentry", "Servant", "Shaper", "Shepherd", "Shield", "Shielder", "Shredder", "Slasher", "Slicer", "Smasher", "Smiter", "Snooper", "Spark", "Sparkle", "Special", "Spirit", "Sprinter", "Sprite", "Squasher", "Stalker", "Status", "Steel", "Steeple", "Stick", "Sticks", "Stitcher", "Striker", "Student", "Stumbler", "Subject", "Suit", "Sunderer", "Supporter", "Surveyor", "Sword", "Tackler", "Taunter", "Teacher", "Teaser", "Tempter", "Tester", "Thief", "Thinker", "Three", "Thunder", "Tinkerer", "Titan", "Toad", "Toledo", "Tutor", "Twister", "Two", "Undoer", "Unit", "Unmaker", "Unsung", "Vessel", "Victor", "Visitor", "Voice", "Walker", "Ward", "Warden", "Watcher", "Whisperer", "Wielder", "Winker", "Winner", "Wonderer", "Wrestler", "Zealot", "Zero"];
-        const randomNum1 = randomFunction() * nameList1.length | 0;
-        return nameList1[randomNum1];
-    }
-    getFullName() {
-        return this.name;
-    }
-}
-
 class Goliath extends Person {
     race = 'goliath';
     maxAge = 100;
     adolescence = 18;
+    haveKidsChance = 17;
 
     randomFirstName() {
         if (this.gender == 'male') {
@@ -931,10 +771,170 @@ class Goliath extends Person {
     }
 }
 
+class Halfling extends Person {
+    race = 'halfling'
+    maxAge = 250;
+    adolescence = 20;
+    haveKidsChance = 4;
+
+    randomFirstName() {
+        if (this.gender == 'male') {
+            const nameList1 = ["An", "Ar", "Bar", "Bel", "Con", "Cor", "Dan", "Dav", "El", "Er", "Fal", "Fin", "Flyn", "Gar", "Go", "Hal", "Hor", "Ido", "Ira", "Jan", "Jo", "Kas", "Kor", "La", "Lin", "Mar", "Mer", "Ne", "Nor", "Ori", "Os", "Pan", "Per", "Pim", "Quin", "Quo", "Ri", "Ric", "San", "Shar", "Tar", "Te", "Ul", "Uri", "Val", "Vin", "Wen", "Wil", "Xan", "Xo", "Yar", "Yen", "Zal", "Zen"];
+            const nameList2 = ["ace", "amin", "bin", "bul", "dak", "dal", "der", "don", "emin", "eon", "fer", "fire", "gin", "hace", "horn", "kas", "kin", "lan", "los", "min", "mo", "nad", "nan", "ner", "orin", "os", "pher", "pos", "ras", "ret", "ric", "rich", "rin", "ry", "ser", "sire", "ster", "ton", "tran", "umo", "ver", "vias", "von", "wan", "wrick", "yas", "yver", "zin", "zor", "zu"];
+            const randomNum1 = Math.floor(randomFunction() * nameList1.length);
+            const randomNum2 = Math.floor(randomFunction() * nameList2.length);
+            return nameList1[randomNum1] + nameList2[randomNum2];        
+        }
+        if (this.gender == 'female') {
+            const nameList3 = ["An", "Ari", "Bel", "Bre", "Cal", "Chen", "Dar", "Dia", "Ei", "Eo", "Eli", "Era", "Fay", "Fen", "Fro", "Gel", "Gra", "Ha", "Hil", "Ida", "Isa", "Jay", "Jil", "Kel", "Kith", "Le", "Lid", "Mae", "Mal", "Mar", "Ne", "Ned", "Odi", "Ora", "Pae", "Pru", "Qi", "Qu", "Ri", "Ros", "Sa", "Shae", "Syl", "Tham", "Ther", "Tryn", "Una", "Uvi", "Va", "Ver", "Wel", "Wi", "Xan", "Xi", "Yes", "Yo", "Zef", "Zen"];
+            const nameList4 = ["alyn", "ara", "brix", "byn", "caryn", "cey", "da", "dove", "drey", "elle", "eni", "fice", "fira", "grace", "gwen", "haly", "jen", "kath", "kis", "leigh", "la", "lie", "lile", "lienne", "lyse", "mia", "mita", "ne", "na", "ni", "nys", "ola", "ora", "phina", "prys", "rana", "ree", "ri", "ris", "sica", "sira", "sys", "tina", "trix", "ula", "vira", "vyre", "wyn", "wyse", "yola", "yra", "zana", "zira"];
+            const randomNum1 = Math.floor(randomFunction() * nameList3.length);
+            const randomNum2 = Math.floor(randomFunction() * nameList4.length);
+            return nameList3[randomNum1] + nameList4[randomNum2];        
+        }
+    }
+    randomLastName() {
+        const nameList12 = ["amber", "apple", "autumn", "barley", "big", "boulder", "bramble", "bright", "bronze", "brush", "cherry", "cinder", "clear", "cloud", "common", "copper", "deep", "dust", "earth", "elder", "ember", "fast", "fat", "fern", "flint", "fog", "fore", "free", "glen", "glow", "gold", "good", "grand", "grass", "great", "green", "haven", "heart", "high", "hill", "hog", "humble", "keen", "laughing", "lea", "leaf", "light", "little", "lone", "long", "lunar", "marble", "mild", "mist", "moon", "moss", "night", "nimble", "proud", "quick", "raven", "reed", "river", "rose", "rumble", "shadow", "silent", "silver", "smooth", "soft", "spring", "still", "stone", "stout", "strong", "summer", "sun", "swift", "tall", "tea", "ten", "thistle", "thorn", "toss", "true", "twilight", "under", "warm", "whisper", "wild", "wise"];
+        const nameList13 = ["ace", "barrel", "beam", "belly", "berry", "bloom", "blossom", "bluff", "bottle", "bough", "brace", "braid", "branch", "brand", "bridge", "brook", "brush", "cheeks", "cloak", "cobble", "creek", "crest", "dance", "dancer", "dew", "dream", "earth", "eye", "eyes", "feet", "fellow", "finger", "fingers", "flow", "flower", "foot", "found", "gather", "glide", "grove", "hand", "hands", "hare", "heart", "hill", "hollow", "kettle", "lade", "leaf", "man", "mane", "mantle", "meadow", "moon", "mouse", "pot", "rabbit", "seeker", "shadow", "shine", "sky", "song", "spark", "spell", "spirit", "step", "stride", "sun", "surge", "top", "topple", "vale", "water", "whistle", "willow", "wind", "wood", "woods"];
+        const randomNum1 = randomFunction() * nameList12.length | 0;
+        let randomNum2 = randomFunction() * nameList13.length | 0;
+        while (nameList12[randomNum1] === nameList13[randomNum2]) {
+            randomNum2 = randomFunction() * nameList13.length | 0;
+        }
+        return capitalizeFirstLetter(nameList12[randomNum1] + nameList13[randomNum2]);    
+    }
+}
+
+class Halfelf extends Person {
+    race = 'halfelf';
+    maxAge = 180;
+    adolescence = 20;
+    haveKidsChance = 7;
+
+    randomFirstName() {
+        if (this.gender == 'male') {
+            const nameList1 = ["Al", "Aro", "Bar", "Bel", "Cor", "Cra", "Dav", "Dor", "Eir", "El", "Fal", "Fril", "Gaer", "Gra", "Hal", "Hor", "Ian", "Ilo", "Jam", "Kev", "Kri", "Leo", "Lor", "Mar", "Mei", "Nil", "Nor", "Ori", "Os", "Pan", "Pet", "Quo", "Raf", "Ri", "Sar", "Syl", "Tra", "Tyr", "Uan", "Ul", "Van", "Vic", "Wal", "Wil", "Xan", "Xav", "Yen", "Yor", "Zan", "Zyl"];
+            const nameList2 = ["avor", "ben", "borin", "coril", "craes", "deyr", "dithas", "elor", "enas", "faelor", "faerd", "finas", "fyr", "gotin", "gretor", "homin", "horn", "kas", "koris", "lamir", "lanann", "lumin", "minar", "morn", "nan", "neak", "neiros", "orin", "ovar", "parin", "phanis", "qarim", "qinor", "reak", "ril", "ros", "sariph", "staer", "torin", "tumil", "valor", "voril", "warith", "word", "xian", "xiron", "yeras", "ynor", "zaphir", "zaren"];
+            const randomNum1 = Math.floor(randomFunction() * nameList1.length);
+            const randomNum2 = Math.floor(randomFunction() * nameList2.length);
+            return nameList1[randomNum1] + nameList2[randomNum2];
+        }
+        if (this.gender == 'female') {
+            const nameList3 = ["Alu", "Aly", "Ar", "Bren", "Byn", "Car", "Co", "Dar", "Del", "El", "Eli", "Fae", "Fha", "Gal", "Gif", "Haly", "Ho", "Ile", "Iro", "Jen", "Jil", "Kri", "Kys", "Les", "Lora", "Ma", "Mar", "Mare", "Neri", "Nor", "Ol", "Ophi", "Phaye", "Pri", "Qi", "Que", "Rel", "Res", "Sael", "Saf", "Syl", "Ther", "Tyl", "Una", "Uri", "Ven", "Vyl", "Win", "Wol", "Xil", "Xyr", "Yes", "Yll", "Zel", "Zin"];
+            const nameList4 = ["aerys", "anys", "bellis", "bwynn", "cerys", "charis", "diane", "dove", "elor", "enyphe", "faen", "fine", "galyn", "gwynn", "hana", "hophe", "kaen", "kilia", "lahne", "lynn", "mae", "malis", "mythe", "nalore", "noa", "nys", "ona", "phira", "pisys", "qarin", "qwyn", "rila", "rora", "seris", "stine", "sys", "thana", "theris", "tihne", "trana", "viel", "vyre", "walyn", "waris", "xaris", "xipha", "yaries", "yra", "zenya", "zira"];
+            const randomNum1 = Math.floor(randomFunction() * nameList3.length);
+            const randomNum2 = Math.floor(randomFunction() * nameList4.length);
+            return nameList3[randomNum1] + nameList4[randomNum2];
+        }
+    }
+    getFullName() {
+        return this.name;
+    }
+}
+
+class Halforc extends Person {
+    race = 'halforc';
+    maxAge = 75;
+    adolescence = 14;
+    haveKidsChance = 22;
+
+    randomFirstName() {
+        if (this.gender == 'male') {
+            const nameList1 = ["Ag", "Agg", "Ar", "Arn", "As", "At", "Atr", "B", "Bar", "Bel", "Bor", "Br", "Brak", "C", "Cr", "D", "Dor", "Dr", "Dur", "G", "Gal", "Gan", "Gar", "Gna", "Gor", "Got", "Gr", "Gram", "Grim", "Grom", "Grum", "Gul", "H", "Hag", "Han", "Har", "Hog", "Hon", "Hor", "Hun", "Hur", "K", "Kal", "Kam", "Kar", "Kel", "Kil", "Kom", "Kor", "Kra", "Kru", "Kul", "Kur", "Lum", "M", "Mag", "Mahl", "Mak", "Mal", "Mar", "Mog", "Mok", "Mor", "Mug", "Muk", "Mura", "N", "Oggu", "Ogu", "Ok", "Oll", "Or", "Rek", "Ren", "Ron", "Rona", "S", "Sar", "Sor", "T", "Tan", "Th", "Thar", "Ther", "Thr", "Thur", "Trak", "Truk", "Ug", "Uk", "Ukr", "Ull", "Ur", "Urth", "Urtr", "Z", "Za", "Zar", "Zas", "Zav", "Zev", "Zor", "Zur", "Zus"];
+            const nameList2 = ["a", "a", "a", "o", "o", "e", "i", "u", "u", "u"];
+            const nameList3 = ["bak", "bar", "bark", "bash", "bur", "burk", "d", "dak", "dall", "dar", "dark", "dash", "dim", "dur", "durk", "g", "gak", "gall", "gar", "gark", "gash", "glar", "gul", "gur", "m", "mak", "mar", "marsh", "mash", "mir", "mur", "n", "nar", "nars", "nur", "rak", "rall", "rash", "rim", "rimm", "rk", "rsh", "rth", "ruk", "sk", "tar", "tir", "tur", "z", "zall", "zar", "zur"];
+            const randomNum1 = Math.floor(randomFunction() * nameList1.length);
+            const randomNum2 = Math.floor(randomFunction() * nameList2.length);
+            const randomNum3 = Math.floor(randomFunction() * nameList3.length);
+            return nameList1[randomNum1] + nameList2[randomNum2] + nameList3[randomNum3];
+        }
+        if (this.gender == 'female') {
+            const nameList4 = ["Al", "Ar", "Br", "Ek", "El", "Fal", "Fel", "Fol", "Ful", "G", "Gaj", "Gar", "Gij", "Gor", "Gr", "Gry", "Gyn", "Hur", "K", "Kar", "Kat", "Ker", "Ket", "Kir", "Kot", "Kur", "Kut", "Lag", "M", "Mer", "Mir", "Mor", "N", "Ol", "Oot", "Puy", "R", "Rah", "Rahk", "Ras", "Rash", "Raw", "Roh", "Rohk", "S", "Sam", "San", "Sem", "Sen", "Sh", "Shay", "Sin", "Sum", "Sun", "Tam", "Tem", "Tu", "Tum", "Ub", "Um", "Ur", "Van", "Zan", "Zen", "Zon", "Zun"];
+            const nameList5 = ["a", "a", "o", "o", "e", "i", "i", "u"];
+            const nameList6 = ["d", "da", "dar", "dur", "g", "gar", "gh", "gri", "gu", "sh", "sha", "shi", "gum", "gume", "gur", "ki", "mar", "mi", "mira", "me", "mur", "ne", "ner", "nir", "nar", "nchu", "ni", "nur", "ral", "rel", "ri", "rook", "ti", "tah", "tir", "tar", "tur", "war", "z", "zar", "zara", "zi", "zur", "zura", "zira"];
+            const randomNum1 = Math.floor(randomFunction() * nameList4.length);
+            const randomNum2 = Math.floor(randomFunction() * nameList5.length);
+            const randomNum3 = Math.floor(randomFunction() * nameList6.length);
+            return nameList4[randomNum1] + nameList5[randomNum2] + nameList6[randomNum3];
+        }
+    }
+    getFullName() {
+        return this.name;
+    }
+}
+
+class Human extends Person {
+    race = 'human';
+    maxAge = 100;
+    adolescence = 18;
+    haveKidsChance = 17;
+}
+
+class Tabaxi extends Person {
+    race = 'tabaxi';
+    maxAge = 100;
+    adolescence = 18;
+    haveKidsChance = 17;
+
+    randomFirstName() {
+        const nameList1 = ["Afternoon Nap (Nap)", "Animal in the Woods (Woods)", "Answered Riddle (Riddle)", "Art of Shadows (Art)", "Aura of Passion (Aura)", "Aurora of Winter (Aurora)", "Autumn Harvest (Autumn)", "Beats of a Heart (Beats)", "Beauty of Summer (Summer)", "Beauty's Eye (Beauty)", "Belly of a Beast (Beast)", "Berry Bush (Bush)", "Big Heart (Big)", "Bird Feather (Bird)", "Bite Marks (Bite)", "Blank Board (Board)", "Blank Canvas (Canvas)", "Blazing Fire (Blaze)", "Blossoms in Summer (Blossom)", "Branch of a River (River)", "Breath of Fresh Air (Breath)", "Broken Chain (Chain)", "Bubble of a Cauldron (Bubble)", "Burden of Chains (Chains)", "Burning Desire (Desire)", "Burning Fire (Fire)", "Bush in the Forest (Forest)", "Bushy Branch (Branch)", "Busy Bee (Bee)", "Cadence of Water (Cadence)", "Cake of Chocolate (Cake)", "Call of a Bird (Bird)", "Call of the Owl (Owl)", "Call to Action (Action)", "Candle in the Dark (Candle)", "Cannon on Deck (Cannon)", "Carriage on the Road (Road)", "Clanking Bottle (Clank)", "Cloaking Dagger (Dagger)", "Cloud in the Sky (Sky)", "Coursing River (River)", "Cover of Clouds (Cover)", "Crescent Moon (Moon)", "Dangling Button (Button)", "Dangling Lace (Lace)", "Daydream at Night (Dream)", "Dew on the Grass (Dew)", "Dream of Days (Dream)", "Drifting Cloud (Cloud)", "Drifting Snowflake (Snowflake)", "Drop in a Pond (Drop)", "Dust of Chalk (Dust)", "Dust on the Road (Dust)", "Eclipse of the Moon (Eclipse)", "Edge of the World (Edge)", "End of Winter (Winter)", "Endless Time (Time)", "Fall of Water (Water)", "Fallen Twig (Twig)", "Fang of a Snake (Fang)", "Feather in the Wind (Feather)", "Fire in the Distance (Fire)", "Fish in the River (River)", "Flame of Passion (Passion)", "Flame of the Spirit (Flame)", "Flickering Fire (Fire)", "Flickering Flame (Flame)", "Flight of a Robin (Robin)", "Flow of the River (Flow)", "Flower in the Field (Flower)", "Flower of Ivory (Ivory)", "Forgotten Link (Link)", "Four-Leaf Clover (Clover)", "Fragrance of Spring (Spring)", "Friend of Foe (Friend)", "Gale of the Storm (Gale)", "Game of Chance (Game)", "Garden of Flowers (Flower)", "Gift of a Guest (Gift)", "Glow of the Sun (Sun)", "Grass of Spring (Grass)", "Guest at Home (Guest)", "Guide of Life (Guide)", "Hawk Feather (Hawk)", "Hen of the Flock (Hen)", "Hidden Depths (Depth)", "Hidden Treasure (Treasure)", "Hide of the Beast (Hide)", "High Noon (Noon)", "Honey of Bees (Honey)", "Hot Flame (Flame)", "Hot as Fire (Fire)", "Ice in Summer (Ice)", "Ice on the Lake (Ice)", "Ink on Skin (Ink)", "Jewel of the Mountain (Jewel)", "Kite in the Wind (Kite)", "Leaf on the Water (Leaf)", "Leaping Frog (Frog)", "Light in the Morning (Light)", "Lightning After Thunder (Lightning)", "Little Flower (Little)", "Lock on an Open Door (Lock)", "Locket on a Heart (Locket)", "Looping Coil (Coil)", "Loose String (String)", "Luck of the Draw (Luck)", "Marble in the Sky (Marble)", "Mark of Life (Mark)", "Melting of Snow (Snow)", "Mirror's Reflection (Mirror)", "Mist in the Morning (Mist)", "Mountain Boulder (Boulder)", "Needle in Hay (Needle)", "Night of Dreams (Night)", "Open Gates (Gate)", "Owl in the Morning (Owl)", "Page of a Book (Page)", "Paint on a Canvas (Paint)", "Patch in the Forest (Patch)", "Paw of a Bear (Paw)", "Peak of Mountains (Peak)", "Piece of the Puzzle (Piece)", "Plume in the Wind (Plume)", "Plume of Smoke (Smoke)", "Poem of Summer (Poem)", "Print of a Boot (Boot)", "Print of an Animal (Animal)", "Quill in the Grass (Quill)", "Rain in Summer (Rain)", "Rain of Fall (Rain)", "Rainbow After Rain (Rainbow)", "Rays of the Sun (Ray)", "Remnants of History (Remnant)", "Rhythm of Drums (Rhythm)", "Ringing of Bells (Bell)", "Rinkling Chains (Chains)", "Roar of a Bear (Roar)", "Rope in a Knot (Knot)", "Rustling of a Deer (Deer)", "Sailing Ship (Ship)", "Sand of the Beach (Sand)", "Sands of Time (Sand)", "Scarf in Summer (Scarf)", "Scratch on Wood (Scratch)", "Screech of Bats (Bat)", "Sea of Opportunity (Sea)", "Second Chance (Chance)", "Serpent Scale (Scale)", "Shadow of a Star (Shadow)", "Shadows in the Wind (Shadow)", "Sky Full of Stars (Sky)", "Sky of a Sunset (Sky)", "Sleight Hand (Hand)", "Smooth as Silk (Silk)", "Snapping Branch (Snap)", "Snow of the Mountain (Snow)", "Solstice of Summer (Solstice)", "Song of Paradise (Song)", "Sound of the Drum (Drum)", "Spark of Life (Spark)", "Sparkle of Light (Sparkle)", "Spell of Rain (Spell)", "Spots of a Leopard (Spot)", "Spring Blossom (Spring)", "Spring Winds (Spring)", "Star in the Morning (Star)", "Steady Rock (Rock)", "Stitch of Fabric (Stitch)", "Stone in Water (Stone)", "Storm at Sea (Sea)", "Storm on the Horizon (Storm)", "Strength of Love (Love)", "Stripes of a Tiger (Tiger)", "Stroke of a Brush (Brush)", "Summer Afternoon (Summer)", "Sunshine at Night (Sunshine)", "Tale of Wonder (Tale)", "Taste of Fruit (Taste)", "Three Tree (Three)", "Thrill of Life (Thrill)", "Thunder in the Morning (Thunder)", "Ticking Clock (Clock)", "Tome of Secrets (Tome)", "Top Card (Card)", "Trail in the Woods (Trail)", "Tree Blossom (Blossom)", "Tree in the Woods (Tree)", "Tricking Treat (Trick)", "Two River (River)", "Unpulled Cart (Cart)", "Unread Book (Book)", "Veil of Shadows (Veil)", "Veil of a Mask (Veil)", "Wave on the Shore (Wave)", "Windy Shore (Shore)", "Wing of an Angel (Angel)", "Winter Breath (Winter)", "Wish Upon a Star (Wish)", "Wonder of the World (Wonder)"];
+        const nameList2 = ["Active", "Agile", "Amused", "Amusing", "Ancient", "Angelic", "Arctic", "Austere", "Bizarre", "Bold", "Brash", "Brave", "Bright", "Bronze", "Cheeky", "Clever", "Curious", "Defiant", "Dynamic", "Eager", "Elegant", "Elite", "Emerald", "Ethereal", "Faint", "Fine", "Five", "Flawless", "Four", "Fragile", "Fragrant", "Free", "Fresh", "Gentle", "Gold", "Golden", "Grand", "Half", "Happy", "Hearty", "Hidden", "Humble", "Hushed", "Icy", "Jade", "Jolly", "Kind", "Lazy", "Light", "Little", "Lone", "Lost", "Lucky", "Magic", "Mellow", "Merry", "Misty", "Mystery", "Nimble", "Odd", "Opal", "Prime", "Proud", "Pure", "Quick", "Quiet", "Quirky", "Radiant", "Rare", "Ruby", "Sapphire", "Secret", "Serene", "Seven", "Shady", "Silent", "Single", "Six", "Smooth", "Stout", "Subtle", "Sweet", "Swift", "Three", "Tranquil", "True", "Twin", "Two", "Velvet", "Vibrant", "Violet", "Wild"];
+        const nameList3 = ["Animal", "Aspect", "Bat", "Beach", "Bear", "Beast", "Beauty", "Beetle", "Bell", "Berry", "Bird", "Bit", "Bite", "Block", "Board", "Boat", "Book", "Boot", "Bottle", "Brain", "Branch", "Breath", "Brush", "Bubble", "Bush", "Button", "Cable", "Cake", "Candle", "Candy", "Cannon", "Canvas", "Card", "Carriage", "Cart", "Chain", "Chains", "Chalk", "Chance", "Child", "Clock", "Cloud", "Clover", "Coil", "Deer", "Device", "Dream", "Drop", "Dust", "Edge", "Fang", "Feather", "Fire", "Fish", "Flame", "Flower", "Frog", "Game", "Garden", "Gate", "Gift", "Glove", "Grass", "Guest", "Guide", "Hen", "Hide", "Honey", "Ice", "Ink", "Jewel", "Kite", "Knot", "Lace", "Leaf", "Light", "Lightning", "Link", "Lock", "Locket", "Love", "Luck", "Marble", "Mark", "Mask", "Mirror", "Needle", "Night", "Owl", "Page", "Patch", "Path", "Peak", "Piece", "Plume", "Poem", "Quill", "Quilt", "Rain", "Riddle", "River", "Robin", "Rock", "Scale", "Scarf", "Scratch", "Sea", "Shadow", "Shoe", "Shore", "Silk", "Smoke", "Snow", "Snowflake", "Song", "Spark", "Sparkle", "Spell", "Star", "Stitch", "Stone", "Storm", "Straw", "Stream", "String", "Stripe", "Tale", "Thing", "Thrill", "Thunder", "Timber", "Time", "Tome", "Trail", "Tree", "Trick", "Veil", "Wave", "Wind", "Wing", "Wish", "Wonder"];
+        if (doesRandomEventHappen(50)) {
+            const randomNum1 = randomFunction() * nameList1.length | 0;
+            return nameList1[randomNum1];
+        }
+        const randomNum1 = randomFunction() * nameList2.length | 0;
+        const randomNum2 = randomFunction() * nameList3.length | 0;
+        const nameType = randomFunction() * 2 | 0;
+        if (nameType === 0) {
+            return nameList2[randomNum1] + " " + nameList3[randomNum2] + " (" + nameList2[randomNum1] + ")";
+        } else {
+            return nameList2[randomNum1] + " " + nameList3[randomNum2] + " (" + nameList3[randomNum2] + ")";
+        }
+    }
+    getFullName() {
+        return this.name;
+    }
+}
+
+class Tiefling extends Person {
+    race = 'tiefling';
+    maxAge = 110;
+    adolescence = 18;
+    haveKidsChance = 15;
+
+    getFullName() {
+        return this.name;
+    }
+    randomFirstName() {
+        if (doesRandomEventHappen(50)) {
+            const nameList3 = ["Achievement", "Adventure", "Aid", "Ambition", "Anguish", "Art", "Ashes", "Atonement", "Awe", "Bliss", "Bright", "Carrion", "Carrior", "Chant", "Cheer", "Cherish", "Closed", "Comfort", "Compassion", "Confidence", "Content", "Courage", "Creed", "Cunning", "Darkness", "Death", "Debauchery", "Deceit", "Delight", "Desire", "Despair", "Devotion", "Dexterity", "Different", "Doom", "Doubt", "Dread", "Ecstasy", "End", "Enduring", "Ennui", "Entropy", "Essential", "Esteem", "Eternal", "Euphoria", "Excellence", "Exceptional", "Exciting", "Expert", "Expertise", "Expressive", "Extreme", "Faith", "Fear", "Flawed", "Free", "Freedom", "Fresh", "Gentle", "Gladness", "Glee", "Gloom", "Glory", "Gluttony", "Grief", "Happiness", "Happy", "Harmony", "Hate", "Hatred", "Hero", "Hope", "Horror", "Hunt", "Hymn", "Ideal", "Ignominy", "Immortal", "Innovation", "Interesting", "Journey", "Joy", "Laughter", "Life", "Light", "Love", "Loyal", "Lust", "Mantra", "Master", "Mastery", "Mayhem", "Misery", "Mockery", "Murder", "Muse", "Music", "Mystery", "Normal", "Nowhere", "Odd", "Open", "Optimal", "Pain", "Panic", "Passion", "Perfect", "Piety", "Pleasure", "Poetry", "Possession", "Promise", "Psalm", "Pure", "Quest", "Random", "Rare", "Recovery", "Redemption", "Regular", "Relentless", "Respect", "Reverence", "Revulsion", "Sadness", "Sanctity", "Silence", "Skilled", "Sly", "Song", "Sorrow", "Suffering", "Temerity", "Terror", "Timeless", "Torment", "Tragedy", "Trickery", "Trouble", "Trust", "Truth", "Uncommon", "Unlocked", "Vice", "Virtue", "Void", "Voyage", "Weary", "Winning", "Wit", "Woe"];
+            const randomNum1 = randomFunction() * nameList3.length | 0;
+            return nameList3[randomNum1];
+        }
+        if (this.gender == 'male') {
+            var nameList1 = ["Aet", "Ak", "Am", "Aran", "And", "Ar", "Ark", "Bar", "Car", "Cas", "Dam", "Dhar", "Eb", "Ek", "Er", "Gar", "Gu", "Gue", "Hor", "Ia", "Ka", "Kai", "Kar", "Kil", "Kos", "Ky", "Loke", "Mal", "Male", "Mav", "Me", "Mor", "Neph", "Oz", "Ral", "Re", "Rol", "Sal", "Sha", "Sir", "Ska", "The", "Thy", "Thyne", "Ur", "Uri", "Val", "Xar", "Zar", "Zer", "Zher", "Zor"];
+            var nameList2 = ["adius", "akas", "akos", "char", "cis", "cius", "dos", "emon", "ichar", "il", "ilius", "ira", "lech", "lius", "lyre", "marir", "menos", "meros", "mir", "mong", "mos", "mus", "non", "rai", "rakas", "rakir", "reus", "rias", "ris", "rius", "ron", "ros", "rus", "rut", "shoon", "thor", "thos", "thus", "us", "venom", "vir", "vius", "xes", "xik", "xikas", "xire", "xius", "xus", "zer", "zire"];
+            const randomNum1 = randomFunction() * nameList1.length | 0;
+            const randomNum2 = randomFunction() * nameList2.length | 0;
+            return nameList1[randomNum1] + nameList2[randomNum2];        
+        }
+        if (this.gender == 'female') {
+            var nameList4 = ["Af", "Agne", "Ani", "Ara", "Ari", "Aria", "Bel", "Bri", "Cre", "Da", "Di", "Dim", "Dor", "Ea", "Fri", "Gri", "His", "In", "Ini", "Kal", "Le", "Lev", "Lil", "Ma", "Mar", "Mis", "Mith", "Na", "Nat", "Ne", "Neth", "Nith", "Ori", "Pes", "Phe", "Qu", "Ri", "Ro", "Sa", "Sar", "Seiri", "Sha", "Val", "Vel", "Ya", "Yora", "Yu", "Za", "Zai", "Ze"];
+            var nameList5 = ["bis", "borys", "cria", "cyra", "dani", "doris", "faris", "firith", "goria", "grea", "hala", "hiri", "karia", "ki", "laia", "lia", "lies", "lista", "lith", "loth", "lypsis", "lyvia", "maia", "meia", "mine", "narei", "nirith", "nise", "phi", "pione", "punith", "qine", "rali", "rissa", "seis", "solis", "spira", "tari", "tish", "uphis", "vari", "vine", "wala", "wure", "xibis", "xori", "yis", "yola", "za", "zes"];
+            const randomNum1 = randomFunction() * nameList4.length | 0;
+            const randomNum2 = randomFunction() * nameList5.length | 0;
+            return nameList4[randomNum1] + nameList5[randomNum2];        
+        }
+    }
+}
+
 class Tortle extends Person {
     race = 'tortle';
     maxAge = 50;
     adolescence = 15;
+    haveKidsChance = 55;
 
     randomFirstName() {
         const nameList1 = ["", "", "", "", "b", "d", "g", "j", "k", "kr", "l", "n", "pl", "q", "s", "t", "w", "x", "y"];
@@ -956,6 +956,23 @@ class Tortle extends Person {
             const randomNum5 = randomFunction() * nameList3.length | 0;
             return capitalizeFirstLetter(nameList1[randomNum1] + nameList2[randomNum2] + nameList3[randomNum5] + nameList4[randomNum4] + nameList5[randomNum3]);
         }
+    }
+    getFullName() {
+        return this.name;
+    }
+}
+
+class Warforged extends Person {
+    race = 'warforged';
+    // warforged have no max age??? but the average age is between 2 and 30????
+    maxAge = 100;
+    adolescence = 18;
+    haveKidsChance = 17;
+
+    randomFirstName() {
+        const nameList1 = ["Abider", "Achiever", "Actor", "Adapter", "Adviser", "Aegis", "Agent", "Animal", "Apparatus", "Armament", "Artist", "Audience", "Author", "Awakener", "Basher", "Bastion", "Battler", "Bear", "Beast", "Beauty", "Beetle", "Bender", "Binder", "Blade", "Book", "Booster", "Boot", "Bouncer", "Brain", "Brander", "Brawler", "Breaker", "Bringer", "Browser", "Bruiser", "Buffet", "Bug", "Builder", "Bulwark", "Calmer", "Candle", "Cannon", "Carer", "Carriage", "Carrier", "Cart", "Carver", "Case", "Caster", "Catcher", "Chain", "Chains", "Challenger", "Champion", "Chaperon", "Charger", "Chaser", "Chopper", "Claymore", "Cleaver", "Climber", "Clock", "Club", "Clubber", "Coil", "Commander", "Controller", "Cook", "Counter", "Creator", "Creature", "Creese", "Crew", "Croaker", "Crow", "Crumbler", "Crusher", "Curator", "Curtana", "Custodian", "Cutlas", "Cutlass", "Cutter", "Dagger", "Data", "Dealer", "Decipherer", "Defender", "Definer", "Delver", "Designer", "Destroyer", "Diagnoser", "Director", "Dirk", "Diver", "Doctor", "Dozer", "Dreamer", "Drifter", "Driver", "Drone", "Echo", "Edge", "Enchanter", "Epee", "Eraser", "Estoc", "Etcher", "Examiner", "Expert", "Falchion", "Familiar", "Fighter", "Figure", "Fire", "Five", "Flail", "Flame", "Fluke", "Foil", "Follower", "Forger", "Four", "Friend", "Fumbler", "Gasher", "Gauger", "Ghost", "Giant", "Gift", "Glaive", "Glancer", "Griller", "Grunter", "Guardian", "Guest", "Guide", "Hacker", "Hammer", "Handler", "Heart", "Help", "Hook", "Horn", "Host", "Hummer", "Hunter", "Image", "Inspector", "Iron", "Judge", "Junior", "Jury", "Katana", "Kid", "Killer", "Knife", "Knocker", "Kris", "Launcher", "Leaper", "Lifter", "Lock", "Locket", "Lurker", "Mace", "Machine", "Mark", "Marker", "Mask", "Masker", "Mauler", "Melter", "Menace", "Mentor", "Merger", "Metal", "Mime", "Mistake", "Model", "Molder", "Murderer", "Nameless", "Needle", "Nemo", "Novice", "Nurse", "Observer", "Officer", "Ogler", "One", "Ornament", "Painter", "Passenger", "Patient", "Patriot", "Pierce", "Pilot", "Pious", "Player", "Porter", "Preacher", "Pretender", "Prize", "Probe", "Protector", "Prowler", "Punisher", "Query", "Ravager", "Reader", "Reckoner", "Relic", "Render", "Rescuer", "Responder", "Reviewer", "Rider", "Rune", "Saber", "Sabre", "Safeguard", "Salvager", "Saviour", "Scimitar", "Scorcher", "Scratcher", "Scrubber", "Searcher", "Security", "Seeker", "Senior", "Senser", "Sentinel", "Sentry", "Servant", "Shaper", "Shepherd", "Shield", "Shielder", "Shredder", "Slasher", "Slicer", "Smasher", "Smiter", "Snooper", "Spark", "Sparkle", "Special", "Spirit", "Sprinter", "Sprite", "Squasher", "Stalker", "Status", "Steel", "Steeple", "Stick", "Sticks", "Stitcher", "Striker", "Student", "Stumbler", "Subject", "Suit", "Sunderer", "Supporter", "Surveyor", "Sword", "Tackler", "Taunter", "Teacher", "Teaser", "Tempter", "Tester", "Thief", "Thinker", "Three", "Thunder", "Tinkerer", "Titan", "Toad", "Toledo", "Tutor", "Twister", "Two", "Undoer", "Unit", "Unmaker", "Unsung", "Vessel", "Victor", "Visitor", "Voice", "Walker", "Ward", "Warden", "Watcher", "Whisperer", "Wielder", "Winker", "Winner", "Wonderer", "Wrestler", "Zealot", "Zero"];
+        const randomNum1 = randomFunction() * nameList1.length | 0;
+        return nameList1[randomNum1];
     }
     getFullName() {
         return this.name;

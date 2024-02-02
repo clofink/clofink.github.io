@@ -38,7 +38,7 @@ var randomFunction;
 function generateNewTown() {
     const seedElem = qs('[name="randomSeed"]');
     const seed = seedElem.value || Math.random().toString(36).substring(2, 11);
-    seedElem.value = seed;
+    log(seed);
     randomFunction = new alea(seed);
 
     newTown = new Town(getUserInputValues());
@@ -92,6 +92,7 @@ function generateNewTown() {
         clearElement(eById('populationInfo'));
     }
     displayTownInfo(newTown);
+    return newTown;
 }
 
 function addYears() {
@@ -668,16 +669,13 @@ function processLifeEvents(person, town, currentYear) {
         person.retire();
     }
     function haveKid() {
-        let haveKidsChance = 15;
+        let haveKidsChance = person.getKidsChance();
         const currentChildren = person.getChildren().length;
-        if (currentChildren > 1) {
-            haveKidsChance = 15;
+        if (currentChildren >= 3) {
+            haveKidsChance = Math.floor(haveKidsChance / 5);
         }
-        if (currentChildren > 3) {
-            haveKidsChance = 3;
-        }
-        if (currentChildren > 5) {
-            haveKidsChance = 1;
+        if (currentChildren >= 5) {
+            haveKidsChance = Math.floor(haveKidsChance / 10);
         }
         if (doesRandomEventHappen(haveKidsChance)) {
             const newChild = createPerson(person.getRace(), {currentYear: currentYear})
@@ -686,8 +684,8 @@ function processLifeEvents(person, town, currentYear) {
             newChild.setStats(calculateAverateStats(person.getStats(), spouse.getStats()));
             person.addChild(newChild);
             newChild.addLifeEvent(currentYear, "{P} was born");
-            person.addLifeEvent(currentYear, `{P} had a child named ${newChild.getFullName()}`);
-            spouse.addLifeEvent(currentYear, `{P} had a child named ${newChild.getFullName()}`);
+            person.addLifeEvent(currentYear, `{P} had a ${newChild.getGender() === "male" ? "son" : "daughter"} named ${newChild.getFullName()}`);
+            spouse.addLifeEvent(currentYear, `{P} had a ${newChild.getGender() === "male" ? "son" : "daughter"} named ${newChild.getFullName()}`);
         }
     }
     function adoptKid() {
@@ -1003,7 +1001,7 @@ function passAway(person, town) {
         town.removeFromOrphanage(person);
     }
     if (person.getSpouse() && !person.getSpouse().getIsDead()) {
-        person.getSpouse().addLifeEvent(town.getCurrentYear(), `{PP} spouse ${personName} died`);
+        person.getSpouse().addLifeEvent(town.getCurrentYear(), `{PP} ${person.getGender() === "male" ? "husband": "wife"} ${personName} died`);
     }
     if (person.getChildren()) {
         for (let child of person.getChildren()) {
@@ -1015,7 +1013,7 @@ function passAway(person, town) {
     if (person.getParents()) {
         for (let parent of person.getParents()) {
             if (!parent.getIsDead()) {
-                parent.addLifeEvent(town.getCurrentYear(), `{PP} child ${personName} died`);
+                parent.addLifeEvent(town.getCurrentYear(), `{PP} ${person.getGender() === "male" ? "son" : "daughter"} ${personName} died`);
             }
         }
     }
@@ -1240,4 +1238,16 @@ function shuffleArray(array) {
         [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
+}
+
+function generateTestTowns(count) {
+    const populations = [];
+    let total = 0;
+    for (let i = 0; i < count; i++) {
+        let town = generateNewTown();
+        const pop = town.getLivingPopulation().length;
+        populations.push(pop);
+        total += pop;
+    }
+    return total / populations.length;
 }
