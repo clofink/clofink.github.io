@@ -574,6 +574,10 @@ function processLifeEvents(person, town, currentYear) {
         {check: canRetire, action: retire, type: "job"},
         {check: canLeaveOrphanage, action: leaveOrphanage}
     ]
+
+    // removing this for now. It seems to cause an issue where people remain in their job after they die
+    // shuffleArray(lifeEvents);
+
     const currentAge = person.getAge();
     const gender = person.getGender();
     let spouse = person.getSpouse();
@@ -628,7 +632,7 @@ function processLifeEvents(person, town, currentYear) {
     }
     function canRetire() {
         if (!currentJob) return false;
-        if (currentAge < person.getRetirementAge()) return false;
+        if (currentAge <= person.getRetirementAge()) return false;
         return true;
     }
     function needsAJob() {
@@ -1000,8 +1004,9 @@ function passAway(person, town) {
     if (getPersonById(person.id, town.getOrphanage())) {
         town.removeFromOrphanage(person);
     }
-    if (person.getSpouse() && !person.getSpouse().getIsDead()) {
-        person.getSpouse().addLifeEvent(town.getCurrentYear(), `{PP} ${person.getGender() === "male" ? "husband": "wife"} ${personName} died`);
+    const spouse = person.getSpouse();
+    if (spouse && !spouse.getIsDead()) {
+        spouse.addLifeEvent(town.getCurrentYear(), `{PP} ${person.getGender() === "male" ? "husband": "wife"} ${personName} died`);
     }
     if (person.getChildren()) {
         for (let child of person.getChildren()) {
@@ -1021,6 +1026,10 @@ function passAway(person, town) {
         if (!bestFriend.getIsDead()) {
             bestFriend.addLifeEvent(town.getCurrentYear(), `{PP} best friend ${personName} died`);
         }
+    }
+    const currentjob = person.getJob();
+    if (currentjob) {
+        currentjob.removePerson();
     }
     town.removePerson(person);
     town.addToDeadPopulation(person);
