@@ -204,10 +204,10 @@ function getUserInputValues() {
 }
 
 function displayTownInfo(town) {
+    const townInfoDiv = eById('townInfo');
     if (tableExists('townTable')) {
-        clearElement(eById('townInfo'));
+        clearElement(townInfoDiv);
     }
-    let townInfoDiv = eById('townInfo');
     let headers = [
         {displayName: 'Population Type'},
         {displayName: 'Number of People'}
@@ -217,16 +217,17 @@ function displayTownInfo(town) {
     let totalPopRow = createDataRow(['Total Population', town.getPopulation().length])
     let livingPopRow = createDataRow(['Living Population', town.getLivingPopulation().length])
     let deadPopRow = createDataRow(['Dead Population', town.getDeadPopulation().length]);
-    totalPopRow.addEventListener('click', swapSelectedPopulation);
-    livingPopRow.addEventListener('click', swapSelectedPopulation);
-    deadPopRow.addEventListener('click', swapSelectedPopulation);
+    registerElement(totalPopRow, "click", swapSelectedPopulation);
+    registerElement(livingPopRow, "click", swapSelectedPopulation);
+    registerElement(deadPopRow, "click", swapSelectedPopulation);
     totalPopRow.id = 'total';
     livingPopRow.id = 'living';
     deadPopRow.id = 'dead';
-    table.appendChild(totalPopRow);
-    table.appendChild(livingPopRow);
-    table.appendChild(deadPopRow);
-    townInfoDiv.appendChild(table);
+
+    addElement(totalPopRow, table);
+    addElement(livingPopRow, table);
+    addElement(deadPopRow, table);
+    addElement(table, townInfoDiv);
 }
 
 function swapSelectedPopulation(event) {
