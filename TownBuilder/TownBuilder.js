@@ -324,71 +324,48 @@ function formatBiography(lifeEvents) {
     return lifeEvents.join('\n');
 }
 
+function highlightPerson(element, highlightClass) {
+    if (!element) return;
+    if (element.classList.contains(highlightClass)) {
+        element.classList.remove(highlightClass);
+    }
+    else {
+        element.classList.add(highlightClass);
+    }
+}
+
 function highlightFamily(event) {
-    let personId = event.target.closest('tr').id;
-    let personElement = event.target.closest('tr');
-    let allTableRows = document.getElementsByTagName('tr');
+    const personElement = event.target.closest('tr');
+    const personId = personElement.id;
+    const allTableRows = document.getElementsByTagName('tr');
     if (!personElement.classList.contains('highlightSelf')) {
         for (let tableRow of allTableRows) {
             tableRow.classList.remove('highlightSelf', 'highlightParent', 'highlightSibling', 'highlightSpouse', 'highlightChild');
         }
     }
-    if (personElement.classList.contains('highlightSelf')) {
-        personElement.classList.remove('highlightSelf');
-    }
-    else {
-        personElement.classList.add('highlightSelf');
-    }    
+    highlightPerson(personElement, 'highlightSelf');
 
-    let thisPerson = getPersonById(personId, population);
+    const thisPerson = getPersonById(personId, population);
     if (thisPerson.getParents()) {
         for (let parent of thisPerson.getParents()) {
-            let parentElement = eById(parent.getPersonId());
-            if (parentElement) {
-                if (parentElement.classList.contains('highlightParent')) {
-                    parentElement.classList.remove('highlightParent');
-                }
-                else {
-                    parentElement.classList.add('highlightParent');
-                }
-            }
+            const parentElement = eById(parent.getPersonId());
+            highlightPerson(parentElement, 'highlightParent');
         }
     }
     if (thisPerson.getSiblings()) {
         for (let sibling of thisPerson.getSiblings()) {
-            let siblingElement = eById(sibling.getPersonId());
-            if (siblingElement) {
-                if (siblingElement.classList.contains('highlightSibling')) {
-                    siblingElement.classList.remove('highlightSibling');
-                }
-                else {
-                    siblingElement.classList.add('highlightSibling');
-                }
-            }
+            const siblingElement = eById(sibling.getPersonId());
+            highlightPerson(siblingElement, 'highlightSibling');
         }
     }
     if (thisPerson.getSpouse()) {
-        let spouseElement = eById(thisPerson.getSpouse().getPersonId());
-        if (spouseElement) {
-            if (spouseElement.classList.contains('highlightSpouse')) {
-                spouseElement.classList.remove('highlightSpouse');
-            }
-            else {
-                spouseElement.classList.add('highlightSpouse');
-            }
-        }
+        const spouseElement = eById(thisPerson.getSpouse().getPersonId());
+        highlightPerson(spouseElement, 'highlightSpouse');
     }
     if (thisPerson.getChildren()) {
         for (let child of thisPerson.getChildren()) {
-            let childElement = eById(child.getPersonId());
-            if (childElement) {
-                if (childElement.classList.contains('highlightChild')) {
-                    childElement.classList.remove('highlightChild');
-                }
-                else {
-                    childElement.classList.add('highlightChild');
-                }
-            }
+            const childElement = eById(child.getPersonId());
+            highlightPerson(childElement, 'highlightChild');
         }
     }
 }
