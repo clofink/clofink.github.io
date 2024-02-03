@@ -516,8 +516,7 @@ function processLifeEvents(person, town, currentYear) {
         {check: canLeaveOrphanage, action: leaveOrphanage}
     ]
 
-    // removing this for now. It seems to cause an issue where people remain in their job after they die
-    // shuffleArray(lifeEvents);
+    shuffleArray(lifeEvents);
 
     const currentAge = person.getAge();
     const gender = person.getGender();
