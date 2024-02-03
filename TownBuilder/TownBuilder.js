@@ -312,12 +312,11 @@ function logMorePersonInfo(event) {
     if (population.length < 1) {
         population = newTown.getLivingPopulation();
     }
-    highlightFamily(event);
-    let parentRow = event.target.closest('tr');
-    let nameElement = parentRow.getElementsByTagName('td')[0];
-    let thisPerson = getPersonByName(nameElement.innerText, population);
-    log(formatBiography(thisPerson.getLifeEvents()));
-    log(thisPerson);
+    const parentRow = event.target.closest('tr');
+    const person = getPersonById(parentRow.id, population);
+    highlightFamily(parentRow, person);
+    log(formatBiography(person.getLifeEvents()));
+    log(person);
 }
 
 function formatBiography(lifeEvents) {
@@ -334,9 +333,7 @@ function highlightPerson(element, highlightClass) {
     }
 }
 
-function highlightFamily(event) {
-    const personElement = event.target.closest('tr');
-    const personId = personElement.id;
+function highlightFamily(personElement, person) {
     const allTableRows = document.getElementsByTagName('tr');
     if (!personElement.classList.contains('highlightSelf')) {
         for (let tableRow of allTableRows) {
@@ -345,25 +342,24 @@ function highlightFamily(event) {
     }
     highlightPerson(personElement, 'highlightSelf');
 
-    const thisPerson = getPersonById(personId, population);
-    if (thisPerson.getParents()) {
-        for (let parent of thisPerson.getParents()) {
+    if (person.getParents()) {
+        for (let parent of person.getParents()) {
             const parentElement = eById(parent.getPersonId());
             highlightPerson(parentElement, 'highlightParent');
         }
     }
-    if (thisPerson.getSiblings()) {
-        for (let sibling of thisPerson.getSiblings()) {
+    if (person.getSiblings()) {
+        for (let sibling of person.getSiblings()) {
             const siblingElement = eById(sibling.getPersonId());
             highlightPerson(siblingElement, 'highlightSibling');
         }
     }
-    if (thisPerson.getSpouse()) {
-        const spouseElement = eById(thisPerson.getSpouse().getPersonId());
+    if (person.getSpouse()) {
+        const spouseElement = eById(person.getSpouse().getPersonId());
         highlightPerson(spouseElement, 'highlightSpouse');
     }
-    if (thisPerson.getChildren()) {
-        for (let child of thisPerson.getChildren()) {
+    if (person.getChildren()) {
+        for (let child of person.getChildren()) {
             const childElement = eById(child.getPersonId());
             highlightPerson(childElement, 'highlightChild');
         }
