@@ -407,80 +407,64 @@ function createHeaderRow(headers, sortBy) {
  * @param {} event - automatically provided by event handler
  */
 function sortByHeader(event) {
-    let sortedPopulation = [...population];
+    const sortedPopulation = [...population];
     const sortBy = event.target.dataset.sortBy || "personId";
     const sortDirection = event.target.dataset.sortDirection;
 
     if (sortDirection === 'asc') {
-        sortedPopulation.sort(customSortAsc);
-        event.target.setAttribute('data-sort-direction', 'desc');
+        event.target.dataset.sortDirection = 'desc';
     }
     else if (sortDirection === 'desc') {
-        sortedPopulation.sort(customSortDesc);
-        event.target.setAttribute('data-sort-direction', 'asc');
+        event.target.dataset.sortDirection = 'asc';
     }
+    sortedPopulation.sort(customSort);
     rebuildTableRows(sortedPopulation);
 
-    function customSortAsc(a, b) {
+    function customSort(a, b) {
         let valueA;
         let valueB;
-        if (sortBy == 'children') {
-            valueA = a.getChildren().length;
-            valueB = b.getChildren().length;
+        switch (sortBy) {
+            case "children":
+                valueA = a.getChildren().length;
+                valueB = b.getChildren().length;
+                break;
+            case "STR":
+            case "CON":
+            case "DEX":
+            case "INT":
+            case "WIS":
+            case "CHA":
+                valueA = parseInt(a.getStats()[sortBy]);
+                valueB = parseInt(b.getStats()[sortBy]);
+                break;
+            case "title":
+                valueA = a.getJob() ? a.getJob().getTitle() : "";
+                valueB = b.getJob() ? b.getJob().getTitle() : "";
+                break;
+            case "yearsInPos":
+                valueA = a.getJob() ? a.getJob().getYearsInPosition() : 0;
+                valueB = b.getJob() ? b.getJob().getYearsInPosition() : 0;
+                break;
+            default:
+                valueA = a[sortBy] ? a[sortBy] : '';
+                valueB = b[sortBy] ? b[sortBy] : '';
+                break;
         }
-        else if (['STR', 'CON', 'DEX', 'INT', 'WIS', 'CHA'].indexOf(sortBy) > -1) {
-            valueA = parseInt(a.getStats()[sortBy]);
-            valueB = parseInt(b.getStats()[sortBy]);
-        }
-        else if (sortBy == 'title') {
-            valueA = a.getJob() ? a.getJob().getTitle() : "";
-            valueB = b.getJob() ? b.getJob().getTitle() : "";
-        }
-        else if (sortBy == 'yearsInPos') {
-            valueA = a.getJob() ? a.getJob().getYearsInPosition() : 0;
-            valueB = b.getJob() ? b.getJob().getYearsInPosition() : 0;
-        }
-        else {
-            valueA = a[sortBy] ? a[sortBy] : '';
-            valueB = b[sortBy] ? b[sortBy] : '';
-        }
-        if (valueA < valueB) {
-          return -1;
-        }
-        if (valueA > valueB) {
-          return 1;
-        }
-        return 0;
-    }
-
-    function customSortDesc(a, b) {
-        let valueA;
-        let valueB;
-        if (sortBy == 'children') {
-            valueA = a.getChildren().length;
-            valueB = b.getChildren().length;
-        }
-        else if (['STR', 'CON', 'DEX', 'INT', 'WIS', 'CHA'].indexOf(sortBy) > -1) {
-            valueA = parseInt(a.getStats()[sortBy]);
-            valueB = parseInt(b.getStats()[sortBy]);
-        }
-        else if (sortBy == 'title') {
-            valueA = a.getJob() ? a.getJob().getTitle() : "";
-            valueB = b.getJob() ? b.getJob().getTitle() : "";
-        }
-        else if (sortBy == 'yearsInPos') {
-            valueA = a.getJob() ? a.getJob().getYearsInPosition() : 0;
-            valueB = b.getJob() ? b.getJob().getYearsInPosition() : 0;
+        if (sortDirection === "asc") {
+            if (valueA < valueB) {
+              return -1;
+            }
+            if (valueA > valueB) {
+              return 1;
+            }
         }
         else {
-            valueA = a[sortBy] ? a[sortBy] : '';
-            valueB = b[sortBy] ? b[sortBy] : '';
-        }
-        if (valueB < valueA) {
-          return -1;
-        }
-        if (valueB > valueA) {
-          return 1;
+            if (valueA > valueB) {
+                return -1;
+              }
+              if (valueA < valueB) {
+                return 1;
+              }  
         }
         return 0;
     }
