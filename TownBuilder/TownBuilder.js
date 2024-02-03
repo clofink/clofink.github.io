@@ -970,7 +970,6 @@ function meetOtherPeople(person, population, currentYear) {
         meetPerson.decreasePersonReputation(personId, value);
     }
     let newReputation = person.getReputationByPersonId(meetPersonId);
-    // only add this event if their reputation just became this value
     if (newReputation >= 20 && person.getBestFriends().indexOf(meetPerson) === -1) {
         person.addBestFriend(meetPerson);
         meetPerson.addBestFriend(person);
@@ -1024,7 +1023,6 @@ function makePersonHouseOwner(person, house) {
 
 function findAPartner(person, population, gender) {
     // only looping through people they have met and eliminating based on reputation quick
-    // log(`Checking for ${person.getFullName()}`);
     for (let potentialPartnerId in person.getReputations()) {
         if (person.getReputationByPersonId(potentialPartnerId) < 5) {
             continue;
@@ -1037,32 +1035,25 @@ function findAPartner(person, population, gender) {
             continue;
         }
         if (person.getRace() !== potentialPartner.getRace()) {
-            // 10% chance that they end up married anyway (can adjust)
             if (doesRandomEventHappen(90)) {
                 continue;
             }
         }
-        // make sure they're not already married
         if (potentialPartner.getSpouse()) {
             continue;
         }
-        // make sure they're a matching gender preference
         if (potentialPartner.getGender() !== person.getGenderPreference()) {
             continue;
         }
         if (gender !== potentialPartner.getGenderPreference()) {
             continue;
         }
-        // makes sure they are not a cousin or sibling (or aunt/uncle)
-        // this is better than just checking last name (and removes issues with accidental same last names)
-        if (person.getFamilyMembers().indexOf(potentialPartner) != -1) {
+        if (person.getFamilyMembers().indexOf(potentialPartner) >= 0) {
             continue;
         }
-        // make sure the partner is over their age of adolescence
         if (potentialPartner.getAge() < potentialPartner.getAdolescence()) {
             continue;
         }
-        // make sure they are within 15 years age difference
         const permissiveAgeDiff = Math.floor((person.getMaxAge() - person.getAdolescence()) / 5);
         if (!(Math.abs(potentialPartner.getAge() - person.getAge()) <= permissiveAgeDiff)) {
             continue;
@@ -1076,7 +1067,6 @@ function calculateExpenses(person, house) {
     const children = person.getChildren();
 
     if (children.length > 0) {
-        // if they have kids, only count the alive ones who are under 18
         for (let child of children) {
             if (!child.getIsDead() && child.getAge() < child.getAdolescence()) {
                 expenses += getRandomNumberInRange(500, 1000);
@@ -1132,16 +1122,15 @@ registerElement(eById('addRace'), "click", addRace);
 addRace();
 
 function rollStats() {
-    let stats = [];
+    const stats = [];
     for (let t = 0; t < 6; t++) {
-        let rolls = [];
+        const rolls = [];
         rolls.push(getRandomNumberInRange(1,6));
         rolls.push(getRandomNumberInRange(1,6));
         rolls.push(getRandomNumberInRange(1,6));
         rolls.push(getRandomNumberInRange(1,6));
-        rolls.sort(); // sorts them lowest to highest
-        rolls.reverse(); // reverses that sorting
-        rolls.pop(); // removes the last item
+        rolls.sort();
+        rolls.shift();
         let sum = 0;
         for (let i = 0; i < rolls.length; i++) {
             sum += rolls[i];
@@ -1153,17 +1142,14 @@ function rollStats() {
 
 function calculateAverateStats(person1Stats, person2Stats) {
     const attributes = ['STR', 'CON', 'WIS', 'INT', 'CHA', 'DEX'];
-    averagedStats = {};
+    const averagedStats = {};
     for (const attribute of attributes) {
-        // let newAverageStat = (person1Stats[attribute] + person2Stats[attribute]) / 2;
         let newAverageStat = getRandomNumberInRange(person1Stats[attribute], person2Stats[attribute]);
         const chance = getRandomNumberInRange(0,99)
         if (chance >= 0 && chance < 10) {
-            // make sure it is never above 20
             (newAverageStat + 1) < 20 ? newAverageStat += 1 : newAverageStat = 20;
         }
         if (chance >= 10 && chance < 25) {
-            // make sure it is never below 0
             (newAverageStat - 1) > 0 ? newAverageStat -= 1 : newAverageStat = 0;
         }
         averagedStats[attribute] = Math.round(newAverageStat);
