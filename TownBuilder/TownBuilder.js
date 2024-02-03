@@ -556,7 +556,7 @@ function processLifeEvents(person, town, currentYear) {
 
     // die
     if (person.getDeathChanceAtAge()) {
-        passAway(person, town);
+        passAway();
     }
     // age
     person.setAge(currentAge + 1);
@@ -799,6 +799,51 @@ function processLifeEvents(person, town, currentYear) {
         }
         return newSpouse;
     }
+    function passAway() {
+        const personName = person.getFullName();
+        person.addLifeEvent(currentYear, "{P} died");
+        if (getPersonById(person.personId, town.getOrphanage())) {
+            town.removeFromOrphanage(person);
+        }
+        if (spouse && !spouse.getIsDead()) {
+            spouse.addLifeEvent(currentYear, `{PP} ${person.getGender() === "male" ? "husband": "wife"} ${personName} died`);
+        }
+        if (person.getChildren()) {
+            for (let child of person.getChildren()) {
+                if (!child.getIsDead()) {
+                    child.addLifeEvent(currentYear, `{PP} ${person.getGender() == 'male' ? 'father' : 'mother'} ${personName} died`);
+                }
+            }
+        }
+        if (person.getParents()) {
+            for (let parent of person.getParents()) {
+                if (!parent.getIsDead()) {
+                    parent.addLifeEvent(currentYear, `{PP} ${person.getGender() === "male" ? "son" : "daughter"} ${personName} died`);
+                }
+            }
+        }
+        for (let bestFriend of person.getBestFriends()) {
+            if (!bestFriend.getIsDead()) {
+                bestFriend.addLifeEvent(currentYear, `{PP} best friend ${personName} died`);
+            }
+        }
+        if (currentJob) {
+            currentJob.removePerson();
+        }
+        town.removePerson(person);
+        town.addToDeadPopulation(person);
+        person.die(currentYear);
+        if (spouse && spouse.getIsDead()) {
+            if (person.getChildren().length > 0) {
+                for (let child of person.getChildren()) {
+                    if (child.getAge() < child.getAdolescence()) {
+                        child.addLifeEvent(currentYear, `{P} was put up for adoption`);
+                        town.addOrphan(child);
+                    }
+                }
+            }
+        }
+    }
 }
 
 function personalFinances(person, house, currentJob, town) {
@@ -937,55 +982,6 @@ function meetOtherPeople(person, population, currentYear) {
         meetPerson.addEnemy(person);
         person.addLifeEvent(currentYear, `{P} became enemies with ${meetPersonName}`);
         meetPerson.addLifeEvent(currentYear, `{P} became enemies with ${personName}`);
-    }
-}
-
-
-function passAway(person, town) {
-    const personName = person.getFullName();
-    person.addLifeEvent(town.getCurrentYear(), "{P} died");
-    if (getPersonById(person.personId, town.getOrphanage())) {
-        town.removeFromOrphanage(person);
-    }
-    const spouse = person.getSpouse();
-    if (spouse && !spouse.getIsDead()) {
-        spouse.addLifeEvent(town.getCurrentYear(), `{PP} ${person.getGender() === "male" ? "husband": "wife"} ${personName} died`);
-    }
-    if (person.getChildren()) {
-        for (let child of person.getChildren()) {
-            if (!child.getIsDead()) {
-                child.addLifeEvent(town.getCurrentYear(), `{PP} ${person.getGender() == 'male' ? 'father' : 'mother'} ${personName} died`);
-            }
-        }
-    }
-    if (person.getParents()) {
-        for (let parent of person.getParents()) {
-            if (!parent.getIsDead()) {
-                parent.addLifeEvent(town.getCurrentYear(), `{PP} ${person.getGender() === "male" ? "son" : "daughter"} ${personName} died`);
-            }
-        }
-    }
-    for (let bestFriend of person.getBestFriends()) {
-        if (!bestFriend.getIsDead()) {
-            bestFriend.addLifeEvent(town.getCurrentYear(), `{PP} best friend ${personName} died`);
-        }
-    }
-    const currentjob = person.getJob();
-    if (currentjob) {
-        currentjob.removePerson();
-    }
-    town.removePerson(person);
-    town.addToDeadPopulation(person);
-    person.die(town.getCurrentYear());
-    if (person.getSpouse() && person.getSpouse().getIsDead()) {
-        if (person.getChildren().length > 0) {
-            for (let child of person.getChildren()) {
-                if (child.getAge() < child.getAdolescence()) {
-                    child.addLifeEvent(town.getCurrentYear(), `{P} was put up for adoption`);
-                    town.addOrphan(child);
-                }
-            }
-        }
     }
 }
 
