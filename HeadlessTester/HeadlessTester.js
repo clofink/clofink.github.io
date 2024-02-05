@@ -124,6 +124,7 @@ async function runCommandAsync(command, args) {
 function updateDependants(element) {
     if (element instanceof Event) element = element.target;
     const dependantElements = qsa(`[data-depends-on='${element.id}']`);
+    let setOption = false;
     for (let dependantElement of dependantElements) {
         const fieldValue = dependantElement.getAttribute("data-depends-value");
         if (fieldValue.split(",").indexOf(element.value) >= 0) {
@@ -131,6 +132,12 @@ function updateDependants(element) {
                 case "BUTTON":
                     dependantElement.style.display = "inline-block";
                     break;
+                case "OPTION":
+                    if (!setOption) {
+                        dependantElement.parentNode.value = dependantElement.value;
+                        sendEvent(dependantElement.parentNode, "change");
+                        setOption = true;
+                    }
                 default:
                     dependantElement.style.display = "block";
                     break;
@@ -188,7 +195,7 @@ function load() {
     registerEvents();
     qs("#account").removeAttribute("open");
     qs("#events").setAttribute("open", true);
-    qs("#commands").setAttribute("open", true)
+    qs("#commands").setAttribute("open", true);
 }
 
 function selectAllEvents() {
@@ -219,8 +226,8 @@ async function runCommand() {
     logItem.scrollIntoView({behavior: "smooth"});
 }
 
-registerElements("select", "change", updateDependants, true);
-registerElements("input,select,textarea", "change", updateGlobal, true);
+registerElements(qsa("select"), "change", updateDependants, true);
+registerElements(qsa("input,select,textarea"), "change", updateGlobal, true);
 registerElement(eById("command"), "change", updateSampleCommand);
 registerElement(eById("loadWidget"), "click", load);
 registerElement(eById("selectAll"), "click", selectAllEvents);
