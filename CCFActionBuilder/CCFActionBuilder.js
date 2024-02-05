@@ -1,45 +1,3 @@
-function qs(selector, target) {
-    return (target || document).querySelector(selector);
-}
-function qsa(selector, target) {
-    return (target || document).querySelectorAll(selector);
-}
-function log(message, level) {
-    if (message === undefined) throw "No Message"
-    if (level && ['log', 'info', 'warn', 'error'].indexOf(level) < 0) throw `Invalid Log Level "${level}". Use info, warn, or error`
-    console[level || "log"](message);
-}
-function eById(id, target) {
-    return (target || document).getElementById(id); 
-}
-function registerElement(element, event, callback) {
-    element.addEventListener(event, callback);
-}
-function unregisterElement(element, event, callback) {
-    element.removeEventListener(event, callback);
-}
-function registerElements(elements, event, callback, doCallback) {
-    for (let element of elements) {
-        if(doCallback) callback(element);
-        registerElement(element, event, callback);
-    }
-}
-function newElement(type, params) {
-    const newElem = document.createElement(type);
-    for (let param in params) {
-        if (param === "class") newElem.classList.add(...params[param]);
-        else newElem.setAttribute(param, params[param])
-    }
-    return newElem;
-}
-function addElement(element, target, position) {
-    if (!position) (target || document.body).appendChild(element);
-    else (target || document.body).insertAdjacentElement(position, element);
-}
-function sendEvent(element, event) {
-    element.dispatchEvent(new Event(event));
-}
-
 var conditionalActions = {
     "IfActiveSchedule": {params: [{name: "Schedule Name"}, {name: "Action", type: "action"}]},
     "IfActiveLanguage": {params: [{name: "Language Code"}, {name: "Action", type: "action"}]},
@@ -147,8 +105,7 @@ function addParametersBlock(action) {
         addElement(newParam, paramsBody);
     }
     if (actionInfo[action].repeatIndex !== undefined && actionInfo[action].repeatIndex.length > 0) {
-        const addParamButton = newElement('button', {class: ["addParam"]});
-        addParamButton.innerText = "Add Parameter";
+        const addParamButton = newElement('button', {class: ["addParam"], innerText: "Add Parameter"});
         registerElement(
             addParamButton, 
             "click", 
@@ -157,8 +114,7 @@ function addParametersBlock(action) {
                 for (let index of actionInfo[action].repeatIndex) {
                     newParams.push(createParameterField(actionInfo[action].params[index]));
                 }
-                const removeParamButton = newElement('button', {class: ["removeParam"]});
-                removeParamButton.innerText = "Remove Parameter";
+                const removeParamButton = newElement('button', {class: ["removeParam"], innerText: "Remove Parameter"});
                 registerElement(removeParamButton, "click", function() {
                     for (let param of newParams) {
                         param.remove();
@@ -178,8 +134,7 @@ function addParametersBlock(action) {
 }
 
 function createParameterField(fieldInfo) {
-    const paramLabel = newElement('label');
-    paramLabel.innerText = `${fieldInfo.name}: `;
+    const paramLabel = newElement('label', {innerText: `${fieldInfo.name}: `});
 
     const paramType = fieldInfo.type || "string";
     switch(paramType) {
@@ -196,9 +151,8 @@ function createParameterField(fieldInfo) {
         case "enum": {
             const select = newElement('select');
             for (let value of fieldInfo.values) {
-                let valueParts = value.split(":");
-                const option = valueParts.length > 1 ? newElement('option', {value: valueParts[1]}) : newElement('option', {value: valueParts[0]});
-                option.innerText = valueParts[0];
+                const valueParts = value.split(":");
+                const option = valueParts.length > 1 ? newElement('option', {value: valueParts[1], innerText: valueParts[0]}) : newElement('option', {value: valueParts[0], innerText: valueParts[0]});
                 addElement(option, select);
             }
             addElement(select, paramLabel);
@@ -208,8 +162,7 @@ function createParameterField(fieldInfo) {
             const actionTypeSelect = newActionTypeSelect();
             const actionSelect = newActionSelect("unconditional");
 
-            addElement(actionTypeSelect, paramLabel);
-            addElement(actionSelect, paramLabel);
+            addElements([actionTypeSelect, actionSelect], paramLabel);
             
             registerElement(
                 actionSelect, 
@@ -298,13 +251,11 @@ function createActionBlock(type) {
     addElement(actionTypeSelect, actionBody);
     addElement(actionSelect, actionBody);
 
-    const addActionBeforeButton = newElement("button", {class: ["addAction"]});
-    addActionBeforeButton.innerText = "Add Action Before";
+    const addActionBeforeButton = newElement("button", {class: ["addAction"], innerText: "Add Action Before"});
     registerElement(addActionBeforeButton, "click", function() {addElement(createActionBlock("unconditional"), actionBody, "beforebegin")});
     addElement(addActionBeforeButton, actionBody);
     
-    const removeButton = newElement("button", {class: ["removeAction"]});
-    removeButton.innerText = "Remove Action";
+    const removeButton = newElement("button", {class: ["removeAction"], innerText: "Remove Action"});
     registerElement(removeButton, "click", function() {actionBody.remove(); updateDisplay();});
     registerElement(actionSelect, "change", function() {let existingParams = qs(".paramsBody", actionBody); if (existingParams) existingParams.remove(); let paramsElems = addParametersBlock(actionSelect.value); if(paramsElems) {addElement(paramsElems, actionBody)}});
     addElement(removeButton, actionBody);
@@ -317,8 +268,7 @@ function createActionTypeSelect(id) {
     const actionTypeSelect = newElement('select', {id: `actionTypeSelect${id}`, class: ['actionTypeSelect']});
     const acitonTypeOptions = ["Unconditional", "Conditional"];
     for (let actionType of acitonTypeOptions) {
-        const actionTypeOption = newElement('option', {value: actionType.toLowerCase()});
-        actionTypeOption.innerText = actionType;
+        const actionTypeOption = newElement('option', {value: actionType.toLowerCase(), innerText: actionType});
         addElement(actionTypeOption, actionTypeSelect);
     }
     return actionTypeSelect;
@@ -328,13 +278,11 @@ function createActionSelect(id, type) {
     const actionSelect = newElement('select', {id: `actionSelect${id}`, class: ['actionSelect']});
 
     for (let action of Object.keys(window.unconditionalActions).sort()) {
-        const actionOption = newElement('option', {value: action, "data-depends-on": `actionTypeSelect${id}`, "data-depends-value": "unconditional", "style": type === "unconditional" ? "display: block;" : "display: none;"});
-        actionOption.innerText = action;
+        const actionOption = newElement('option', {value: action, innerText: action, "data-depends-on": `actionTypeSelect${id}`, "data-depends-value": "unconditional", "style": type === "unconditional" ? "display: block;" : "display: none;"});
         addElement(actionOption, actionSelect);
     }
     for (let action of Object.keys(window.conditionalActions).sort()) {
-        const actionOption = newElement('option', {value: action, "data-depends-on": `actionTypeSelect${id}`, "data-depends-value": "conditional", "style": type === "conditional" ? "display: block;" : "display: none;"});
-        actionOption.innerText = action;
+        const actionOption = newElement('option', {value: action, innerText: action, "data-depends-on": `actionTypeSelect${id}`, "data-depends-value": "conditional", "style": type === "conditional" ? "display: block;" : "display: none;"});
         addElement(actionOption, actionSelect);
     }
 
@@ -362,18 +310,15 @@ function newTreatmentBlock() {
     const nameInput = newElement('input', {class: ["treatmentName"]});
     addElement(nameInput, treatmentBody);
 
-    const addActionButton = newElement('button', {title: "Add Action", class: ["addAction"]});
-    addActionButton.innerText = "Add Action";
+    const addActionButton = newElement('button', {title: "Add Action", class: ["addAction"], innerText: "Add Action"});
     registerElement(addActionButton, "click", function() {addActionBlock(actionList)});
     addElement(addActionButton, treatmentBody);
 
-    const addTreatmentBeforeButton = newElement('button', {title: "Add Treatment Before", class: ["addTreatment"]});
-    addTreatmentBeforeButton.innerText = "Add Treatment Before";
+    const addTreatmentBeforeButton = newElement('button', {title: "Add Treatment Before", class: ["addTreatment"], innerText: "Add Treatment Before"});
     registerElement(addTreatmentBeforeButton, "click", function() {addElement(newTreatmentBlock(), treatmentBody, "beforebegin")});
     addElement(addTreatmentBeforeButton, treatmentBody);
     
-    const removeButton = newElement("button", {title: "Remove Treatment", class: ["removeTreatment"]});
-    removeButton.innerText = "Remove Treatment";
+    const removeButton = newElement("button", {title: "Remove Treatment", class: ["removeTreatment"], innerText: "Remove Treatment"});
     registerElement(removeButton, "click", function() {treatmentBody.remove(); updateDisplay();});
     addElement(removeButton, treatmentBody);
     
