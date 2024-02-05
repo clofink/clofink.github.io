@@ -1,39 +1,3 @@
-function qs(selector, target) {
-    return (target || document).querySelector(selector);
-}
-function qsa(selector, target) {
-    return (target || document).querySelectorAll(selector);
-}
-function log(message, level) {
-    if (message === undefined) throw "No Message"
-    if (level && ['log', 'info', 'warn', 'error'].indexOf(level) < 0) throw `Invalid Log Level "${level}". Use info, warn, or error`
-    console[level || "log"](message);
-}
-function eById(id, target) {
-    return (target || document).getElementById(id); 
-}
-function registerElement(element, event, callback) {
-    element.addEventListener(event, callback);
-}
-function registerElements(selector, event, callback, doCallback) {
-    const elements = qsa(selector);
-    for (let element of elements) {
-        if(doCallback) callback(element);
-        registerElement(element, event, callback);
-    }
-}
-function newElement(type, params) {
-    const newElem = document.createElement(type);
-    for (let param in params) {
-        if (param === "class") newElem.classList.add(...params[param]);
-        else newElem.setAttribute(param, params[param])
-    }
-    return newElem;
-}
-function addElement(element, target) {
-    (target || document.body).appendChild(element)
-}
-
 window.storedValues = {};
 window.listenedEvents = [];
 
@@ -208,13 +172,11 @@ function createLogItem(eventName, eventBody, type) {
     type = type || "info"
     const logItem = newElement("div", {class: ['logItem']});
     if (eventName) {
-        const logHeader = newElement("div", {class: ["logHeader", type]});
-        logHeader.innerText = eventName;
+        const logHeader = newElement("div", {class: ["logHeader", type], innerText: eventName});
         addElement(logHeader, logItem);
     }
     if (eventBody && Object.keys(eventBody).length > 0) {
-        const logBody = newElement("pre", {class: ["logBody"]});
-        logBody.innerText = JSON.stringify(eventBody, null, 2);
+        const logBody = newElement("pre", {class: ["logBody"], innerText: JSON.stringify(eventBody, null, 2)});
         addElement(logBody, logItem);
     }
     return logItem;
