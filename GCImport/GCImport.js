@@ -173,6 +173,12 @@ async function showLoading(loadingFunc) {
     }
 }
 
+function createDownloadLink(fileName, fileContents, fileType) {
+    const fileData = new Blob([fileContents], {type: fileType});
+    const fileURL = window.URL.createObjectURL(fileData);
+    return newElement('a', {href: fileURL, download: fileName, innerText: "Example"});
+}
+
 var tabs = [];
 var fileContents;
 
