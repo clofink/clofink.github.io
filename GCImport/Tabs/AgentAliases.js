@@ -2,6 +2,7 @@ addTab("Agent Aliases", showAgentAliasPage);
 
 function showAgentAliasPage() {
     window.requiredFields = ["Email", "Alias"];
+    window.allValidFields = ["Email", "Alias"];
 
     const container = newElement('div', {id: "userInputs"});
     const label = newElement('label', {innerText: "Agent Aliases CSV: "});
@@ -16,7 +17,8 @@ function showAgentAliasPage() {
         `Must have "users" scope`, 
         `Required CSV columns "Email" and "Alias"`
     ]);
-    addElements([label, startButton, logoutButton, helpSection], container);
+    const exampleLink = createDownloadLink("Agent Aliases Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
+    addElements([label, startButton, logoutButton, helpSection, exampleLink], container);
     return container;
 
     // undocumented API from the UI

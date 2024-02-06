@@ -2,6 +2,7 @@ addTab("Queues", showQueuesPage);
 
 function showQueuesPage() {
     window.requiredFields = ["Name"];
+    window.allValidFields = ["Name", "Division", "Description", "Auto Answer", "Alerting Timeout", "SLA Percentage", "SLA Duration", "ACW", "ACW Timeout", "Manual Assignment", "Scoring Method", "Evaluation Method", "Script", "In-Queue Flow"];
 
     const container = newElement('div', {id: "userInputs"});
     const label = newElement('label', {innerText: "Queues CSV: "});
@@ -23,7 +24,8 @@ function showQueuesPage() {
         `Scoring Method: one of TimestampAndPriority, PriorityOnly`,
         `Evaluation Method: one of ALL, BEST, NONE`
     ]);
-    addElements([label, startButton, logoutButton, helpSection], container);
+    const exampleLink = createDownloadLink("Queues Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
+    addElements([label, startButton, logoutButton, helpSection, exampleLink], container);
     return container;
         
     function importQueuesWrapper() {

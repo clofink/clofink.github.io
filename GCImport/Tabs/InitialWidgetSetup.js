@@ -2,6 +2,7 @@ addTab("Widgets", showWidgetsPage);
 
 function showWidgetsPage() {
     window.requiredFields = ["Configuration Name", "Inbound Flow Name", "Deployment Name"];
+    window.allValidFields = ["Configuration Name", "Inbound Flow Name", "Deployment Name", "Languages", "Default Language", "Home Screen", "Home Screen Logo URL", "Agent Typing Indicator", "Visitor Typing Indicator", "Auto-Start Conversations", "Rich Text Formatting", "Conversation Disconnect", "Clear Conversation", "Humanize Conversation", "Bot Name", "Bot Image URL", "Color", "Position", "Allow Co-Browse", "Allow Agent Control", "Predictive Engagement", "Headless Mode"]
 
     const container = newElement('div', { id: "userInputs" });
     const label = newElement('label', {innerText: "Widgets CSV: "});
@@ -23,7 +24,8 @@ function showWidgetsPage() {
         `Color: HEX value`,
         `Position: one of left, right, auto`
     ]);
-    addElements([label, startButton, logoutButton, helpSection], container);
+    const exampleLink = createDownloadLink("Widgets Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
+    addElements([label, startButton, logoutButton, helpSection, exampleLink], container);
     return container;
 
     async function getAllWidgetConfigs() {

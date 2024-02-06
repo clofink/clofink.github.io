@@ -2,6 +2,7 @@ addTab("Skills", showSkillsPage);
 
 function showSkillsPage() {
     window.requiredFields = ["Name"];
+    window.allValidFields = ["Name"];
 
     const container = newElement('div', {id: "userInputs"});
     const label = newElement('label', {innerText: "Skills CSV: "});
@@ -16,7 +17,8 @@ function showSkillsPage() {
         `Must have "routing" scope`, 
         `Required CSV column "Name"`
     ]);
-    addElements([label, startButton, logoutButton, helpSection], container);
+    const exampleLink = createDownloadLink("Skills Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
+    addElements([label, startButton, logoutButton, helpSection, exampleLink], container);
     return container;
 
     function importSkillsWrapper() {

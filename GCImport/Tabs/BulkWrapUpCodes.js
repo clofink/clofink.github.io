@@ -2,6 +2,7 @@ addTab("Wrap-Up Codes", showWrapUpCodesPage);
 
 function showWrapUpCodesPage() {
     window.requiredFields = ["Queue Name", "Wrap-Up Codes"];
+    window.allValidFields = ["Queue Name", "Wrap-Up Codes"];
 
     const container = newElement('div', {id: "userInputs"});
     const label = newElement('label', {innerText: "Wrap-Up Codes CSV: "});
@@ -19,7 +20,8 @@ function showWrapUpCodesPage() {
         `If the code does not exist, it will be created`,
         `Wrap-Up Codes are only added. If there are already codes on a queue, they will not be removed.`
     ]);
-    addElements([label, startButton, logoutButton, helpSection], container);
+    const exampleLink = createDownloadLink("Wrapup Codes Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
+    addElements([label, startButton, logoutButton, helpSection, exampleLink], container);
     return container;
     
     async function addWrapUpCodes(queueId, codes) {

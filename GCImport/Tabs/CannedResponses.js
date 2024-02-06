@@ -2,6 +2,8 @@ addTab("Canned Responses", showCannedResponsePage);
 
 function showCannedResponsePage() {
     window.requiredFields = ["Name", "Library", "Type", "Content"];
+    window.allValidFields = ["Name", "Library", "Type", "Content"];
+
     const container = newElement('div', {id: "userInputs"});
     const label = newElement('label', {innerText: "Canned Responses CSV: "});
     const fileInput = newElement('input', {type: "file", accept: ".csv"});
@@ -17,7 +19,8 @@ function showCannedResponsePage() {
         `If a library with a matching name does not exist, it will be created`, 
         `If multiple libraries have the same name, the last one in the list returned from the API will be used`
     ]);
-    addElements([label, startButton, logoutButton, helpSection], container);
+    const exampleLink = createDownloadLink("Canned Responses Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
+    addElements([label, startButton, logoutButton, helpSection, exampleLink], container);
     return container;
     
     function importCannedWrapper() {
