@@ -1,38 +1,35 @@
-var conditionalActions = {
-    "IfActiveSchedule": {params: [{name: "Schedule Name"}, {name: "Action", type: "action"}]},
-    "IfActiveLanguage": {params: [{name: "Language Code"}, {name: "Action", type: "action"}]},
-    "IfQAPlayback": {params: [{name: "Action", type: "action"}]},
-    "IfParticipantData": {params: [{name: "Field Name"}, {name: "Value"}, {name: "Action", type: "action"}]},
-    "IfStaff": {params: [{name: "Lower Count", type: "number"}, {name: "Upper Count", type: "number"}, {name: "Action", type: "action"}]},
-    "IfEWT": {params: [{name: "Lower Seconds", type: "number"}, {name: "Upper Seconds", type: "number"}, {name: "Action", type: "action"}]},
-    "IfPIQ": {params: [{name: "Lower Position", type: "number"}, {name: "Upper Position", type: "number"}, {name: "Action", type: "action"}]},
-    "IfTimeInQueue": {params: [{name: "Lower Seconds", type: "number"}, {name: "Upper Seconds", type: "number"}, {name: "Action", type: "action"}]},
-    "IfWaiting": {params: [{name: "Lower Bound", type: "number"}, {name: "Upper Bound", type: "number"}, {name: "Action", type: "action"}]},
-    "IfPromptTextExists": {params: [{name: "Prompt Name"}, {name: "Action", type: "action"}]},
-    "IfRandom": {params: [{name: "Percentage", type: "number"}, {name: "Action", type: "action"}]}
-}
-
-var unconditionalActions = {
-    "Disconnect": {},
-    "SetLanguage": {params: [{name: "Language Code"}]},
-    "SetQueue": {params: [{name: "Name"}]},
-    "SetPriority": {params: [{name: "Value", type: "number"}]},
-    "SetScheduleGroup": {params: [{name: "Type"}, {name: "Name"}]},
-    "SetTreatment": {params: [{name: "Type", type: "enum", values: ["Active:", "In-Queue:inqueue"]}, {name: "Name"}]},
-    "ScheduleCheck": {},
-    "EmergencyCheck": {},
-    "SetSkills": {params: [{name: 'Mode', type: "enum", values: ["Clear:clear", "Append:append", "Overwrite:overwrite"]}, {name: 'Skill Name'}], repeatIndex: [1]},
-    "SetParticipantData": {params: [{name: 'Mode', type: "enum", values: ['Initialize:initialize', 'Overwrite:overwrite']}, {name: 'Key'}, {name: 'Value'}], repeatIndex: [1,2]},
-    "SetWait": {params: [{name:"Seconds", type:"number"}]},
-    "SetRedirect": {params: [{name:"URL String"}]},
-    "NoOp": {},
-    "PlayPIQ": {},
-    "PlayPIQDigital": {},
-    "PlayEWT": {},
-    "PlayEWTDigital": {},
-    "Loop": {params: [{name: "Start Index", type: "number"}, {name: "Loop Count", type: "number"}]},
-    "ProcessTransferQueue": {},
-    "ShowPrompt": {params: [{name: "Prompt Name"}]}
+var actions = {
+    "IfActiveSchedule": {type: "conditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: "Schedule Name"}, {name: "Action", type: "action"}]},
+    "IfActiveLanguage": {type: "conditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: "Language Code"}, {name: "Action", type: "action"}]},
+    "IfQAPlayback": {type: "conditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: "Action", type: "action"}]},
+    "IfParticipantData": {type: "conditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: "Field Name"}, {name: "Value"}, {name: "Action", type: "action"}]},
+    "IfStaff": {type: "conditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: "Lower Count", type: "number"}, {name: "Upper Count", type: "number"}, {name: "Action", type: "action"}]},
+    "IfEWT": {type: "conditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: "Lower Seconds", type: "number"}, {name: "Upper Seconds", type: "number"}, {name: "Action", type: "action"}]},
+    "IfPIQ": {type: "conditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: "Lower Position", type: "number"}, {name: "Upper Position", type: "number"}, {name: "Action", type: "action"}]},
+    "IfTimeInQueue": {type: "conditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: "Lower Seconds", type: "number"}, {name: "Upper Seconds", type: "number"}, {name: "Action", type: "action"}]},
+    "IfWaiting": {type: "conditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: "Lower Bound", type: "number"}, {name: "Upper Bound", type: "number"}, {name: "Action", type: "action"}]},
+    "IfPromptTextExists": {type: "conditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: "Prompt Name"}, {name: "Action", type: "action"}]},
+    "IfRandom": {type: "conditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: "Percentage", type: "number"}, {name: "Action", type: "action"}]},
+    "Disconnect": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"]},
+    "SetLanguage": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: "Language Code"}]},
+    "SetQueue": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: "Name"}]},
+    "SetPriority": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: "Value", type: "number"}]},
+    "SetScheduleGroup": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: "Type"}, {name: "Name"}]},
+    "SetTreatment": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: "Type", type: "enum", values: ["Active:", "In-Queue:inqueue"]}, {name: "Name"}]},
+    "ScheduleCheck": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"]},
+    "EmergencyCheck": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"]},
+    "SetSkills": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: 'Mode', type: "enum", values: ["Clear:clear", "Append:append", "Overwrite:overwrite"]}, {name: 'Skill Name'}], repeatIndex: [1]},
+    "SetParticipantData": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: 'Mode', type: "enum", values: ['Initialize:initialize', 'Overwrite:overwrite']}, {name: 'Key'}, {name: 'Value'}], repeatIndex: [1,2]},
+    "SetWait": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name:"Seconds", type:"number"}]},
+    "SetRedirect": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name:"URL String"}]},
+    "NoOp": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"]},
+    "PlayPIQ": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"]},
+    "PlayPIQDigital": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"]},
+    "PlayEWT": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"]},
+    "PlayEWTDigital": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"]},
+    "Loop": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: "Start Index", type: "number"}, {name: "Loop Count", type: "number"}]},
+    "ProcessTransferQueue": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"]},
+    "ShowPrompt": {type: "unconditional", validFor: ["prequeue", "inqueue", "emergency", "holiday", "closed"], params: [{name: "Prompt Name"}]}
 }
 
 var separators = {
@@ -96,7 +93,7 @@ function loadString() {
 }
 
 function addParametersBlock(action) {
-    var actionInfo = {...unconditionalActions, ...conditionalActions};
+    var actionInfo = {...actions};
     if (!actionInfo[action] || !actionInfo[action].params) return;
     const paramsBody = newElement('div', {class: ["paramsBody"]});
 
@@ -227,7 +224,7 @@ function parseString(input) {
         for (let action of splitActions) {
             let splitParameters = action.split(window.separators.actionParameterSeparator);
             let actionName = splitParameters.shift();
-            if (Object.keys(window.conditionalActions).indexOf(actionName) < 0 && Object.keys(window.unconditionalActions).indexOf(actionName) < 0) {
+            if (Object.keys(window.actions).indexOf(actionName) < 0) {
                 splitParameters.push(actionName);
                 actionName = "ShowPrompt";
             }
@@ -277,12 +274,9 @@ function createActionTypeSelect(id) {
 function createActionSelect(id, type) {
     const actionSelect = newElement('select', {id: `actionSelect${id}`, class: ['actionSelect']});
 
-    for (let action of Object.keys(window.unconditionalActions).sort()) {
-        const actionOption = newElement('option', {value: action, innerText: action, "data-depends-on": `actionTypeSelect${id}`, "data-depends-value": "unconditional", "style": type === "unconditional" ? "display: block;" : "display: none;"});
-        addElement(actionOption, actionSelect);
-    }
-    for (let action of Object.keys(window.conditionalActions).sort()) {
-        const actionOption = newElement('option', {value: action, innerText: action, "data-depends-on": `actionTypeSelect${id}`, "data-depends-value": "conditional", "style": type === "conditional" ? "display: block;" : "display: none;"});
+    for (let action of Object.keys(window.actions).sort()) {
+        const actionOption = newElement('option', {value: action, "data-depends-on": `actionTypeSelect${id}`, "data-depends-value": window.actions[action].type, "style": type === window.actions[action].type ? "display: block;" : "display: none;"});
+        actionOption.innerText = action;
         addElement(actionOption, actionSelect);
     }
 
@@ -389,7 +383,7 @@ function updateFields() {
     while (inputParent.childNodes.length > 0) {
         inputParent.childNodes[0].remove();
     }
-    console.log(fields)
+    log(fields)
     for (let treatment in fields) {
         const treatmentBlock = newTreatmentBlock();
         const actionList = qs(".actionList", treatmentBlock);
@@ -423,7 +417,7 @@ function updateFields() {
                 }
                 
                 if (params[i].classList.contains("actionSelect")) {
-                    if (Object.keys(conditionalActions).indexOf(action.params[i]) < 0 && Object.keys(unconditionalActions).indexOf(action.params[i]) < 0) {
+                    if (Object.keys(actions).indexOf(action.params[i]) < 0) {
                         action.params.splice(i, 0, "ShowPrompt");
                     }
                     const actionTypeSelect = qs(".actionTypeSelect", qs(".paramsBody", newAction));
@@ -440,11 +434,7 @@ function updateFields() {
 }
 
 function getActionType(action) {
-    let actionType;
-    if (Object.keys(window.unconditionalActions).indexOf(action) >= 0) actionType = "unconditional";
-    else if (Object.keys(window.conditionalActions).indexOf(action) >= 0) actionType = "conditional";
-    else actionType = "unconditional";
-    return actionType;
+    return window.actions[action].type || "unconditional";
 }
 
 registerElement(eById("addTreatment"), "click", addTreatmentBlock);
