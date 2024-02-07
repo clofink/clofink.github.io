@@ -202,6 +202,21 @@ function createDownloadLink(fileName, fileContents, fileType) {
     return newElement('a', {href: fileURL, download: fileName, innerText: "Example"});
 }
 
+async function makeCallAndHandleErrors(callFunc, args, results, itemName, itemType) {
+    try {
+        const result = await callFunc(...args);
+        if (result.status !== 200) {
+            results.push({name: itemName, type: itemType, status: "failed", error: result.message});
+            return;
+        }
+        results.push({name: itemName, type: itemType, status: "success"});
+        return result;
+    }
+    catch(error) {
+        results.push({name: itemName, type: itemType, status: "failed", error: error});
+    }
+}
+
 var tabs = [];
 var fileContents;
 
