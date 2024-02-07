@@ -36,7 +36,11 @@ function showAgentAliasPage() {
             "version": userInfo.version
         };
         const result = await fetch(url, {method: "PUT", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-        return result.json();
+        const resultJson = await result.json();
+        if (result.ok) {
+            resultJson.status = 200;
+        }
+        return resultJson;
     }
     
     async function getAllUsers() {
@@ -71,7 +75,7 @@ function showAgentAliasPage() {
     }
     
     function importAgentAliasesWrapper() {
-        showLoading(importAgentAliases);
+        showLoading(importAgentAliases, container);
     }
     
     async function importAgentAliases() {
@@ -86,11 +90,22 @@ function showAgentAliasPage() {
         const results = [];
         for (let user of fileContents.data) {
             if (!userInfo[user.Email]) {
-                log(`No active user matching email ${user.Email}`);
+                results.push({name: user.Email, type: "Agent Alias", status: "failed", error: `No active user matching email ${user.Email}`});
                 continue;
             }
-            results.push(updateUserAlias(userInfo[user.Email], user.Alias));
+            try {
+                const result = await updateUserAlias(userInfo[user.Email], user.Alias);
+                if (result.status !== 200) {
+                    results.push({name: user.Email, type: "Agent Alias", status: "failed", error: result.message});
+                    continue;
+                }
+                results.push({name: user.Email, type: "Agent Alias", status: "success"});
+            }
+            catch (error) {
+                results.push({name: user.Email, type: "Agent Alias", status: "failed", error: error});
+                continue;
+            }
         }
-        return Promise.all(results);
+        return results;
     }
 }
