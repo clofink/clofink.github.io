@@ -32,7 +32,7 @@ function showSkillsPage() {
         for (let skill of fileContents.data) {
             if (skill.Name) {
                 try {
-                    const result = createItem("/api/v2/routing/skills", {name: skill.Name})
+                    const result = await createItem("/api/v2/routing/skills", {name: skill.Name})
                     if (result.status !== 200) {
                         results.push({name: skill.Name, type: "Skill", status: "failed", error: result.message});
                         continue;
