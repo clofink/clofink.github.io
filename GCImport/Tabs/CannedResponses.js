@@ -24,7 +24,7 @@ function showCannedResponsePage() {
     return container;
     
     function importCannedWrapper() {
-        showLoading(importCannedResponses);
+        showLoading(importCannedResponses, container);
     }
     
     async function importCannedResponses() {
@@ -41,8 +41,18 @@ function showCannedResponsePage() {
             if (Object.keys(response).length != 4) continue;
             let libraryId;
             if (response.Library && !libraryInfo[response.Library]) {
-                const newLibrary = await createItem("/api/v2/responsemanagement/libraries", {name: response.Library});
-                libraryInfo[response.Library] = newLibrary.id;
+                try {
+                    const newLibrary = await createItem("/api/v2/responsemanagement/libraries", {name: response.Library});
+                    if(newLibrary.status !== 200) {
+                        results.push({name: response.Library, type: "Response Library", status: "failed", error: newLibrary.message});
+                        continue;
+                    }
+                    libraryInfo[response.Library] = newLibrary.id;
+                    results.push({name: response.Library, type: "Response Library", status: "success"});
+                }
+                catch(error) {
+                    results.push({name: response.Library, type: "Response Library", status: "failed", error: error});
+                }
             }
             libraryId = libraryInfo[response.Library];
             if (response.Name && response.Content && response.Type) {
@@ -70,8 +80,17 @@ function showCannedResponsePage() {
                         }
                     ],
                 }
-                const newMessage = await createItem("/api/v2/responsemanagement/responses", body);
-                results.push(newMessage);
+                try {
+                    const newMessage = await createItem("/api/v2/responsemanagement/responses", body);
+                    if (newMessage.status !== 200) {
+                        results.push({name: response.Name, type: "Canned Response", status: "failed", error: newMessage.message});
+                        continue;
+                    }
+                    results.push({name: response.Name, type: "Canned Response", status: "success"});
+                }
+                catch(error) {
+                    results.push({name: response.Name, type: "Canned Response", status: "failed", error: error});
+                }
             }
         }
         return results;
