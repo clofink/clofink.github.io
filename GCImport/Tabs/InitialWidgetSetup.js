@@ -107,11 +107,15 @@ function showWidgetsPage() {
         //     "flowMetaData": { "flowDocumentVersion": "2.0" }
         // };
         const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        return result.json();
+        const resultJson = await result.json();
+        if (result.ok) {
+            resultJson.status = 200;
+        }
+        return resultJson;
     }
 
     function importWidgetsWrapper() {
-        showLoading(importWidgets);
+        showLoading(importWidgets, container);
     }
 
     async function importWidgets() {
@@ -131,29 +135,85 @@ function showWidgetsPage() {
             widgetConfigMapping[config.name] = { id: config.id, version: config.version };
         }
 
-        const createdObjects = [];
+        const results = [];
         for (let initial of fileContents.data) {
             // create the inbound message flow
             if (!inboundFlowsMapping[initial["Inbound Flow Name"]]) {
-                const inboundFlow = await createItem("/api/v2/flows/", { "type": "inboundshortmessage", "name": initial["Inbound Flow Name"], "description": "" });
-                createdObjects.push(inboundFlow);
-                // publish an initial version
-                await createInitialVersion(inboundFlow.id);
-                await createItem(`/api/v2/flows/actions/publish?flow=${inboundFlow.id}`, {});
+                let inboundFlow;
+                try {
+                    inboundFlow = await createItem("/api/v2/flows/", { "type": "inboundshortmessage", "name": initial["Inbound Flow Name"], "description": "" });
+                    if (inboundFlow.status !== 200) {
+                        results.push({name: initial["Inbound Flow Name"], type: "Inbound Message Flow", status: "failed", error: inboundFlow.message});
+                        continue;
+                    }
+                    results.push({name: initial["Inbound Flow Name"], type: "Inbound Message Flow", status: "success"});
+                }
+                catch (error) {
+                    results.push({name: initial["Inbound Flow Name"], type: "Inbound Message Flow", status: "failed", error: error});
+                    continue;
+                }
+                try {
+                    const initialFlowVersion = await createInitialVersion(inboundFlow.id);
+                    if (initialFlowVersion.status !== 200) {
+                        results.push({name: initial["Inbound Flow Name"], type: "Initial Flow Version", status: "failed", error: initialFlowVersion.message});
+                        continue;
+                    }
+                    results.push({name: initial["Inbound Flow Name"], type: "Initial Flow Version", status: "success"});
+                }
+                catch(error) {
+                    results.push({name: initial["Inbound Flow Name"], type: "Initial Flow Version", status: "failed", error: error});
+                    continue;
+                }
+                try {
+                    const publishedFlow = await createItem(`/api/v2/flows/actions/publish?flow=${inboundFlow.id}`, {});
+                    if (publishedFlow.status !== 200) {
+                        results.push({name: initial["Inbound Flow Name"], type: "Flow Publish", status: "failed", error: publishedFlow.message});
+                        continue;
+                    }
+                    results.push({name: initial["Inbound Flow Name"], type: "Flow Publish", status: "success"});
+                }
+                catch(error) {
+                    results.push({name: initial["Inbound Flow Name"], type: "Flow Publish", status: "failed", error: error});
+                    continue;
+                }
+
                 inboundFlowsMapping[initial["Inbound Flow Name"]] = inboundFlow.id;
             }
             const flowId = inboundFlowsMapping[initial["Inbound Flow Name"]];
 
             // create the messenger config
             if (!widgetConfigMapping[initial["Configuration Name"]]) {
-                const newConfig = await createItem("/api/v2/webdeployments/configurations/", parseInput(resolveMapping(initial)));
-                const publishedConfig = await createItem(`/api/v2/webdeployments/configurations/${newConfig.id}/versions/draft/publish`, {});
-                createdObjects.push(publishedConfig);
+                let newConfig;
+                let publishedConfig;
+                try {
+                    newConfig = await createItem("/api/v2/webdeployments/configurations/", parseInput(resolveMapping(initial)));
+                    if (newConfig.status !== 200) {
+                        results.push({name: initial["Configuration Name"], type: "Messenger Configuration", status: "failed", error: newConfig.message});
+                        continue;
+                    }
+                    results.push({name: initial["Configuration Name"], type: "Messenger Configuration", status: "success"});
+                }
+                catch (error) {
+                    results.push({name: initial["Configuration Name"], type: "Messenger Configuration", status: "failed", error: error});
+                    continue;
+                }
+                try {
+                    publishedConfig = await createItem(`/api/v2/webdeployments/configurations/${newConfig.id}/versions/draft/publish`, {});
+                    if (publishedConfig.status !== 200) {
+                        results.push({name: initial["Configuration Name"], type: "Configuration Publish", status: "failed", error: publishedConfig.message});
+                        continue;
+                    }
+                    results.push({name: initial["Configuration Name"], type: "Configuration Publish", status: "success"});
+                }
+                catch (error) {
+                    results.push({name: initial["Configuration Name"], type: "Configuration Publish", status: "failed", error: error});
+                    continue;
+                }
+
                 widgetConfigMapping[initial["Configuration Name"]] = { id: publishedConfig.id, version: publishedConfig.version };
             }
             const config = widgetConfigMapping[initial["Configuration Name"]];
 
-            // create the messenger deployment
             const body = {
                 "name": initial["Deployment Name"],
                 "description": "",
@@ -163,10 +223,19 @@ function showWidgetsPage() {
                 "flow": { "id": flowId },
                 "status": "Active"
             }
-            const deployment = await createItem("/api/v2/webdeployments/deployments/", body);
-            createdObjects.push(deployment);
+            try {
+                const deployment = await createItem("/api/v2/webdeployments/deployments/", body);
+                if (deployment.status !== 200) {
+                    results.push({name: initial["Deployment Name"], type: "Messenger Deployment", status: "failed", error: deployment.message});
+                    continue;
+                }
+                results.push({name: initial["Deployment Name"], type: "Messenger Deployment", status: "success"});
+            }
+            catch (error) {
+                results.push({name: initial["Deployment Name"], type: "Messenger Deployment", status: "failed", error: error});
+            }
         }
-        return createdObjects;
+        return results;
     }
 
     function resolveMapping(inputObj) {
