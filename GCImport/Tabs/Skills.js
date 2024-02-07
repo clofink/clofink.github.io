@@ -22,7 +22,7 @@ function showSkillsPage() {
     return container;
 
     function importSkillsWrapper() {
-        showLoading(importSkills);
+        showLoading(importSkills, container);
     }
     
     async function importSkills() {
@@ -31,9 +31,19 @@ function showSkillsPage() {
         const results = [];
         for (let skill of fileContents.data) {
             if (skill.Name) {
-                results.push(createItem("/api/v2/routing/skills", {name: skill.Name}));
+                try {
+                    const result = createItem("/api/v2/routing/skills", {name: skill.Name})
+                    if (result.status !== 200) {
+                        results.push({name: skill.Name, type: "Skill", status: "failed", error: result.message});
+                        continue;
+                    }
+                    results.push({name: skill.Name, type: "Skill", status: "success"});
+                }
+                catch(error) {
+                    results.push({name: skill.Name, type: "Skill", status: "failed", error: error});
+                }
             }
         }
-        return Promise.all(results);
+        return results;
     }
 }
