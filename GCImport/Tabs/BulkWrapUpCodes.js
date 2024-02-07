@@ -65,32 +65,12 @@ function showWrapUpCodesPage() {
                     const trimmedCode = wrapUpCode.trim();
                     if (!trimmedCode) continue;
                     if (!wrapupCodeMapping[trimmedCode]) {
-                        try {
-                            const newWrapUpCode = await createItem("/api/v2/routing/wrapupcodes", {"name": trimmedCode, "division":{"id":"*"}});
-                            if (newWrapUpCode.status !== 200) {
-                                results.push({name: trimmedCode, type: "Wrap Up Code", status: "failed", error: newWrapUpCode.message});
-                                continue;
-                            }
-                            results.push({name: trimmedCode, type: "Wrap Up Code", status: "success"});
-                            wrapupCodeMapping[trimmedCode] = newWrapUpCode.id;
-                        }
-                        catch(error) {
-                            results.push({name: trimmedCode, type: "Wrap Up Code", status: "failed", error: error});
-                        }
+                        const newWrapUpCode = await makeCallAndHandleErrors(createItem, ["/api/v2/routing/wrapupcodes", {"name": trimmedCode, "division":{"id":"*"}}], results, trimmedCode, "Wrap Up Code");
+                        if (newWrapUpCode) wrapupCodeMapping[trimmedCode] = newWrapUpCode.id;
                     }
                     codesToAdd.push({id: wrapupCodeMapping[trimmedCode]});
                 }
-                try {
-                    const mapCodes = await addWrapUpCodes(queueMapping[item["Queue Name"]], codesToAdd);
-                    if (mapCodes.status !== 200) {
-                        results.push({name: item["Queue Name"], type: "Code Mapping", status: "failed", error: mapCodes.message});
-                        continue;
-                    }
-                    results.push({name: item["Queue Name"], type: "Code Mapping", status: "success"});
-                }
-                catch(error) {
-                    results.push({name: item["Queue Name"], type: "Code Mapping", status: "failed", error: error});
-                }
+                await makeCallAndHandleErrors(addWrapUpCodes, [queueMapping[item["Queue Name"]], codesToAdd], results, item["Queue Name"], "Code Mapping");
             }
         }
         return results;

@@ -139,43 +139,14 @@ function showWidgetsPage() {
         for (let initial of fileContents.data) {
             // create the inbound message flow
             if (!inboundFlowsMapping[initial["Inbound Flow Name"]]) {
-                let inboundFlow;
-                try {
-                    inboundFlow = await createItem("/api/v2/flows/", { "type": "inboundshortmessage", "name": initial["Inbound Flow Name"], "description": "" });
-                    if (inboundFlow.status !== 200) {
-                        results.push({name: initial["Inbound Flow Name"], type: "Inbound Message Flow", status: "failed", error: inboundFlow.message});
-                        continue;
-                    }
-                    results.push({name: initial["Inbound Flow Name"], type: "Inbound Message Flow", status: "success"});
-                }
-                catch (error) {
-                    results.push({name: initial["Inbound Flow Name"], type: "Inbound Message Flow", status: "failed", error: error});
-                    continue;
-                }
-                try {
-                    const initialFlowVersion = await createInitialVersion(inboundFlow.id);
-                    if (initialFlowVersion.status !== 200) {
-                        results.push({name: initial["Inbound Flow Name"], type: "Initial Flow Version", status: "failed", error: initialFlowVersion.message});
-                        continue;
-                    }
-                    results.push({name: initial["Inbound Flow Name"], type: "Initial Flow Version", status: "success"});
-                }
-                catch(error) {
-                    results.push({name: initial["Inbound Flow Name"], type: "Initial Flow Version", status: "failed", error: error});
-                    continue;
-                }
-                try {
-                    const publishedFlow = await createItem(`/api/v2/flows/actions/publish?flow=${inboundFlow.id}`, {});
-                    if (publishedFlow.status !== 200) {
-                        results.push({name: initial["Inbound Flow Name"], type: "Flow Publish", status: "failed", error: publishedFlow.message});
-                        continue;
-                    }
-                    results.push({name: initial["Inbound Flow Name"], type: "Flow Publish", status: "success"});
-                }
-                catch(error) {
-                    results.push({name: initial["Inbound Flow Name"], type: "Flow Publish", status: "failed", error: error});
-                    continue;
-                }
+                const inboundFlow = await makeCallAndHandleErrors(createItem, ["/api/v2/flows/", { "type": "inboundshortmessage", "name": initial["Inbound Flow Name"], "description": "" }], results, initial["Inbound Flow Name"], "Inbound Message Flow");
+                if (!inboundFlow) continue;
+
+                const initialFlowVersion = await makeCallAndHandleErrors(createInitialVersion, [inboundFlow.id], results, initial["Inbound Flow Name"], "Initial Flow Version");
+                if (!initialFlowVersion) continue;
+
+                const publishedFlow = await makeCallAndHandleErrors(createItem, [`/api/v2/flows/actions/publish?flow=${inboundFlow.id}`, {}], results, initial["Inbound Flow Name"], "Flow Publish");
+                if (!publishedFlow) continue;
 
                 inboundFlowsMapping[initial["Inbound Flow Name"]] = inboundFlow.id;
             }
@@ -183,32 +154,11 @@ function showWidgetsPage() {
 
             // create the messenger config
             if (!widgetConfigMapping[initial["Configuration Name"]]) {
-                let newConfig;
-                let publishedConfig;
-                try {
-                    newConfig = await createItem("/api/v2/webdeployments/configurations/", parseInput(resolveMapping(initial)));
-                    if (newConfig.status !== 200) {
-                        results.push({name: initial["Configuration Name"], type: "Messenger Configuration", status: "failed", error: newConfig.message});
-                        continue;
-                    }
-                    results.push({name: initial["Configuration Name"], type: "Messenger Configuration", status: "success"});
-                }
-                catch (error) {
-                    results.push({name: initial["Configuration Name"], type: "Messenger Configuration", status: "failed", error: error});
-                    continue;
-                }
-                try {
-                    publishedConfig = await createItem(`/api/v2/webdeployments/configurations/${newConfig.id}/versions/draft/publish`, {});
-                    if (publishedConfig.status !== 200) {
-                        results.push({name: initial["Configuration Name"], type: "Configuration Publish", status: "failed", error: publishedConfig.message});
-                        continue;
-                    }
-                    results.push({name: initial["Configuration Name"], type: "Configuration Publish", status: "success"});
-                }
-                catch (error) {
-                    results.push({name: initial["Configuration Name"], type: "Configuration Publish", status: "failed", error: error});
-                    continue;
-                }
+                const newConfig = await makeCallAndHandleErrors(createItem, ["/api/v2/webdeployments/configurations/", parseInput(resolveMapping(initial))], results, initial["Configuration Name"], "Messenger Configuration");
+                if (!newConfig) continue;
+
+                const publishedConfig = await makeCallAndHandleErrors(createItem, [`/api/v2/webdeployments/configurations/${newConfig.id}/versions/draft/publish`, {}], results, initial["Configuration Name"], "Messenger Configuration");
+                if (!publishedConfig) continue;
 
                 widgetConfigMapping[initial["Configuration Name"]] = { id: publishedConfig.id, version: publishedConfig.version };
             }
@@ -223,17 +173,7 @@ function showWidgetsPage() {
                 "flow": { "id": flowId },
                 "status": "Active"
             }
-            try {
-                const deployment = await createItem("/api/v2/webdeployments/deployments/", body);
-                if (deployment.status !== 200) {
-                    results.push({name: initial["Deployment Name"], type: "Messenger Deployment", status: "failed", error: deployment.message});
-                    continue;
-                }
-                results.push({name: initial["Deployment Name"], type: "Messenger Deployment", status: "success"});
-            }
-            catch (error) {
-                results.push({name: initial["Deployment Name"], type: "Messenger Deployment", status: "failed", error: error});
-            }
+            const deployment = await makeCallAndHandleErrors(createItem, ["/api/v2/webdeployments/deployments/", body], results, initial["Deployment Name"], "Messenger Deployment");
         }
         return results;
     }

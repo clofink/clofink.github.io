@@ -41,18 +41,8 @@ function showCannedResponsePage() {
             if (Object.keys(response).length != 4) continue;
             let libraryId;
             if (response.Library && !libraryInfo[response.Library]) {
-                try {
-                    const newLibrary = await createItem("/api/v2/responsemanagement/libraries", {name: response.Library});
-                    if(newLibrary.status !== 200) {
-                        results.push({name: response.Library, type: "Response Library", status: "failed", error: newLibrary.message});
-                        continue;
-                    }
-                    libraryInfo[response.Library] = newLibrary.id;
-                    results.push({name: response.Library, type: "Response Library", status: "success"});
-                }
-                catch(error) {
-                    results.push({name: response.Library, type: "Response Library", status: "failed", error: error});
-                }
+                const newLibrary = await makeCallAndHandleErrors(createItem, ["/api/v2/responsemanagement/libraries", {name: response.Library}], results, response.Library, "Response Library");
+                if (newLibrary) libraryInfo[response.Library] = newLibrary.id;
             }
             libraryId = libraryInfo[response.Library];
             if (response.Name && response.Content && response.Type) {
@@ -80,17 +70,7 @@ function showCannedResponsePage() {
                         }
                     ],
                 }
-                try {
-                    const newMessage = await createItem("/api/v2/responsemanagement/responses", body);
-                    if (newMessage.status !== 200) {
-                        results.push({name: response.Name, type: "Canned Response", status: "failed", error: newMessage.message});
-                        continue;
-                    }
-                    results.push({name: response.Name, type: "Canned Response", status: "success"});
-                }
-                catch(error) {
-                    results.push({name: response.Name, type: "Canned Response", status: "failed", error: error});
-                }
+                await makeCallAndHandleErrors(createItem, ["/api/v2/responsemanagement/responses", body], results, response.Name, "Canned Response");
             }
         }
         return results;

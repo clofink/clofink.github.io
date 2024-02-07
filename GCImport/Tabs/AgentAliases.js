@@ -93,18 +93,7 @@ function showAgentAliasPage() {
                 results.push({name: user.Email, type: "Agent Alias", status: "failed", error: `No active user matching email ${user.Email}`});
                 continue;
             }
-            try {
-                const result = await updateUserAlias(userInfo[user.Email], user.Alias);
-                if (result.status !== 200) {
-                    results.push({name: user.Email, type: "Agent Alias", status: "failed", error: result.message});
-                    continue;
-                }
-                results.push({name: user.Email, type: "Agent Alias", status: "success"});
-            }
-            catch (error) {
-                results.push({name: user.Email, type: "Agent Alias", status: "failed", error: error});
-                continue;
-            }
+            await makeCallAndHandleErrors(updateUserAlias, [userInfo[user.Email], user.Alias], results, user.Email, "Agent Alias");
         }
         return results;
     }
