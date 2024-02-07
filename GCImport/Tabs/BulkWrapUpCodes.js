@@ -27,11 +27,15 @@ function showWrapUpCodesPage() {
     async function addWrapUpCodes(queueId, codes) {
         const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/routing/queues/${queueId}/wrapupcodes`;
         const result = await fetch(url, {method: "POST", body: JSON.stringify(codes), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-        return result.json();
+        const resultsJson = await result.json();
+        if (result.ok) {
+            resultsJson.status = 200;
+        }
+        return resultsJson;
     }
     
     function importWrapUpCodesWrapper() {
-        showLoading(importWrapUpCodes);
+        showLoading(importWrapUpCodes, container);
     }
     
     async function importWrapUpCodes() {
@@ -53,7 +57,7 @@ function showWrapUpCodesPage() {
         for (let item of fileContents.data) {
             if (item["Queue Name"] && item["Wrap-Up Codes"]) {
                 if (!queueMapping[item["Queue Name"]]) {
-                    log(`No queue exists with name: ${item["Queue Name"]}`);
+                    results.push({name: item["Queue Name"], type: "Code Mapping", status: "failed", error: `No queue exists with name: ${item["Queue Name"]}`});
                     continue;
                 }
                 const codesToAdd = [];
@@ -61,14 +65,34 @@ function showWrapUpCodesPage() {
                     const trimmedCode = wrapUpCode.trim();
                     if (!trimmedCode) continue;
                     if (!wrapupCodeMapping[trimmedCode]) {
-                        const newWrapUpCode = await createItem("/api/v2/routing/wrapupcodes", {"name": trimmedCode, "division":{"id":"*"}});
-                        wrapupCodeMapping[trimmedCode] = newWrapUpCode.id;
+                        try {
+                            const newWrapUpCode = await createItem("/api/v2/routing/wrapupcodes", {"name": trimmedCode, "division":{"id":"*"}});
+                            if (newWrapUpCode.status !== 200) {
+                                results.push({name: trimmedCode, type: "Wrap Up Code", status: "failed", error: newWrapUpCode.message});
+                                continue;
+                            }
+                            results.push({name: trimmedCode, type: "Wrap Up Code", status: "success"});
+                            wrapupCodeMapping[trimmedCode] = newWrapUpCode.id;
+                        }
+                        catch(error) {
+                            results.push({name: trimmedCode, type: "Wrap Up Code", status: "failed", error: error});
+                        }
                     }
                     codesToAdd.push({id: wrapupCodeMapping[trimmedCode]});
                 }
-                results.push(addWrapUpCodes(queueMapping[item["Queue Name"]], codesToAdd));
+                try {
+                    const mapCodes = await addWrapUpCodes(queueMapping[item["Queue Name"]], codesToAdd);
+                    if (mapCodes.status !== 200) {
+                        results.push({name: item["Queue Name"], type: "Code Mapping", status: "failed", error: mapCodes.message});
+                        continue;
+                    }
+                    results.push({name: item["Queue Name"], type: "Code Mapping", status: "success"});
+                }
+                catch(error) {
+                    results.push({name: item["Queue Name"], type: "Code Mapping", status: "failed", error: error});
+                }
             }
         }
-        return Promise.all(results);
+        return results;
     }
 }
