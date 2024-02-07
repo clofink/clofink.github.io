@@ -145,7 +145,11 @@ async function getAll(path, resultsKey, pageSize) {
 async function createItem(path, body) {
     const url = `https://api.${window.localStorage.getItem('environment')}${path}`;
     const result = await fetch(url, {method: "POST", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-    return result.json();
+    const resultJson = await result.json();
+    if (result.ok) {
+        resultJson.status = 200;
+    }
+    return resultJson;
 }
 
 function addTab(tabName, renderCallback) {
@@ -164,13 +168,32 @@ function addTab(tabName, renderCallback) {
     if (eById("tabList")) showTabs();
 }
 
-async function showLoading(loadingFunc) {
+async function showLoading(loadingFunc, containerElement) {
     eById("loadIcon").classList.add("shown");
     const results = await loadingFunc();
     eById("loadIcon").classList.remove("shown");
-    for (let result of results) {
-        log(result);
+    
+    let resultsContainer = qs(".resultsContainer");
+    if (!resultsContainer) {
+        resultsContainer = newElement("div", {class: ["resultsContainer"]});
     }
+    clearElement(resultsContainer);
+    const resultHeader = newElement("div", {class: ["resultHeader"], innerText: "Results"});
+    addElement(resultHeader, resultsContainer);
+
+    if (results) {
+        log(results);
+        for (let result of results) {
+            // this should be a format like this:
+            // {name: "", type: "", status: "failed/success", error: error}
+            let item = newElement("div", {class: ["resultItem"], innerText: `[${result.type}] ${result.name}`});
+            if (result.status === "failed") {
+                item = newElement("div", {class: ["resultItem", "error"], innerText: `[${result.type}] ${result.name}: ${result.error}`});
+            }
+            addElement(item, resultsContainer);
+        }
+    }
+    addElement(resultsContainer, containerElement);
 }
 
 function createDownloadLink(fileName, fileContents, fileType) {
