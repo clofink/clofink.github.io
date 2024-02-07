@@ -79,3 +79,25 @@ body {
         transform:rotate(360deg);
     }
 }
+
+.resultsContainer {
+    max-height: 50vh;
+    overflow-y: scroll;
+    margin-top: .5em;
+}
+
+.resultsContainer div {
+    border: 1px solid black;
+    border-radius: 5px;
+    padding: .5em;
+    margin: .5em;
+}
+
+.resultHeader {
+    background-color: #ebebeb;
+    text-align: center;
+}
+
+.resultItem.error {
+    background-color: lightpink;
+}
