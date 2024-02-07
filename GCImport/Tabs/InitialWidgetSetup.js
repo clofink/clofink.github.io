@@ -29,7 +29,7 @@ function showWidgetsPage() {
     return container;
 
     async function getAllWidgetConfigs() {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/webdeployments/configurations/?showOnlyPublished=false`;
+        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/webdeployments/configurations/?showOnlyPublished=true`;
         const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
         return await result.json();
     }
