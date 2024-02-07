@@ -75,17 +75,7 @@ function showQueuesPage() {
                     }
                 }
                 const mappedQueue = resolveMapping(queue);
-                try {
-                    const result = await createItem("/api/v2/routing/queues", parseInput({...mappedQueue, ...newFields}));
-                    if (result.status !== 200) {
-                        results.push({name: mappedQueue.name, type: "Queue", status: "failed", error: result.message});
-                        continue;
-                    }
-                    results.push({name: mappedQueue.name, type: "Queue", status: "success"});
-                }
-                catch(error) {
-                    results.push({name: mappedQueue.name, type: "Queue", status: "failed", error: error});
-                }
+                await makeCallAndHandleErrors(createItem, ["/api/v2/routing/queues", parseInput({...mappedQueue, ...newFields})], results, mappedQueue.name, "Queue");
             }
         }
         return Promise.all(results);
