@@ -101,3 +101,76 @@ body {
 .resultItem.error {
     background-color: lightpink;
 }
+
+.flows-merge #taskContainer {
+    display: inline-block;
+    width: 100%;
+}
+
+.flows-merge .displaySection {
+    display: inline-block;
+    height: 20em;
+    text-align: center;
+    width: 40%;
+}
+
+.flows-merge .section1, .flows-merge .section3 {
+    border: 1px #000000 solid;
+    height: 20em;
+    overflow-y: scroll;
+    text-align: left;
+    width: 100%;
+    margin-bottom: .5em;
+    margin-top: .5em;
+}
+
+.flows-merge .collection-item {
+    padding: .5em;
+    user-select: none;
+    cursor: pointer;
+}
+
+.flows-merge .collection-item input {
+    margin-right: .5em;
+}
+
+:nth-child(odd of .flows-merge  .collection-item) {
+    background-color: #ebebeb;
+}
+
+.flows-merge .section2 {
+    width: 20%;
+    text-align: center;
+    overflow: hidden;
+}
+
+.flows-merge .section2 button {
+    width: 75%;
+    margin-bottom: .5em;
+}
+
+.flows-merge .header {
+    text-align: center;
+    font-size: large;
+    margin-top: .5em;
+    margin-bottom: .5em;
+}
+
+.flows-merge ul {
+    margin-block-start: 0;
+}
+
+.collection label {
+    display: block;
+}
+
+.flows-merge summary {
+    user-select: none;
+    cursor: pointer;
+}
+
+.flows-merge .selectorContainer {
+    display: flex;
+    justify-content: space-evenly;
+    
+}
