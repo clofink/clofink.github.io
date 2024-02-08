@@ -1,11 +1,11 @@
-addTab("Prompts", showPromptsPage);
+// addTab("Prompts", showPromptsPage);
 
 function showPromptsPage() {
     window.requiredFields = ["Name"];
     window.allValidFields = ["Name", "EN-US Text", "Description"];
 
     const container = newElement('div', { id: "userInputs" });
-    const label = newElement('label', { innerText: "Queues CSV: " });
+    const label = newElement('label', { innerText: "Prompts CSV: " });
     const fileInput = newElement('input', { type: "file", accept: ".csv" });
     addElement(fileInput, label);
     registerElement(fileInput, "change", loadFile);
