@@ -116,13 +116,16 @@ function showMergeTasksPage() {
 
     function copyAll(element) {
         if (element instanceof Event) element = element.target;
+        const sourceElem = eById(element.dataset.copyFrom)
+        const destElem = eById(element.dataset.copyTo)
+
         const source = eById(element.dataset.copyFrom).dataset.flowId;
         const dest = eById(element.dataset.copyTo).dataset.flowId;
         for (let taskId of getAllTaskIds(eById(element.dataset.copyFrom))) {
             copyTaskFromAToB(flowCache[source], flowCache[dest], taskId);
         }
-        updateTaskDisplay();
-        updateTaskDisplay();
+        updateTaskDisplay(sourceElem, source);
+        updateTaskDisplay(destElem, dest);
     }
 
     function downloadFlow(element) {
