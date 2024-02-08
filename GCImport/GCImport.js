@@ -178,10 +178,10 @@ async function showLoading(loadingFunc, containerElement) {
         resultsContainer = newElement("div", {class: ["resultsContainer"]});
     }
     clearElement(resultsContainer);
-    const resultHeader = newElement("div", {class: ["resultHeader"], innerText: "Results"});
-    addElement(resultHeader, resultsContainer);
 
     if (results) {
+        const resultHeader = newElement("div", {class: ["resultHeader"], innerText: "Results"});
+        addElement(resultHeader, resultsContainer);    
         log(results);
         for (let result of results) {
             // this should be a format like this:

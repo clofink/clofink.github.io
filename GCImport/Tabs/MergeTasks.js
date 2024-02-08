@@ -55,7 +55,7 @@ function showMergeTasksPage() {
         }
         sendEvent(leftSelect, "change");
         sendEvent(rightSelect, "change");
-        return allBotFlows;
+        return;
     }
 
     async function getFlowConfig(flowId) {
