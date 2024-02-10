@@ -4,15 +4,7 @@ function showMergeTasksPage() {
     const flowCache = {}; // place to store flow details so I don't have to retrieve the same one multiple times
     const container = newElement('div', { id: "userInputs", class: ["flows-merge"] });
 
-    const flow1Display = newElement("div", { class: ["displaySection"] });
-    const leftLabel = newElement("label", { innerText: "" });
-    const leftSelect = newElement("select", { "data-select-for": "flow1Tasks" });
-    addElement(leftSelect, leftLabel);
-    registerElement(leftSelect, "change", updateDisplayedTasks);
-    const flow1Tasks = newElement("div", { id: "flow1Tasks", class: ["section1"] });
-    const downloadButton1 = newElement("button", { id: "downloadLeft", "data-source": "flow1Tasks", innerText: "Download" });
-    registerElement(downloadButton1, "click", downloadFlow);
-    addElements([leftLabel, flow1Tasks, downloadButton1], flow1Display);
+    const flow1Display = createFlowDisplay(1, 'section1');
 
     const buttonSection = newElement("div", { id: "taskActions", class: ["displaySection", "section2"] });
     const buttonContainer = newElement("div", { id: "taskButtons" });
@@ -27,15 +19,7 @@ function showMergeTasksPage() {
     addElements([copyLeft, copyRight, copyAllLeft, copyAllRight], buttonContainer);
     addElement(buttonContainer, buttonSection);
 
-    const flow2Display = newElement("div", { class: ["displaySection"] });
-    const rightLabel = newElement("label", { innerText: "" });
-    const rightSelect = newElement("select", { "data-select-for": "flow2Tasks" });
-    addElement(rightSelect, rightLabel);
-    registerElement(rightSelect, "change", updateDisplayedTasks);
-    const flow2Tasks = newElement("div", { id: "flow2Tasks", class: ["section3"] });
-    const downloadButton2 = newElement("button", { id: "downloadLeft", "data-source": "flow2Tasks", innerText: "Download" });
-    registerElement(downloadButton2, "click", downloadFlow);
-    addElements([rightLabel, flow2Tasks, downloadButton2], flow2Display);
+    const flow2Display = createFlowDisplay(2, 'section3');
 
     const taskContainer = newElement('div', { id: "taskContainer" });
     addElements([flow1Display, buttonSection, flow2Display], taskContainer);
@@ -56,6 +40,19 @@ function showMergeTasksPage() {
         sendEvent(leftSelect, "change");
         sendEvent(rightSelect, "change");
         return;
+    }
+
+    function createFlowDisplay(number, section) {
+        const flowDisplay = newElement("div", { class: ["displaySection"] });
+        const label = newElement("label", { innerText: "" });
+        const select = newElement("select", { "data-select-for": `flow${number}Tasks` });
+        addElement(select, label);
+        registerElement(select, "change", updateDisplayedTasks);
+        const flowTasks = newElement("div", { id: `flow${number}Tasks`, class: [section] });
+        const downloadButton = newElement("button", { "data-source": `flow${number}Tasks`, innerText: "Download" });
+        registerElement(downloadButton, "click", downloadFlow);
+        addElements([label, flowTasks, downloadButton], flowDisplay);
+        return flowDisplay;
     }
 
     async function getFlowConfig(flowId) {
