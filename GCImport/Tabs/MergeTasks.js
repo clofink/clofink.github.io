@@ -31,14 +31,16 @@ function showMergeTasksPage() {
 
     async function initialLoad() {
         const allBotFlows = await getAll("/api/v2/flows?sortBy=name&sortOrder=asc&type=digitalbot", "entities", 50);
+        const first = qs("select", flow1Display);
+        const second = qs("select", flow2Display);
         for (let botFlow of allBotFlows) {
             const option = newElement("option", { innerText: botFlow.name, value: botFlow.id });
             const option2 = newElement("option", { innerText: botFlow.name, value: botFlow.id });
-            addElement(option, leftSelect);
-            addElement(option2, rightSelect);
+            addElement(option, first);
+            addElement(option2, second);
         }
-        sendEvent(leftSelect, "change");
-        sendEvent(rightSelect, "change");
+        sendEvent(first, "change");
+        sendEvent(second, "change");
         return;
     }
 
