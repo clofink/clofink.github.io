@@ -621,7 +621,7 @@ function processLifeEvents(person, town, currentYear) {
             const newChild = createPerson(person.getRace(), {currentYear: currentYear})
             town.addToPopulation(newChild);
             newChild.setParents([person, spouse]);
-            newChild.setStats(calculateAverateStats(person.getStats(), spouse.getStats()));
+            newChild.setStats(calculateAverageStats(person.getStats(), spouse.getStats()));
             person.addChild(newChild);
             newChild.addLifeEvent(currentYear, "{P} was born");
             person.addLifeEvent(currentYear, `{P} had a ${newChild.getGender() === "male" ? "son" : "daughter"} named ${newChild.getFullName()}`);
@@ -1134,7 +1134,7 @@ function rollStats() {
     return stats;
 }
 
-function calculateAverateStats(person1Stats, person2Stats) {
+function calculateAverageStats(person1Stats, person2Stats) {
     const attributes = ['STR', 'CON', 'WIS', 'INT', 'CHA', 'DEX'];
     const averagedStats = {};
     for (const attribute of attributes) {
