@@ -169,8 +169,12 @@ dialog {
     margin-top: 0;
 }
 dialog div {
-    max-height: calc(80vh - 3em - 2px);
+    max-height: calc(80vh - 4em - 2px - 1.5em);
     overflow-y: scroll;
+}
+dialog h2 {
+    margin-top: .5em;
+    margin-bottom: .5em;
 }
 body:has(dialog[open]) {
     overflow: hidden;
