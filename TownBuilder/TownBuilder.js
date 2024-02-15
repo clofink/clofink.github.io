@@ -282,7 +282,16 @@ function displayPopulationInfo(peopleList) {
 function fillPeopleTable(peopleList, table) {
     for (let person of peopleList) {
         const rowData = [];
-        rowData.push(person.getFullName());
+        const personId = person.getPersonId();
+        const nameElem = newElement('td', {innerText: person.getFullName()});
+        registerElement(nameElem, "click", () => {
+            let existingModal = qs(`[data-person-id="${personId}"]`);
+            if (!existingModal) {
+                existingModal = createModal(person);
+                document.body.appendChild(existingModal);
+            }
+            existingModal.showModal();
+        })
         rowData.push(person.getAge());
         rowData.push(person.getRace());
         rowData.push(person.getBirthYear());
@@ -301,8 +310,9 @@ function fillPeopleTable(peopleList, table) {
         rowData.push(personStats.WIS);
         rowData.push(personStats.CHA);
         const dataRow = createDataRow(rowData);
+        addElement(nameElem, dataRow, "afterbegin");
         registerElement(dataRow, "click", logMorePersonInfo);
-        dataRow.id = person.getPersonId();
+        dataRow.id = personId;
         addElement(dataRow, table);
     }
     return table;
@@ -1168,4 +1178,14 @@ function generateTestTowns(count) {
         total += pop;
     }
     return total / populations.length;
+}
+
+function createModal(person) {
+    const modal = newElement("dialog", {"data-person-id": person.getPersonId()});
+    const name = newElement("h2", {innerText: person.getFullName()});
+    const closeButton = newElement("button", {innerText: "Close", class: ["modal-close"]});
+    const content = newElement("div", {innerText: formatBiography(person.getLifeEvents())});
+    registerElement(closeButton, "click", function() {modal.close()})
+    addElements([closeButton, name, content], modal);
+    return modal;
 }

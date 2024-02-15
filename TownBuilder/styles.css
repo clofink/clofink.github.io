@@ -161,3 +161,22 @@ th {
 .raceSelector {
     padding-top: .5em;
 }
+dialog {
+    position: fixed;
+    top: 10vh;
+    border: solid black 1px;
+    margin-left: auto;
+    margin-top: 0;
+}
+dialog div {
+    max-height: calc(80vh - 3em - 2px);
+    overflow-y: scroll;
+}
+body:has(dialog[open]) {
+    overflow: hidden;
+}
+.modal-close {
+    float: right;
+    user-select: none;
+    cursor: pointer;
+}
