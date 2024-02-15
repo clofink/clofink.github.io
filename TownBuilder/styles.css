@@ -77,6 +77,10 @@ table {
 td, th {
     text-align: center;
 }
+th {
+    user-select: none;
+    cursor: pointer;
+}
 #self {
     height: 1em;
     width: 1em;
