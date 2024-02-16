@@ -1,4 +1,5 @@
 var population = [];
+var tabs = [];
 var newTown;
 
 function getPersonById(personId, personList) {
@@ -88,10 +89,7 @@ function generateNewTown() {
     eById('newTown').classList.remove('hidden');
     eById('yearsToAdd').classList.remove('hidden');
     eById('extendTownTime').classList.remove('hidden');
-    if (tableExists('populationTable')) {
-        clearElement(eById('populationInfo'));
-    }
-    displayTownInfo(newTown);
+    showTownInfo();
     return newTown;
 }
 
@@ -110,7 +108,7 @@ function addYears() {
     if (tableExists('populationTable')) {
         clearElement(eById('populationInfo'));
     }
-    displayTownInfo(newTown);
+    showTownInfo();
 }
 
 function populateTown(town) {
@@ -203,127 +201,9 @@ function getUserInputValues() {
     return inputValues;
 }
 
-function displayTownInfo(town) {
-    const townInfoDiv = eById('townInfo');
-    if (tableExists('townTable')) {
-        clearElement(townInfoDiv);
-    }
-    let headers = [
-        {displayName: 'Population Type'},
-        {displayName: 'Number of People'}
-    ];
-    let table = createTable(headers);
-    table.id = 'townTable';
-    let totalPopRow = createDataRow(['Total Population', town.getPopulation().length])
-    let livingPopRow = createDataRow(['Living Population', town.getLivingPopulation().length])
-    let deadPopRow = createDataRow(['Dead Population', town.getDeadPopulation().length]);
-    registerElement(totalPopRow, "click", swapSelectedPopulation);
-    registerElement(livingPopRow, "click", swapSelectedPopulation);
-    registerElement(deadPopRow, "click", swapSelectedPopulation);
-    totalPopRow.id = 'total';
-    livingPopRow.id = 'living';
-    deadPopRow.id = 'dead';
-
-    addElement(totalPopRow, table);
-    addElement(livingPopRow, table);
-    addElement(deadPopRow, table);
-    addElement(table, townInfoDiv);
-}
-
-function swapSelectedPopulation(event) {
-    let popType = event.target.closest('tr').id;
-    switch(popType) {
-        case 'total':
-            window.population = newTown.getPopulation();
-            break;
-        case 'living':
-            window.population = newTown.getLivingPopulation();
-            break;
-        case 'dead':
-            window.population = newTown.getDeadPopulation();
-            break;
-        default:
-            widnow.population = newTown.getLivingPopulation();
-            break;
-    }
-    displayPopulationInfo(population);
-}
-
-function displayPopulationInfo(peopleList) {
-    if (tableExists('populationTable')) {
-        clearElement(eById('populationInfo'));
-    }
-    const populationInfoDiv = eById('populationInfo');
-
-    const headers = [
-        {displayName: 'Name', sortBy: "name"}, 
-        {displayName: 'Age', sortBy: "age"},
-        {displayName: 'Race', sortBy: "race"},
-        {displayName: 'Birth Year', sortBy: "birthYear"},
-        {displayName: 'Death Year', sortBy: "deathYear"},
-        {displayName: 'Gender', sortBy: "gender"},
-        {displayName: 'Gender Preference', sortBy: "genderPreference"},
-        {displayName: '# Children', sortBy: "children"},
-        {displayName: 'Worth', sortBy: "value"},
-        {displayName: 'Job Title', sortBy: "title"},
-        {displayName: 'Years in Job', sortBy: "yearsInPos"},
-        {displayName: 'Strength', sortBy: "STR"},
-        {displayName: 'Dexterity', sortBy: "DEX"},
-        {displayName: 'Constitution', sortBy: "CON"},
-        {displayName: 'Intelligence', sortBy: "INT"},
-        {displayName: 'Wisdom', sortBy: "WIS"},
-        {displayName: 'Charisma', sortBy: "CHA"},
-    ]
-    const table = createTable(headers, true);
-    table.id = 'populationTable'
-    addElement(fillPeopleTable(peopleList, table), populationInfoDiv);
-}
-
-function fillPeopleTable(peopleList, table) {
-    for (let person of peopleList) {
-        const rowData = [];
-        const personId = person.getPersonId();
-        const nameElem = newElement('td', {innerText: person.getFullName()});
-        registerElement(nameElem, "click", () => {
-            let existingModal = qs(`[data-person-id="${personId}"]`);
-            if (!existingModal) {
-                existingModal = createModal(person);
-                document.body.appendChild(existingModal);
-            }
-            existingModal.showModal();
-        })
-        rowData.push(person.getAge());
-        rowData.push(person.getRace());
-        rowData.push(person.getBirthYear());
-        rowData.push(person.getDeathYear() ? person.getDeathYear() : '-');
-        rowData.push(person.getGender());
-        rowData.push(person.getGenderPreference());
-        rowData.push(person.getChildren().length);
-        rowData.push(person.getValue() ? person.getValue() : 0);
-        rowData.push(person.getJob() ? person.getJob().getTitle() : '-');
-        rowData.push(person.getJob() ? person.getJob().getYearsInPosition() : 0);
-        const personStats = person.getStats();
-        rowData.push(personStats.STR);
-        rowData.push(personStats.DEX);
-        rowData.push(personStats.CON);
-        rowData.push(personStats.INT);
-        rowData.push(personStats.WIS);
-        rowData.push(personStats.CHA);
-        const dataRow = createDataRow(rowData);
-        addElement(nameElem, dataRow, "afterbegin");
-        registerElement(dataRow, "click", logMorePersonInfo);
-        dataRow.id = personId;
-        addElement(dataRow, table);
-    }
-    return table;
-}
-
 function logMorePersonInfo(event) {
-    if (population.length < 1) {
-        population = newTown.getLivingPopulation();
-    }
     const parentRow = event.target.closest('tr');
-    const person = getPersonById(parentRow.id, population);
+    const person = getPersonById(parentRow.id, newTown.getPopulation());
     highlightFamily(parentRow, person);
     log(formatBiography(person.getLifeEvents()));
     log(person);
@@ -417,7 +297,20 @@ function createHeaderRow(headers, sortBy) {
  * @param {} event - automatically provided by event handler
  */
 function sortByHeader(event) {
-    const sortedPopulation = [...population];
+    let sortedPopulation = [];
+    const parentTable = event.target.closest("table");
+    const populationName = parentTable.dataset.population;
+    switch (populationName) {
+        case "living":
+            sortedPopulation = newTown.getLivingPopulation();
+            break;
+        case "dead":
+            sortedPopulation = newTown.getDeadPopulation();
+            break;
+        default:
+            sortedPopulation = newTown.getPopulation();
+            break;
+    }
     const sortBy = event.target.dataset.sortBy || "personId";
     const sortDirection = event.target.dataset.sortDirection;
 
@@ -428,7 +321,7 @@ function sortByHeader(event) {
         event.target.dataset.sortDirection = 'asc';
     }
     sortedPopulation.sort(customSort);
-    rebuildTableRows(sortedPopulation);
+    rebuildTableRows(parentTable, sortedPopulation);
 
     function customSort(a, b) {
         let valueA;
@@ -480,9 +373,8 @@ function sortByHeader(event) {
     }
 }
 
-function rebuildTableRows(sortedPopulation) {
-    const table = qs('#populationTable');
-    const dataRows = qsa('#populationTable tr td:first-of-type');
+function rebuildTableRows(table, sortedPopulation) {
+    const dataRows = qsa('tr td:first-of-type', table);
     for (let dataRow of dataRows) {
         table.removeChild(dataRow.parentElement);
     }
@@ -581,7 +473,7 @@ function processLifeEvents(person, town, currentYear) {
         return doesRandomEventHappen(25);
     }
     function canHaveKids() {
-        if (!gender === "female") return false;
+        if (gender !== "female") return false;
         if (!spouse || spouse.getIsDead() || spouse.getGender() !== "male") return false;
         if (currentAge < person.getAdolescence() || currentAge > person.getRetirementAge()) return false;
         return true;
@@ -1188,4 +1080,260 @@ function createModal(person) {
     registerElement(closeButton, "click", function() {modal.close()})
     addElements([closeButton, name, content], modal);
     return modal;
+}
+
+function showTabs() {
+    const tabList = eById('tabList');
+    clearElement(tabList);
+
+    for (let i = 0; i < window.tabs.length; i++) {
+        addElement(tabs[i], tabList);
+        if (i === 0) tabs[i].click();
+    }
+}
+
+function showTownInfo() {
+    const page = eById('page');
+    clearElement(page);
+    const tabList = newElement('div', {id: "tabList"});
+    const tabContent = newElement('div', {id: "tabContent"});
+    addElements([tabList, tabContent], page);
+    showTabs();
+}
+
+function addTab(tabName, renderCallback) {
+    const tabSelected = function() {
+        for (let tab of qsa(".tabHeader")) {
+            tab.classList.remove("selected");
+        }
+        newTab.classList.add("selected");
+        const tabContainer = eById("tabContent");
+        clearElement(tabContainer);
+        addElement(renderCallback(), tabContainer);
+    }
+    const newTab = newElement("div", {class: ["tabHeader"], innerText: tabName});
+    registerElement(newTab, "click", tabSelected);
+    tabs.push(newTab);
+    if (eById("tabList")) showTabs();
+}
+
+addTab("Town Stats", showTownInfoTab);
+addTab("Living Population", showLivingPopulationTab);
+addTab("Dead Population", showDeadPopulationTab);
+addTab("Full Population", showFullPopulationTab);
+addTab("Buildings", showBuildingsTab);
+addTab("Jobs", showJobsTab);
+
+function showLivingPopulationTab() {
+    const container = newElement('div');
+    const headers = [
+        {displayName: 'Name', sortBy: "name"}, 
+        {displayName: 'Age', sortBy: "age"},
+        {displayName: 'Race', sortBy: "race"},
+        {displayName: 'Birth Year', sortBy: "birthYear"},
+        {displayName: 'Death Year', sortBy: "deathYear"},
+        {displayName: 'Gender', sortBy: "gender"},
+        {displayName: 'Gender Preference', sortBy: "genderPreference"},
+        {displayName: '# Children', sortBy: "children"},
+        {displayName: 'Worth', sortBy: "value"},
+        {displayName: 'Job Title', sortBy: "title"},
+        {displayName: 'Years in Job', sortBy: "yearsInPos"},
+        {displayName: 'Strength', sortBy: "STR"},
+        {displayName: 'Dexterity', sortBy: "DEX"},
+        {displayName: 'Constitution', sortBy: "CON"},
+        {displayName: 'Intelligence', sortBy: "INT"},
+        {displayName: 'Wisdom', sortBy: "WIS"},
+        {displayName: 'Charisma', sortBy: "CHA"},
+    ]
+    const table = createTable(headers, true);
+    table.classList.add("sortable");
+    table.dataset.population = "living";
+    addElement(fillPeopleTable(newTown.getLivingPopulation(), table), container);
+    return container;
+}
+
+function showFullPopulationTab() {
+    const container = newElement('div');
+    const headers = [
+        {displayName: 'Name', sortBy: "name"}, 
+        {displayName: 'Age', sortBy: "age"},
+        {displayName: 'Race', sortBy: "race"},
+        {displayName: 'Birth Year', sortBy: "birthYear"},
+        {displayName: 'Death Year', sortBy: "deathYear"},
+        {displayName: 'Gender', sortBy: "gender"},
+        {displayName: 'Gender Preference', sortBy: "genderPreference"},
+        {displayName: '# Children', sortBy: "children"},
+        {displayName: 'Worth', sortBy: "value"},
+        {displayName: 'Job Title', sortBy: "title"},
+        {displayName: 'Years in Job', sortBy: "yearsInPos"},
+        {displayName: 'Strength', sortBy: "STR"},
+        {displayName: 'Dexterity', sortBy: "DEX"},
+        {displayName: 'Constitution', sortBy: "CON"},
+        {displayName: 'Intelligence', sortBy: "INT"},
+        {displayName: 'Wisdom', sortBy: "WIS"},
+        {displayName: 'Charisma', sortBy: "CHA"},
+    ]
+    const table = createTable(headers, true);
+    table.classList.add("sortable");
+    table.dataset.population = "all";
+    addElement(fillPeopleTable(newTown.getPopulation(), table), container);
+    return container;
+}
+
+function showDeadPopulationTab() {
+    const container = newElement('div');
+    const headers = [
+        {displayName: 'Name', sortBy: "name"}, 
+        {displayName: 'Age', sortBy: "age"},
+        {displayName: 'Race', sortBy: "race"},
+        {displayName: 'Birth Year', sortBy: "birthYear"},
+        {displayName: 'Death Year', sortBy: "deathYear"},
+        {displayName: 'Gender', sortBy: "gender"},
+        {displayName: 'Gender Preference', sortBy: "genderPreference"},
+        {displayName: '# Children', sortBy: "children"},
+        {displayName: 'Worth', sortBy: "value"},
+        {displayName: 'Job Title', sortBy: "title"},
+        {displayName: 'Years in Job', sortBy: "yearsInPos"},
+        {displayName: 'Strength', sortBy: "STR"},
+        {displayName: 'Dexterity', sortBy: "DEX"},
+        {displayName: 'Constitution', sortBy: "CON"},
+        {displayName: 'Intelligence', sortBy: "INT"},
+        {displayName: 'Wisdom', sortBy: "WIS"},
+        {displayName: 'Charisma', sortBy: "CHA"},
+    ]
+    const table = createTable(headers, true);
+    table.classList.add("sortable");
+    table.dataset.population = "dead";
+    addElement(fillPeopleTable(newTown.getDeadPopulation(), table), container);
+    return container;
+}
+
+function showBuildingsTab() {
+    const container = newElement('div');
+    const headers = [
+        {displayName: 'Name'},
+        {displayName: 'Owner'},
+        {displayName: 'Residents'}
+    ];
+    const table = createTable(headers);
+    const buildings = newTown.getBuildings();
+    for (let building of buildings) {
+        const jobRow = createDataRow([
+            building.getBuildingName(),
+            building.getOwner() ? building.getOwner().getFullName() : "-",
+            building.getResidents().length
+        ]);
+        addElement(jobRow, table);
+    }
+    addElement(table, container);
+    return container;
+}
+
+function showJobsTab() {
+    const container = newElement('div');
+    const headers = [
+        {displayName: 'Job'},
+        {displayName: 'Person'},
+        {displayName: 'Salary'},
+        {displayName: 'Building'}
+    ];
+    const table = createTable(headers);
+    const jobs = newTown.getJobMarket();
+    for (let job of jobs) {
+        const jobRow = createDataRow([
+            job.getTitle(),
+            job.getPerson() ? job.getPerson().getFullName() : "-",
+            job.getSalary(),
+            job.getBuilding() ? job.getBuilding().getBuildingName() : "-"
+        ]);
+        addElement(jobRow, table);
+    }
+    addElement(table, container);
+    return container;
+}
+
+function showTownInfoTab() {
+    const container = newElement('div');
+    const headers = [
+        {displayName: 'Metric'},
+        {displayName: 'Result'}
+    ];
+    const table = createTable(headers);
+
+    const livingPopulation = newTown.getLivingPopulation();
+    const totalPopRow = createDataRow(['Total Population', newTown.getPopulation().length])
+    const livingPopRow = createDataRow(['Living Population', livingPopulation.length])
+    const deadPopRow = createDataRow(['Dead Population', newTown.getDeadPopulation().length]);
+
+    let homelessCount = 0;
+    for (let person of livingPopulation) {
+        if (!person.getResidency()) homelessCount++;
+    }
+
+    const jobs = newTown.getJobMarket();
+    const jobMarket = createDataRow(["Total Jobs", jobs.length]);
+
+    let staffedJobs = 0;
+    for (let job of jobs) {
+        if (job.getPerson()) staffedJobs++;
+    }
+    const staffed = createDataRow(["Staffed Jobs", staffedJobs]);
+    const staffedRate = createDataRow(["Employment Rate", `${Math.round((staffedJobs / jobs.length) * 100)}%`]);
+    const employmentRate = createDataRow(["Employment Rate", `${Math.round((staffedJobs / newTown.getLivingPopulation().length) * 100)}%`]);
+
+    const buildings = newTown.getBuildings();
+    const townBuildings = createDataRow(["Buildings", buildings.length]);
+
+    let occupied = 0;
+    let owned = 0;
+    for (let building of buildings) {
+        if (building.getOwner()) owned++;
+        if (building.getResidents().length > 0) occupied++;
+    }
+    const ownedBuildings = createDataRow(["Owned Buildings", owned]);
+    const occupiedBuildings = createDataRow(["Occupied Buildings", occupied]);
+    const homelessnessRate = createDataRow(["Homelessness Rate", `${Math.round((homelessCount / newTown.getLivingPopulation().length) * 100)}%`]);
+
+    addElements([totalPopRow, livingPopRow, deadPopRow, jobMarket, staffed, staffedRate, employmentRate, townBuildings, ownedBuildings, occupiedBuildings, homelessnessRate], table);
+    addElement(table, container);
+    return container;
+}
+
+function fillPeopleTable(peopleList, table) {
+    for (let person of peopleList) {
+        const rowData = [];
+        const personId = person.getPersonId();
+        const nameElem = newElement('td', {innerText: person.getFullName()});
+        registerElement(nameElem, "click", () => {
+            let existingModal = qs(`[data-person-id="${personId}"]`);
+            if (!existingModal) {
+                existingModal = createModal(person);
+                document.body.appendChild(existingModal);
+            }
+            existingModal.showModal();
+        })
+        rowData.push(person.getAge());
+        rowData.push(person.getRace());
+        rowData.push(person.getBirthYear());
+        rowData.push(person.getDeathYear() ? person.getDeathYear() : '-');
+        rowData.push(person.getGender());
+        rowData.push(person.getGenderPreference());
+        rowData.push(person.getChildren().length);
+        rowData.push(person.getValue() ? person.getValue() : 0);
+        rowData.push(person.getJob() ? person.getJob().getTitle() : '-');
+        rowData.push(person.getJob() ? person.getJob().getYearsInPosition() : 0);
+        const personStats = person.getStats();
+        rowData.push(personStats.STR);
+        rowData.push(personStats.DEX);
+        rowData.push(personStats.CON);
+        rowData.push(personStats.INT);
+        rowData.push(personStats.WIS);
+        rowData.push(personStats.CHA);
+        const dataRow = createDataRow(rowData);
+        addElement(nameElem, dataRow, "afterbegin");
+        registerElement(dataRow, "click", logMorePersonInfo);
+        dataRow.id = personId;
+        addElement(dataRow, table);
+    }
+    return table;
 }

@@ -72,13 +72,15 @@ table, th, td {
     padding: .25em;
 }
 table {
-    margin-top: .5em;
+    margin: .5em;
 }
 td, th {
     text-align: center;
 }
 th {
     user-select: none;
+}
+table.sortable th {
     cursor: pointer;
 }
 #self {
@@ -183,4 +185,34 @@ body:has(dialog[open]) {
     float: right;
     user-select: none;
     cursor: pointer;
+}
+#tabList {
+    white-space: nowrap;
+    overflow-x: scroll;
+    scrollbar-width: none;
+}
+#tabList::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+.tabHeader {
+    display: inline-block;
+    border: 1px solid black;
+    padding: .5em;
+    border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
+    border-bottom: none;
+    background-color: lightgrey;
+    user-select: none;
+    cursor: pointer;
+}
+.tabHeader.selected {
+    background-color: white;
+}
+#tabContent {
+    border: 1px solid black;
+    overflow-x: scroll;
+}
+#page {
+    margin-top: .5em;
 }
