@@ -1300,18 +1300,20 @@ function createPersonKey() {
 
 class PagedTable {
     headers;
-    dataRows;
+    fullData;
     pageSize;
     currentPage;
     pageCount;
+    filteredData;
+    filters = [];
 
     constructor(headers, dataRows, pageSize, sortFunc, tableInfo) {
         this.headers = headers || [];
-        this.dataRows = dataRows || [];
+        this.fullData = dataRows || [];
         this.pageSize = pageSize || 0;
+        this.filteredData = this.fullData;
         this.currentPage = 0;
         if (sortFunc) this.sortFunc = sortFunc;
-        this.pageCount = Math.ceil(dataRows.length / pageSize);
 
         this.container = newElement('div', {class: ["tableContainer"]});
         this.table = newElement("table", tableInfo);
@@ -1319,16 +1321,26 @@ class PagedTable {
         const headerNames = [];
         for (let header of headers) {
             headerNames.push(header.innerText);
+            this.filters.push("");
         }
 
         this.headerRow = newElement('tr');
         for (let header of headers) {
             const tableHeader = newElement('th', header);
+            const tableSearchBar = newElement("input");
+            registerElement(tableSearchBar, "input", (event) => {
+                const headerIndex = headerNames.indexOf(header.innerText);
+                const newSearchString = event.target.value.toLowerCase().trim();
+                this.filters[headerIndex] = newSearchString;
+                this.applyFilters();
+            })
             if (this.sortFunc) registerElement(tableHeader, "click", (event) => {
-                this.sortFunc(event, headerNames, this.dataRows);
+                if (event.target.nodeName === "INPUT") return;
+                this.sortFunc(event, headerNames, this.filteredData);
                 this.updateTable();
                 this.setPage(0);
             });
+            addElement(tableSearchBar, tableHeader);
             addElement(tableHeader, this.headerRow);
         }
         addElement(this.headerRow, this.table);
@@ -1342,6 +1354,25 @@ class PagedTable {
         return this.container;
     }
 
+    applyFilters() {
+        let filteredRows = this.fullData;
+        for (let i = 0; i < this.filters.length; i++) {
+            const currentFilter = this.filters[i];
+            const newFiltered = []
+            for (let row of filteredRows) {
+                let currentValue = row[i].toString().toLowerCase().trim();
+                if (row[i] instanceof Element) currentValue = row[i].innerText.toLowerCase().trim();
+
+                if (currentValue.indexOf(currentFilter) >= 0) {
+                    newFiltered.push(row);
+                }
+            }
+            filteredRows = newFiltered;
+        }
+        this.filteredData = filteredRows;
+        this.updateTable();
+    }
+
     changePage(pageChange) {
         this.currentPage += pageChange;
 
@@ -1350,14 +1381,12 @@ class PagedTable {
     }
 
     updateTable() {
-        clearElement(this.table);
-        addElement(this.headerRow, this.table);
-
+        clearElement(this.table, "tr:has(td)");
         const startIndex = this.pageSize * this.currentPage;
-        const dataLength = this.dataRows.length;
+        const dataLength = this.filteredData.length;
         const endIndex = startIndex + this.pageSize < dataLength ? startIndex + this.pageSize : dataLength;
         for (let i = startIndex; i < endIndex; i++) {
-            const row = this.dataRows[i];
+            const row = this.filteredData[i];
             const tableRow = newElement('tr');
             for (let data of row) {
                 if (data instanceof Element) addElement(data, tableRow);
@@ -1377,6 +1406,8 @@ class PagedTable {
     }
 
     updateButtons() {
+        this.pageCount = Math.ceil(this.filteredData.length / this.pageSize);
+
         clearElement(this.buttonContainer);
         if (this.currentPage > 1) {
             const previousAll = newElement("button", {innerText: "<<"});
