@@ -1148,7 +1148,7 @@ function showLivingPopulationTab() {
     const table = createTable(headers, true);
     table.classList.add("sortable");
     table.dataset.population = "living";
-    addElement(fillPeopleTable(newTown.getLivingPopulation(), table), container);
+    addElements([fillPeopleTable(newTown.getLivingPopulation(), table), createPersonKey()], container);
     return container;
 }
 
@@ -1176,7 +1176,7 @@ function showFullPopulationTab() {
     const table = createTable(headers, true);
     table.classList.add("sortable");
     table.dataset.population = "all";
-    addElement(fillPeopleTable(newTown.getPopulation(), table), container);
+    addElements([fillPeopleTable(newTown.getPopulation(), table), createPersonKey()], container);
     return container;
 }
 
@@ -1204,7 +1204,7 @@ function showDeadPopulationTab() {
     const table = createTable(headers, true);
     table.classList.add("sortable");
     table.dataset.population = "dead";
-    addElement(fillPeopleTable(newTown.getDeadPopulation(), table), container);
+    addElements([fillPeopleTable(newTown.getDeadPopulation(), table), createPersonKey()], container);
     return container;
 }
 
@@ -1265,6 +1265,9 @@ function showTownInfoTab() {
     const livingPopRow = createDataRow(['Living Population', livingPopulation.length])
     const deadPopRow = createDataRow(['Dead Population', newTown.getDeadPopulation().length]);
 
+    const startingYearRow = createDataRow(['Starting Year', newTown.getYearOfIncorporation()]);
+    const currentYearRow = createDataRow(['Current Year', newTown.getCurrentYear()]);
+
     let homelessCount = 0;
     for (let person of livingPopulation) {
         if (!person.getResidency()) homelessCount++;
@@ -1294,7 +1297,7 @@ function showTownInfoTab() {
     const occupiedBuildings = createDataRow(["Occupied Buildings", occupied]);
     const homelessnessRate = createDataRow(["Homelessness Rate", `${Math.round((homelessCount / newTown.getLivingPopulation().length) * 100)}%`]);
 
-    addElements([totalPopRow, livingPopRow, deadPopRow, jobMarket, staffed, staffedRate, employmentRate, townBuildings, ownedBuildings, occupiedBuildings, homelessnessRate], table);
+    addElements([totalPopRow, livingPopRow, deadPopRow, startingYearRow, currentYearRow, jobMarket, staffed, staffedRate, employmentRate, townBuildings, ownedBuildings, occupiedBuildings, homelessnessRate], table);
     addElement(table, container);
     return container;
 }
@@ -1336,4 +1339,25 @@ function fillPeopleTable(peopleList, table) {
         addElement(dataRow, table);
     }
     return table;
+}
+
+function createPersonKey() {
+    const keyContainer = newElement("div", {id: "personChatKey"});
+    
+    const selectedSpan = createSection("self", "Selected Person");
+    const spouseSpan = createSection("spouse", "Their Spouse");
+    const childSpan = createSection("children", "Their Children");
+    const parentSpan = createSection("parent", "Their Parents");
+    const siblingsSpan = createSection("sibling", "Their Siblings");
+
+    addElements([selectedSpan, spouseSpan, childSpan, parentSpan, siblingsSpan], keyContainer);
+    return keyContainer;
+
+    function createSection(id, text) {
+        const span = newElement('span');
+        const person = newElement("div", {id: id});
+        const label = newElement("div", {innerText: text});
+        addElements([person, label], span);
+        return span;
+    }
 }
