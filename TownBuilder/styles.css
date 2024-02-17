@@ -222,3 +222,8 @@ body:has(dialog[open]) {
 .pageButtons {
     text-align: center;
 }
+.pageButtons button {
+    margin-left: .5em;
+    margin-right: .5em;
+    margin-bottom: .5em;
+}
