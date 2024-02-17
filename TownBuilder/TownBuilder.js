@@ -1037,74 +1037,74 @@ addTab("Jobs", showJobsTab);
 
 function showLivingPopulationTab() {
     const headers = [
-        {innerText: "Name", "data-sort-direction": "asc", "data-sort-by": "name"},
-        {innerText: "Age", "data-sort-direction": "asc", "data-sort-by": "age"},
-        {innerText: "Race", "data-sort-direction": "asc", "data-sort-by": "race"},
-        {innerText: "Birth Year", "data-sort-direction": "asc", "data-sort-by": "birthYear"},
-        {innerText: "Death Year", "data-sort-direction": "asc", "data-sort-by": "deathyear"},
-        {innerText: "Gender", "data-sort-direction": "asc", "data-sort-by": "gender"},
-        {innerText: "Gender Preference", "data-sort-direction": "asc", "data-sort-by": "genderPreference"},
-        {innerText: "# Children", "data-sort-direction": "asc", "data-sort-by": "children"},
-        {innerText: "Worth", "data-sort-direction": "asc", "data-sort-by": "value"},
-        {innerText: "Job Title", "data-sort-direction": "asc", "data-sort-by": "title"},
-        {innerText: "Years in Job", "data-sort-direction": "asc", "data-sort-by": "yearsInPos"},
-        {innerText: "Strength", "data-sort-direction": "asc", "data-sort-by": "STR"},
-        {innerText: "Dexterity", "data-sort-direction": "asc", "data-sort-by": "DEX"},
-        {innerText: "Constitution", "data-sort-direction": "asc", "data-sort-by": "CON"},
-        {innerText: "Intelligence", "data-sort-direction": "asc", "data-sort-by": "INT"},
-        {innerText: "Wisdom", "data-sort-direction": "asc", "data-sort-by": "WIS"},
-        {innerText: "Charisma", "data-sort-direction": "asc", "data-sort-by": "CHA"},
+        {innerText: "Name", "data-sort-direction": "asc"},
+        {innerText: "Age", "data-sort-direction": "asc"},
+        {innerText: "Race", "data-sort-direction": "asc"},
+        {innerText: "Birth Year", "data-sort-direction": "asc"},
+        {innerText: "Death Year", "data-sort-direction": "asc"},
+        {innerText: "Gender", "data-sort-direction": "asc"},
+        {innerText: "Gender Preference", "data-sort-direction": "asc"},
+        {innerText: "# Children", "data-sort-direction": "asc"},
+        {innerText: "Worth", "data-sort-direction": "asc"},
+        {innerText: "Job Title", "data-sort-direction": "asc"},
+        {innerText: "Years in Job", "data-sort-direction": "asc"},
+        {innerText: "Strength", "data-sort-direction": "asc"},
+        {innerText: "Dexterity", "data-sort-direction": "asc"},
+        {innerText: "Constitution", "data-sort-direction": "asc"},
+        {innerText: "Intelligence", "data-sort-direction": "asc"},
+        {innerText: "Wisdom", "data-sort-direction": "asc"},
+        {innerText: "Charisma", "data-sort-direction": "asc"},
     ]
 
-    return new PagedTable(headers, getPopulationData(newTown.getLivingPopulation()), 100, sortPersonTable, {class: ["sortable"], "data-population": "dead"});
+    return new PagedTable(headers, getPopulationData(newTown.getLivingPopulation()), 100, sortTable, {class: ["sortable"], "data-population": "dead"});
 }
 
 function showFullPopulationTab() {
     const headers = [
-        {innerText: "Name", "data-sort-direction": "asc", "data-sort-by": "name"},
-        {innerText: "Age", "data-sort-direction": "asc", "data-sort-by": "age"},
-        {innerText: "Race", "data-sort-direction": "asc", "data-sort-by": "race"},
-        {innerText: "Birth Year", "data-sort-direction": "asc", "data-sort-by": "birthYear"},
-        {innerText: "Death Year", "data-sort-direction": "asc", "data-sort-by": "deathyear"},
-        {innerText: "Gender", "data-sort-direction": "asc", "data-sort-by": "gender"},
-        {innerText: "Gender Preference", "data-sort-direction": "asc", "data-sort-by": "genderPreference"},
-        {innerText: "# Children", "data-sort-direction": "asc", "data-sort-by": "children"},
-        {innerText: "Worth", "data-sort-direction": "asc", "data-sort-by": "value"},
-        {innerText: "Job Title", "data-sort-direction": "asc", "data-sort-by": "title"},
-        {innerText: "Years in Job", "data-sort-direction": "asc", "data-sort-by": "yearsInPos"},
-        {innerText: "Strength", "data-sort-direction": "asc", "data-sort-by": "STR"},
-        {innerText: "Dexterity", "data-sort-direction": "asc", "data-sort-by": "DEX"},
-        {innerText: "Constitution", "data-sort-direction": "asc", "data-sort-by": "CON"},
-        {innerText: "Intelligence", "data-sort-direction": "asc", "data-sort-by": "INT"},
-        {innerText: "Wisdom", "data-sort-direction": "asc", "data-sort-by": "WIS"},
-        {innerText: "Charisma", "data-sort-direction": "asc", "data-sort-by": "CHA"},
+        {innerText: "Name", "data-sort-direction": "asc"},
+        {innerText: "Age", "data-sort-direction": "asc"},
+        {innerText: "Race", "data-sort-direction": "asc"},
+        {innerText: "Birth Year", "data-sort-direction": "asc"},
+        {innerText: "Death Year", "data-sort-direction": "asc"},
+        {innerText: "Gender", "data-sort-direction": "asc"},
+        {innerText: "Gender Preference", "data-sort-direction": "asc"},
+        {innerText: "# Children", "data-sort-direction": "asc"},
+        {innerText: "Worth", "data-sort-direction": "asc"},
+        {innerText: "Job Title", "data-sort-direction": "asc"},
+        {innerText: "Years in Job", "data-sort-direction": "asc"},
+        {innerText: "Strength", "data-sort-direction": "asc"},
+        {innerText: "Dexterity", "data-sort-direction": "asc"},
+        {innerText: "Constitution", "data-sort-direction": "asc"},
+        {innerText: "Intelligence", "data-sort-direction": "asc"},
+        {innerText: "Wisdom", "data-sort-direction": "asc"},
+        {innerText: "Charisma", "data-sort-direction": "asc"},
     ]
 
-    return new PagedTable(headers, getPopulationData(newTown.getPopulation()), 100, sortPersonTable, {class: ["sortable"], "data-population": "dead"});
+    return new PagedTable(headers, getPopulationData(newTown.getPopulation()), 100, sortTable, {class: ["sortable"], "data-population": "dead"});
 }
 
 function showDeadPopulationTab() {
     const headers = [
-        {innerText: "Name", "data-sort-direction": "asc", "data-sort-by": "name"},
-        {innerText: "Age", "data-sort-direction": "asc", "data-sort-by": "age"},
-        {innerText: "Race", "data-sort-direction": "asc", "data-sort-by": "race"},
-        {innerText: "Birth Year", "data-sort-direction": "asc", "data-sort-by": "birthYear"},
-        {innerText: "Death Year", "data-sort-direction": "asc", "data-sort-by": "deathyear"},
-        {innerText: "Gender", "data-sort-direction": "asc", "data-sort-by": "gender"},
-        {innerText: "Gender Preference", "data-sort-direction": "asc", "data-sort-by": "genderPreference"},
-        {innerText: "# Children", "data-sort-direction": "asc", "data-sort-by": "children"},
-        {innerText: "Worth", "data-sort-direction": "asc", "data-sort-by": "value"},
-        {innerText: "Job Title", "data-sort-direction": "asc", "data-sort-by": "title"},
-        {innerText: "Years in Job", "data-sort-direction": "asc", "data-sort-by": "yearsInPos"},
-        {innerText: "Strength", "data-sort-direction": "asc", "data-sort-by": "STR"},
-        {innerText: "Dexterity", "data-sort-direction": "asc", "data-sort-by": "DEX"},
-        {innerText: "Constitution", "data-sort-direction": "asc", "data-sort-by": "CON"},
-        {innerText: "Intelligence", "data-sort-direction": "asc", "data-sort-by": "INT"},
-        {innerText: "Wisdom", "data-sort-direction": "asc", "data-sort-by": "WIS"},
-        {innerText: "Charisma", "data-sort-direction": "asc", "data-sort-by": "CHA"},
+        {innerText: "Name", "data-sort-direction": "asc"},
+        {innerText: "Age", "data-sort-direction": "asc"},
+        {innerText: "Race", "data-sort-direction": "asc"},
+        {innerText: "Birth Year", "data-sort-direction": "asc"},
+        {innerText: "Death Year", "data-sort-direction": "asc"},
+        {innerText: "Gender", "data-sort-direction": "asc"},
+        {innerText: "Gender Preference", "data-sort-direction": "asc"},
+        {innerText: "# Children", "data-sort-direction": "asc"},
+        {innerText: "Worth", "data-sort-direction": "asc"},
+        {innerText: "Job Title", "data-sort-direction": "asc"},
+        {innerText: "Years in Job", "data-sort-direction": "asc"},
+        {innerText: "Strength", "data-sort-direction": "asc"},
+        {innerText: "Dexterity", "data-sort-direction": "asc"},
+        {innerText: "Constitution", "data-sort-direction": "asc"},
+        {innerText: "Intelligence", "data-sort-direction": "asc"},
+        {innerText: "Wisdom", "data-sort-direction": "asc"},
+        {innerText: "Charisma", "data-sort-direction": "asc"},
     ]
 
-    return new PagedTable(headers, getPopulationData(newTown.getDeadPopulation()), 100, sortPersonTable, {class: ["sortable"], "data-population": "dead"});
+    return new PagedTable(headers, getPopulationData(newTown.getDeadPopulation()), 100, sortTable, {class: ["sortable"], "data-population": "dead"});
 }
 
 function getPopulationData(population) {
@@ -1146,9 +1146,9 @@ function getPopulationData(population) {
 
 function showBuildingsTab() {
     const headers = [
-        {innerText: "Name"},
-        {innerText: "Owner"},
-        {innerText: "Residents"},
+        {innerText: "Name", "data-sort-direction": "asc"},
+        {innerText: "Owner", "data-sort-direction": "asc"},
+        {innerText: "Residents", "data-sort-direction": "asc"},
     ];
     const dataRows = [];
     const buildings = newTown.getBuildings();
@@ -1159,15 +1159,15 @@ function showBuildingsTab() {
             building.getResidents().length
         ]);
     }
-    return new PagedTable(headers, dataRows, 50);
+    return new PagedTable(headers, dataRows, 50, sortTable, {class: ["sortable"]});
 }
 
 function showJobsTab() {
     const headers = [
-        {innerText: 'Job'},
-        {innerText: 'Person'},
-        {innerText: 'Salary'},
-        {innerText: 'Building'}
+        {innerText: 'Job', "data-sort-direction": "asc"},
+        {innerText: 'Person', "data-sort-direction": "asc"},
+        {innerText: 'Salary', "data-sort-direction": "asc"},
+        {innerText: 'Building', "data-sort-direction": "asc"},
     ];
     const jobs = newTown.getJobMarket();
     const dataRows = [];
@@ -1179,7 +1179,7 @@ function showJobsTab() {
             job.getBuilding() ? job.getBuilding().getBuildingName() : "-"
         ])
     }
-    return new PagedTable(headers, dataRows, 50);
+    return new PagedTable(headers, dataRows, 50, sortTable, {class: ["sortable"]});
 }
 
 function showTownInfoTab() {
@@ -1438,7 +1438,7 @@ class PagedTable {
     }
 }
 
-function sortPersonTable(event, headers, tableData) {
+function sortTable(event, headers, tableData) {
     const sortBy = event.target.innerText;
     const sortDirection = event.target.dataset.sortDirection;
 
@@ -1488,5 +1488,108 @@ function sortPersonTable(event, headers, tableData) {
               }  
         }
         return 0;
+    }
+}
+
+
+
+
+class PersonTable extends PagedTable {
+
+    constructor(population, populationName) {
+        const dataRows = [];
+        for (let person of population) {
+            const personId = person.getPersonId();
+            const nameElem = newElement('td', {innerText: person.getFullName()});
+            registerElement(nameElem, "click", () => {
+                let existingModal = qs(`[data-person-id="${personId}"]`);
+                if (!existingModal) {
+                    existingModal = createModal(person);
+                    document.body.appendChild(existingModal);
+                }
+                existingModal.showModal();
+            })
+            const personStats = person.getStats();
+            dataRows.push({id: personId, data: [
+                nameElem,
+                person.getAge(),
+                person.getRace(),
+                person.getBirthYear(),
+                person.getDeathYear() ? person.getDeathYear() : '-',
+                person.getGender(),
+                person.getGenderPreference(),
+                person.getChildren().length,
+                person.getValue() ? person.getValue() : 0,
+                person.getJob() ? person.getJob().getTitle() : '-',
+                person.getJob() ? person.getJob().getYearsInPosition() : 0,
+                personStats.STR,
+                personStats.DEX,
+                personStats.CON,
+                personStats.INT,
+                personStats.WIS,
+                personStats.CHA,
+            ]})
+        }
+
+        const headers = [
+            {innerText: "Name", "data-sort-direction": "asc", "data-sort-by": "name"},
+            {innerText: "Age", "data-sort-direction": "asc", "data-sort-by": "age"},
+            {innerText: "Race", "data-sort-direction": "asc", "data-sort-by": "race"},
+            {innerText: "Birth Year", "data-sort-direction": "asc", "data-sort-by": "birthYear"},
+            {innerText: "Death Year", "data-sort-direction": "asc", "data-sort-by": "deathyear"},
+            {innerText: "Gender", "data-sort-direction": "asc", "data-sort-by": "gender"},
+            {innerText: "Gender Preference", "data-sort-direction": "asc", "data-sort-by": "genderPreference"},
+            {innerText: "# Children", "data-sort-direction": "asc", "data-sort-by": "children"},
+            {innerText: "Worth", "data-sort-direction": "asc", "data-sort-by": "value"},
+            {innerText: "Job Title", "data-sort-direction": "asc", "data-sort-by": "title"},
+            {innerText: "Years in Job", "data-sort-direction": "asc", "data-sort-by": "yearsInPos"},
+            {innerText: "Strength", "data-sort-direction": "asc", "data-sort-by": "STR"},
+            {innerText: "Dexterity", "data-sort-direction": "asc", "data-sort-by": "DEX"},
+            {innerText: "Constitution", "data-sort-direction": "asc", "data-sort-by": "CON"},
+            {innerText: "Intelligence", "data-sort-direction": "asc", "data-sort-by": "INT"},
+            {innerText: "Wisdom", "data-sort-direction": "asc", "data-sort-by": "WIS"},
+            {innerText: "Charisma", "data-sort-direction": "asc", "data-sort-by": "CHA"},
+        ]
+        super(headers, dataRows, 100, sortTable, {class: ["sortable"], "data-population": populationName});
+    }
+    
+    updateTable() {
+        clearElement(this.table, "tr:has(td)");
+        const startIndex = this.pageSize * this.currentPage;
+        const dataLength = this.filteredData.length;
+        const endIndex = startIndex + this.pageSize < dataLength ? startIndex + this.pageSize : dataLength;
+        for (let i = startIndex; i < endIndex; i++) {
+            const row = this.filteredData[i];
+            const tableRow = newElement('tr');
+            for (let data of row) {
+                if (data instanceof Element) addElement(data, tableRow);
+                else {
+                    const tableData = newElement('td', {innerText: data});
+                    addElement(tableData, tableRow);
+                };
+            }
+            addElement(tableRow, this.table);
+        }
+    }
+
+    createPersonKey() {
+        const keyContainer = newElement("div", {id: "personChatKey"});
+        
+        const selectedSpan = createSection("self", "Selected Person");
+        const spouseSpan = createSection("spouse", "Their Spouse");
+        const childSpan = createSection("children", "Their Children");
+        const parentSpan = createSection("parent", "Their Parents");
+        const siblingsSpan = createSection("sibling", "Their Siblings");
+    
+        addElements([selectedSpan, spouseSpan, childSpan, parentSpan, siblingsSpan], keyContainer);
+        return keyContainer;
+    
+        function createSection(id, text) {
+            const span = newElement('span');
+            const person = newElement("div", {id: id});
+            const label = newElement("div", {innerText: text});
+            addElements([person, label], span);
+            return span;
+        }
     }
 }
