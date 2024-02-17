@@ -980,7 +980,25 @@ function generateTestTowns(count) {
         populations.push(pop);
         total += pop;
     }
-    return total / populations.length;
+    return {median: getMedian(populations), mean: total / populations.length};
+}
+
+function getMedian(array) {
+    const sortedArray = array.toSorted((a,b) => a - b)
+    let median;
+    if (sortedArray.length % 2 === 0) {
+        const middleHighIndex = sortedArray.length / 2
+        const middleLowIndex = middleHighIndex - 1;
+        const middleLow = sortedArray[middleLowIndex];
+        const middleHigh = sortedArray[middleHighIndex];
+        median = Math.round((middleLow + middleHigh) / 2);
+    }
+    else {
+        const middleIndex = (sortedArray.length - 1) / 2
+        const middle = sortedArray[middleIndex]
+        median = middle;
+    }
+    return median;
 }
 
 function createModal(person) {
