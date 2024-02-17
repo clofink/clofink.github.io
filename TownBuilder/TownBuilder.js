@@ -1327,6 +1327,7 @@ class PagedTable {
             if (this.sortFunc) registerElement(tableHeader, "click", (event) => {
                 this.sortFunc(event, headerNames, this.dataRows);
                 this.updateTable();
+                this.setPage(0);
             });
             addElement(tableHeader, this.headerRow);
         }
@@ -1369,10 +1370,21 @@ class PagedTable {
         }
     }
 
+    setPage(pageNum) {
+        this.currentPage = pageNum;
+        this.updateButtons();
+        this.updateTable();
+    }
+
     updateButtons() {
         clearElement(this.buttonContainer);
+        if (this.currentPage > 1) {
+            const previousAll = newElement("button", {innerText: "<<"});
+            registerElement(previousAll, "click", () => {this.setPage(0)});
+            addElement(previousAll, this.buttonContainer);
+        }
         if (this.currentPage > 0) {
-            const previousButton = newElement("button", {innerText: "<-"});
+            const previousButton = newElement("button", {innerText: "<"});
             registerElement(previousButton, "click", () => {this.changePage(-1)});
             addElement(previousButton, this.buttonContainer);
         }
@@ -1380,11 +1392,15 @@ class PagedTable {
             const pageCount = newElement("span", {innerText: `${this.currentPage + 1}/${this.pageCount}`})
             addElement(pageCount, this.buttonContainer);
         }
-
         if (this.currentPage < this.pageCount - 1 && this.pageCount > 1) {
-            const nextButton = newElement("button", {innerText: "->"});
+            const nextButton = newElement("button", {innerText: ">"});
             registerElement(nextButton, "click", () => {this.changePage(1)});
             addElement(nextButton, this.buttonContainer);
+        }
+        if (this.currentPage < this.pageCount - 2 && this.pageCount > 2) {
+            const nextAll = newElement("button", {innerText: ">>"});
+            registerElement(nextAll, "click", () => {this.setPage(this.pageCount - 1)});
+            addElement(nextAll, this.buttonContainer);
         }
         return this.buttonContainer;
     }
