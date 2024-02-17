@@ -1452,8 +1452,23 @@ function sortPersonTable(event, headers, tableData) {
     
     function customSort(a, b) {
         const headerIndex = headers.indexOf(sortBy);
-        let valueA = !isNaN(parseInt(a[headerIndex])) ? parseInt(a[headerIndex]) : a[headerIndex];
-        let valueB = !isNaN(parseInt(b[headerIndex])) ? parseInt(b[headerIndex]) : b[headerIndex];
+        let valueA;
+        let valueB;
+        if (a[headerIndex] instanceof Element) {
+            valueA = a[headerIndex].innerText;
+        }
+        else {
+            valueA = a[headerIndex];
+        }
+        if (b[headerIndex] instanceof Element) {
+            valueB = b[headerIndex].innerText;
+        }
+        else {
+            valueB = b[headerIndex];
+        }
+
+        valueA = !isNaN(parseInt(valueA)) ? parseInt(valueA) : valueA;
+        valueB = !isNaN(parseInt(valueB)) ? parseInt(valueB) : valueB;
 
         if (sortDirection === "asc") {
             if (valueA < valueB) {
