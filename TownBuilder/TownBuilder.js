@@ -1371,6 +1371,7 @@ class PagedTable {
         }
         this.filteredData = filteredRows;
         this.updateTable();
+        this.updateButtons();
     }
 
     changePage(pageChange) {
