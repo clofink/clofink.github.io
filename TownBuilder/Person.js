@@ -404,7 +404,7 @@ class Dragonborn extends Person {
     race = 'dragonborn';
     maxAge = 80;
     adolescence = 15;
-    haveKidsChance = 20;
+    haveKidsChance = 25;
 
     getFullName() {
         // return full name with any modifiers needed
@@ -491,7 +491,7 @@ class Dwarf extends Person {
     race = 'dwarf';
     maxAge = 350;
     adolescence = 50;
-    haveKidsChance = 5;
+    haveKidsChance = 12;
 
     randomFirstName() {
         const nameList1 = ["Ad", "Am", "Arm", "Baer", "Daer", "Bal", "Ban", "Bar", "Bel", "Ben", "Ber", "Bhal", "Bhar", "Bhel", "Bram", "Bran", "Brom", "Brum", "Bun", "Dal", "Dar", "Dol", "Dul", "Eb", "Em", "Erm", "Far", "Gal", "Gar", "Ger", "Gim", "Gral", "Gram", "Gran", "Grem", "Gren", "Gril", "Gry", "Gul", "Har", "Hjal", "Hjol", "Hjul", "Hor", "Hul", "Hur", "Kar", "Khar", "Kram", "Krom", "Krum", "Mag", "Mal", "Mel", "Mor", "Muir", "Mur", "Rag", "Ran", "Reg", "Rot", "Thal", "Thar", "Thel", "Ther", "Tho", "Thor", "Thul", "Thur", "Thy", "Tor", "Ty", "Um", "Urm", "Von"];
@@ -557,7 +557,7 @@ class Elf extends Person {
     race = 'elf';
     maxAge = 750;
     adolescence = 100;
-    haveKidsChance = 4;
+    haveKidsChance = 18;
 
     randomFirstName() {
         if (this.gender == 'male') {
@@ -637,7 +637,7 @@ class Gnome extends Person {
     race = 'gnome';
     maxAge = 425;
     adolescence = 40;
-    haveKidsChance = 3.5;
+    haveKidsChance = 8;
 
     randomFirstName() {
         if (this.gender == 'male') {
@@ -724,7 +724,7 @@ class Goliath extends Person {
     race = 'goliath';
     maxAge = 100;
     adolescence = 18;
-    haveKidsChance = 16;
+    haveKidsChance = 20;
 
     randomFirstName() {
         if (this.gender == 'male') {
@@ -771,7 +771,7 @@ class Halfling extends Person {
     race = 'halfling'
     maxAge = 250;
     adolescence = 20;
-    haveKidsChance = 4;
+    haveKidsChance = 7;
 
     randomFirstName() {
         if (this.gender == 'male') {
@@ -805,7 +805,7 @@ class Halfelf extends Person {
     race = 'halfelf';
     maxAge = 180;
     adolescence = 20;
-    haveKidsChance = 7;
+    haveKidsChance = 9;
 
     randomFirstName() {
         if (this.gender == 'male') {
