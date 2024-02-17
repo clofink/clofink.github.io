@@ -216,3 +216,9 @@ body:has(dialog[open]) {
 #page {
     margin-top: .5em;
 }
+.tableContainer {
+    width: fit-content;
+}
+.pageButtons {
+    text-align: center;
+}

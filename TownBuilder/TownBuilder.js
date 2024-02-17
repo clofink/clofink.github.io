@@ -292,95 +292,6 @@ function createHeaderRow(headers, sortBy) {
     return (headerRow);
 }
 
-/**
- * Sortby lambda that handles the table sorting
- * @param {} event - automatically provided by event handler
- */
-function sortByHeader(event) {
-    let sortedPopulation = [];
-    const parentTable = event.target.closest("table");
-    const populationName = parentTable.dataset.population;
-    switch (populationName) {
-        case "living":
-            sortedPopulation = newTown.getLivingPopulation();
-            break;
-        case "dead":
-            sortedPopulation = newTown.getDeadPopulation();
-            break;
-        default:
-            sortedPopulation = newTown.getPopulation();
-            break;
-    }
-    const sortBy = event.target.dataset.sortBy || "personId";
-    const sortDirection = event.target.dataset.sortDirection;
-
-    if (sortDirection === 'asc') {
-        event.target.dataset.sortDirection = 'desc';
-    }
-    else if (sortDirection === 'desc') {
-        event.target.dataset.sortDirection = 'asc';
-    }
-    sortedPopulation.sort(customSort);
-    rebuildTableRows(parentTable, sortedPopulation);
-
-    function customSort(a, b) {
-        let valueA;
-        let valueB;
-        switch (sortBy) {
-            case "children":
-                valueA = a.getChildren().length;
-                valueB = b.getChildren().length;
-                break;
-            case "STR":
-            case "CON":
-            case "DEX":
-            case "INT":
-            case "WIS":
-            case "CHA":
-                valueA = parseInt(a.getStats()[sortBy]);
-                valueB = parseInt(b.getStats()[sortBy]);
-                break;
-            case "title":
-                valueA = a.getJob() ? a.getJob().getTitle() : "";
-                valueB = b.getJob() ? b.getJob().getTitle() : "";
-                break;
-            case "yearsInPos":
-                valueA = a.getJob() ? a.getJob().getYearsInPosition() : 0;
-                valueB = b.getJob() ? b.getJob().getYearsInPosition() : 0;
-                break;
-            default:
-                valueA = a[sortBy] ? a[sortBy] : '';
-                valueB = b[sortBy] ? b[sortBy] : '';
-                break;
-        }
-        if (sortDirection === "asc") {
-            if (valueA < valueB) {
-              return -1;
-            }
-            if (valueA > valueB) {
-              return 1;
-            }
-        }
-        else {
-            if (valueA > valueB) {
-                return -1;
-              }
-              if (valueA < valueB) {
-                return 1;
-              }  
-        }
-        return 0;
-    }
-}
-
-function rebuildTableRows(table, sortedPopulation) {
-    const dataRows = qsa('tr td:first-of-type', table);
-    for (let dataRow of dataRows) {
-        table.removeChild(dataRow.parentElement);
-    }
-    fillPeopleTable(sortedPopulation, table);
-}
-
 function createDataRow(data) {
     const dataRow = newElement('tr');
     for (let row of data) {
@@ -1125,7 +1036,6 @@ addTab("Buildings", showBuildingsTab);
 addTab("Jobs", showJobsTab);
 
 function showLivingPopulationTab() {
-    const container = newElement('div');
     const headers = [
         {innerText: "Name", "data-sort-direction": "asc", "data-sort-by": "name"},
         {innerText: "Age", "data-sort-direction": "asc", "data-sort-by": "age"},
@@ -1145,15 +1055,11 @@ function showLivingPopulationTab() {
         {innerText: "Wisdom", "data-sort-direction": "asc", "data-sort-by": "WIS"},
         {innerText: "Charisma", "data-sort-direction": "asc", "data-sort-by": "CHA"},
     ]
-    const table = createTable(headers, true);
-    table.classList.add("sortable");
-    table.dataset.population = "living";
-    addElements([fillPeopleTable(newTown.getLivingPopulation(), table), createPersonKey()], container);
-    return container;
+
+    return new PagedTable(headers, getPopulationData(newTown.getLivingPopulation()), 100, sortPersonTable, {class: ["sortable"], "data-population": "dead"});
 }
 
 function showFullPopulationTab() {
-    const container = newElement('div');
     const headers = [
         {innerText: "Name", "data-sort-direction": "asc", "data-sort-by": "name"},
         {innerText: "Age", "data-sort-direction": "asc", "data-sort-by": "age"},
@@ -1173,15 +1079,11 @@ function showFullPopulationTab() {
         {innerText: "Wisdom", "data-sort-direction": "asc", "data-sort-by": "WIS"},
         {innerText: "Charisma", "data-sort-direction": "asc", "data-sort-by": "CHA"},
     ]
-    const table = createTable(headers, true);
-    table.classList.add("sortable");
-    table.dataset.population = "all";
-    addElements([fillPeopleTable(newTown.getPopulation(), table), createPersonKey()], container);
-    return container;
+
+    return new PagedTable(headers, getPopulationData(newTown.getPopulation()), 100, sortPersonTable, {class: ["sortable"], "data-population": "dead"});
 }
 
 function showDeadPopulationTab() {
-    const container = newElement('div');
     const headers = [
         {innerText: "Name", "data-sort-direction": "asc", "data-sort-by": "name"},
         {innerText: "Age", "data-sort-direction": "asc", "data-sort-by": "age"},
@@ -1201,55 +1103,83 @@ function showDeadPopulationTab() {
         {innerText: "Wisdom", "data-sort-direction": "asc", "data-sort-by": "WIS"},
         {innerText: "Charisma", "data-sort-direction": "asc", "data-sort-by": "CHA"},
     ]
-    const table = createTable(headers, true);
-    table.classList.add("sortable");
-    table.dataset.population = "dead";
-    addElements([fillPeopleTable(newTown.getDeadPopulation(), table), createPersonKey()], container);
-    return container;
+
+    return new PagedTable(headers, getPopulationData(newTown.getDeadPopulation()), 100, sortPersonTable, {class: ["sortable"], "data-population": "dead"});
+}
+
+function getPopulationData(population) {
+    const dataRows = [];
+    for (let person of population) {
+        const personId = person.getPersonId();
+        const nameElem = newElement('td', {innerText: person.getFullName()});
+        registerElement(nameElem, "click", () => {
+            let existingModal = qs(`[data-person-id="${personId}"]`);
+            if (!existingModal) {
+                existingModal = createModal(person);
+                document.body.appendChild(existingModal);
+            }
+            existingModal.showModal();
+        })
+        const personStats = person.getStats();
+        dataRows.push([
+            nameElem,
+            person.getAge(),
+            person.getRace(),
+            person.getBirthYear(),
+            person.getDeathYear() ? person.getDeathYear() : '-',
+            person.getGender(),
+            person.getGenderPreference(),
+            person.getChildren().length,
+            person.getValue() ? person.getValue() : 0,
+            person.getJob() ? person.getJob().getTitle() : '-',
+            person.getJob() ? person.getJob().getYearsInPosition() : 0,
+            personStats.STR,
+            personStats.DEX,
+            personStats.CON,
+            personStats.INT,
+            personStats.WIS,
+            personStats.CHA,
+        ])
+    }
+    return dataRows;
 }
 
 function showBuildingsTab() {
-    const container = newElement('div');
     const headers = [
         {innerText: "Name"},
         {innerText: "Owner"},
         {innerText: "Residents"},
     ];
-    const table = createTable(headers);
+    const dataRows = [];
     const buildings = newTown.getBuildings();
     for (let building of buildings) {
-        const jobRow = createDataRow([
+        dataRows.push([
             building.getBuildingName(),
             building.getOwner() ? building.getOwner().getFullName() : "-",
             building.getResidents().length
         ]);
-        addElement(jobRow, table);
     }
-    addElement(table, container);
-    return container;
+    return new PagedTable(headers, dataRows, 50);
 }
 
 function showJobsTab() {
-    const container = newElement('div');
     const headers = [
         {innerText: 'Job'},
         {innerText: 'Person'},
         {innerText: 'Salary'},
         {innerText: 'Building'}
     ];
-    const table = createTable(headers);
     const jobs = newTown.getJobMarket();
+    const dataRows = [];
     for (let job of jobs) {
-        const jobRow = createDataRow([
+        dataRows.push([
             job.getTitle(),
             job.getPerson() ? job.getPerson().getFullName() : "-",
             job.getSalary(),
             job.getBuilding() ? job.getBuilding().getBuildingName() : "-"
-        ]);
-        addElement(jobRow, table);
+        ])
     }
-    addElement(table, container);
-    return container;
+    return new PagedTable(headers, dataRows, 50);
 }
 
 function showTownInfoTab() {
@@ -1365,5 +1295,135 @@ function createPersonKey() {
         const label = newElement("div", {innerText: text});
         addElements([person, label], span);
         return span;
+    }
+}
+
+class PagedTable {
+    headers;
+    dataRows;
+    pageSize;
+    currentPage;
+    pageCount;
+
+    constructor(headers, dataRows, pageSize, sortFunc, tableInfo) {
+        this.headers = headers || [];
+        this.dataRows = dataRows || [];
+        this.pageSize = pageSize || 0;
+        this.currentPage = 0;
+        if (sortFunc) this.sortFunc = sortFunc;
+        this.pageCount = Math.ceil(dataRows.length / pageSize);
+
+        this.container = newElement('div', {class: ["tableContainer"]});
+        this.table = newElement("table", tableInfo);
+
+        const headerNames = [];
+        for (let header of headers) {
+            headerNames.push(header.innerText);
+        }
+
+        this.headerRow = newElement('tr');
+        for (let header of headers) {
+            const tableHeader = newElement('th', header);
+            if (this.sortFunc) registerElement(tableHeader, "click", (event) => {
+                this.sortFunc(event, headerNames, this.dataRows);
+                this.updateTable();
+            });
+            addElement(tableHeader, this.headerRow);
+        }
+        addElement(this.headerRow, this.table);
+
+        this.buttonContainer = newElement("div", {class: ["pageButtons"]});
+        this.updateTable();
+        this.updateButtons();
+
+        addElements([this.table, this.buttonContainer], this.container);
+
+        return this.container;
+    }
+
+    changePage(pageChange) {
+        this.currentPage += pageChange;
+
+        this.updateTable();
+        this.updateButtons();
+    }
+
+    updateTable() {
+        clearElement(this.table);
+        addElement(this.headerRow, this.table);
+
+        const startIndex = this.pageSize * this.currentPage;
+        const dataLength = this.dataRows.length;
+        const endIndex = startIndex + this.pageSize < dataLength ? startIndex + this.pageSize : dataLength;
+        for (let i = startIndex; i < endIndex; i++) {
+            const row = this.dataRows[i];
+            const tableRow = newElement('tr');
+            for (let data of row) {
+                if (data instanceof Element) addElement(data, tableRow);
+                else {
+                    const tableData = newElement('td', {innerText: data});
+                    addElement(tableData, tableRow);
+                };
+            }
+            addElement(tableRow, this.table);
+        }
+    }
+
+    updateButtons() {
+        clearElement(this.buttonContainer);
+        if (this.currentPage > 0) {
+            const previousButton = newElement("button", {innerText: "<-"});
+            registerElement(previousButton, "click", () => {this.changePage(-1)});
+            addElement(previousButton, this.buttonContainer);
+        }
+        if (this.pageCount > 1) {
+            const pageCount = newElement("span", {innerText: `${this.currentPage + 1}/${this.pageCount}`})
+            addElement(pageCount, this.buttonContainer);
+        }
+
+        if (this.currentPage < this.pageCount - 1 && this.pageCount > 1) {
+            const nextButton = newElement("button", {innerText: "->"});
+            registerElement(nextButton, "click", () => {this.changePage(1)});
+            addElement(nextButton, this.buttonContainer);
+        }
+        return this.buttonContainer;
+    }
+}
+
+function sortPersonTable(event, headers, tableData) {
+    const sortBy = event.target.innerText;
+    const sortDirection = event.target.dataset.sortDirection;
+
+    if (sortDirection === 'asc') {
+        event.target.dataset.sortDirection = 'desc';
+    }
+    else if (sortDirection === 'desc') {
+        event.target.dataset.sortDirection = 'asc';
+    }
+
+    tableData.sort(customSort);
+    
+    function customSort(a, b) {
+        const headerIndex = headers.indexOf(sortBy);
+        let valueA = !isNaN(parseInt(a[headerIndex])) ? parseInt(a[headerIndex]) : a[headerIndex];
+        let valueB = !isNaN(parseInt(b[headerIndex])) ? parseInt(b[headerIndex]) : b[headerIndex];
+
+        if (sortDirection === "asc") {
+            if (valueA < valueB) {
+              return -1;
+            }
+            if (valueA > valueB) {
+              return 1;
+            }
+        }
+        else {
+            if (valueA > valueB) {
+                return -1;
+              }
+              if (valueA < valueB) {
+                return 1;
+              }  
+        }
+        return 0;
     }
 }
