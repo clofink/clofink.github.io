@@ -285,7 +285,7 @@ function createTable(headers, sortBy) {
 function createHeaderRow(headers, sortBy) {
     const headerRow = newElement('tr');
     for (let header of headers) {
-        const tableValue = newElement('th', {innerHTML: header.displayName, "data-sort-direction": "asc", "data-sort-by": header.sortBy});
+        const tableValue = newElement('th', header);
         if (sortBy) registerElement(tableValue, "click", sortByHeader);
         addElement(tableValue, headerRow);
     }
@@ -1127,23 +1127,23 @@ addTab("Jobs", showJobsTab);
 function showLivingPopulationTab() {
     const container = newElement('div');
     const headers = [
-        {displayName: 'Name', sortBy: "name"}, 
-        {displayName: 'Age', sortBy: "age"},
-        {displayName: 'Race', sortBy: "race"},
-        {displayName: 'Birth Year', sortBy: "birthYear"},
-        {displayName: 'Death Year', sortBy: "deathYear"},
-        {displayName: 'Gender', sortBy: "gender"},
-        {displayName: 'Gender Preference', sortBy: "genderPreference"},
-        {displayName: '# Children', sortBy: "children"},
-        {displayName: 'Worth', sortBy: "value"},
-        {displayName: 'Job Title', sortBy: "title"},
-        {displayName: 'Years in Job', sortBy: "yearsInPos"},
-        {displayName: 'Strength', sortBy: "STR"},
-        {displayName: 'Dexterity', sortBy: "DEX"},
-        {displayName: 'Constitution', sortBy: "CON"},
-        {displayName: 'Intelligence', sortBy: "INT"},
-        {displayName: 'Wisdom', sortBy: "WIS"},
-        {displayName: 'Charisma', sortBy: "CHA"},
+        {innerText: "Name", "data-sort-direction": "asc", "data-sort-by": "name"},
+        {innerText: "Age", "data-sort-direction": "asc", "data-sort-by": "age"},
+        {innerText: "Race", "data-sort-direction": "asc", "data-sort-by": "race"},
+        {innerText: "Birth Year", "data-sort-direction": "asc", "data-sort-by": "birthYear"},
+        {innerText: "Death Year", "data-sort-direction": "asc", "data-sort-by": "deathyear"},
+        {innerText: "Gender", "data-sort-direction": "asc", "data-sort-by": "gender"},
+        {innerText: "Gender Preference", "data-sort-direction": "asc", "data-sort-by": "genderPreference"},
+        {innerText: "# Children", "data-sort-direction": "asc", "data-sort-by": "children"},
+        {innerText: "Worth", "data-sort-direction": "asc", "data-sort-by": "value"},
+        {innerText: "Job Title", "data-sort-direction": "asc", "data-sort-by": "title"},
+        {innerText: "Years in Job", "data-sort-direction": "asc", "data-sort-by": "yearsInPos"},
+        {innerText: "Strength", "data-sort-direction": "asc", "data-sort-by": "STR"},
+        {innerText: "Dexterity", "data-sort-direction": "asc", "data-sort-by": "DEX"},
+        {innerText: "Constitution", "data-sort-direction": "asc", "data-sort-by": "CON"},
+        {innerText: "Intelligence", "data-sort-direction": "asc", "data-sort-by": "INT"},
+        {innerText: "Wisdom", "data-sort-direction": "asc", "data-sort-by": "WIS"},
+        {innerText: "Charisma", "data-sort-direction": "asc", "data-sort-by": "CHA"},
     ]
     const table = createTable(headers, true);
     table.classList.add("sortable");
@@ -1155,23 +1155,23 @@ function showLivingPopulationTab() {
 function showFullPopulationTab() {
     const container = newElement('div');
     const headers = [
-        {displayName: 'Name', sortBy: "name"}, 
-        {displayName: 'Age', sortBy: "age"},
-        {displayName: 'Race', sortBy: "race"},
-        {displayName: 'Birth Year', sortBy: "birthYear"},
-        {displayName: 'Death Year', sortBy: "deathYear"},
-        {displayName: 'Gender', sortBy: "gender"},
-        {displayName: 'Gender Preference', sortBy: "genderPreference"},
-        {displayName: '# Children', sortBy: "children"},
-        {displayName: 'Worth', sortBy: "value"},
-        {displayName: 'Job Title', sortBy: "title"},
-        {displayName: 'Years in Job', sortBy: "yearsInPos"},
-        {displayName: 'Strength', sortBy: "STR"},
-        {displayName: 'Dexterity', sortBy: "DEX"},
-        {displayName: 'Constitution', sortBy: "CON"},
-        {displayName: 'Intelligence', sortBy: "INT"},
-        {displayName: 'Wisdom', sortBy: "WIS"},
-        {displayName: 'Charisma', sortBy: "CHA"},
+        {innerText: "Name", "data-sort-direction": "asc", "data-sort-by": "name"},
+        {innerText: "Age", "data-sort-direction": "asc", "data-sort-by": "age"},
+        {innerText: "Race", "data-sort-direction": "asc", "data-sort-by": "race"},
+        {innerText: "Birth Year", "data-sort-direction": "asc", "data-sort-by": "birthYear"},
+        {innerText: "Death Year", "data-sort-direction": "asc", "data-sort-by": "deathyear"},
+        {innerText: "Gender", "data-sort-direction": "asc", "data-sort-by": "gender"},
+        {innerText: "Gender Preference", "data-sort-direction": "asc", "data-sort-by": "genderPreference"},
+        {innerText: "# Children", "data-sort-direction": "asc", "data-sort-by": "children"},
+        {innerText: "Worth", "data-sort-direction": "asc", "data-sort-by": "value"},
+        {innerText: "Job Title", "data-sort-direction": "asc", "data-sort-by": "title"},
+        {innerText: "Years in Job", "data-sort-direction": "asc", "data-sort-by": "yearsInPos"},
+        {innerText: "Strength", "data-sort-direction": "asc", "data-sort-by": "STR"},
+        {innerText: "Dexterity", "data-sort-direction": "asc", "data-sort-by": "DEX"},
+        {innerText: "Constitution", "data-sort-direction": "asc", "data-sort-by": "CON"},
+        {innerText: "Intelligence", "data-sort-direction": "asc", "data-sort-by": "INT"},
+        {innerText: "Wisdom", "data-sort-direction": "asc", "data-sort-by": "WIS"},
+        {innerText: "Charisma", "data-sort-direction": "asc", "data-sort-by": "CHA"},
     ]
     const table = createTable(headers, true);
     table.classList.add("sortable");
@@ -1183,23 +1183,23 @@ function showFullPopulationTab() {
 function showDeadPopulationTab() {
     const container = newElement('div');
     const headers = [
-        {displayName: 'Name', sortBy: "name"}, 
-        {displayName: 'Age', sortBy: "age"},
-        {displayName: 'Race', sortBy: "race"},
-        {displayName: 'Birth Year', sortBy: "birthYear"},
-        {displayName: 'Death Year', sortBy: "deathYear"},
-        {displayName: 'Gender', sortBy: "gender"},
-        {displayName: 'Gender Preference', sortBy: "genderPreference"},
-        {displayName: '# Children', sortBy: "children"},
-        {displayName: 'Worth', sortBy: "value"},
-        {displayName: 'Job Title', sortBy: "title"},
-        {displayName: 'Years in Job', sortBy: "yearsInPos"},
-        {displayName: 'Strength', sortBy: "STR"},
-        {displayName: 'Dexterity', sortBy: "DEX"},
-        {displayName: 'Constitution', sortBy: "CON"},
-        {displayName: 'Intelligence', sortBy: "INT"},
-        {displayName: 'Wisdom', sortBy: "WIS"},
-        {displayName: 'Charisma', sortBy: "CHA"},
+        {innerText: "Name", "data-sort-direction": "asc", "data-sort-by": "name"},
+        {innerText: "Age", "data-sort-direction": "asc", "data-sort-by": "age"},
+        {innerText: "Race", "data-sort-direction": "asc", "data-sort-by": "race"},
+        {innerText: "Birth Year", "data-sort-direction": "asc", "data-sort-by": "birthYear"},
+        {innerText: "Death Year", "data-sort-direction": "asc", "data-sort-by": "deathyear"},
+        {innerText: "Gender", "data-sort-direction": "asc", "data-sort-by": "gender"},
+        {innerText: "Gender Preference", "data-sort-direction": "asc", "data-sort-by": "genderPreference"},
+        {innerText: "# Children", "data-sort-direction": "asc", "data-sort-by": "children"},
+        {innerText: "Worth", "data-sort-direction": "asc", "data-sort-by": "value"},
+        {innerText: "Job Title", "data-sort-direction": "asc", "data-sort-by": "title"},
+        {innerText: "Years in Job", "data-sort-direction": "asc", "data-sort-by": "yearsInPos"},
+        {innerText: "Strength", "data-sort-direction": "asc", "data-sort-by": "STR"},
+        {innerText: "Dexterity", "data-sort-direction": "asc", "data-sort-by": "DEX"},
+        {innerText: "Constitution", "data-sort-direction": "asc", "data-sort-by": "CON"},
+        {innerText: "Intelligence", "data-sort-direction": "asc", "data-sort-by": "INT"},
+        {innerText: "Wisdom", "data-sort-direction": "asc", "data-sort-by": "WIS"},
+        {innerText: "Charisma", "data-sort-direction": "asc", "data-sort-by": "CHA"},
     ]
     const table = createTable(headers, true);
     table.classList.add("sortable");
@@ -1211,9 +1211,9 @@ function showDeadPopulationTab() {
 function showBuildingsTab() {
     const container = newElement('div');
     const headers = [
-        {displayName: 'Name'},
-        {displayName: 'Owner'},
-        {displayName: 'Residents'}
+        {innerText: "Name"},
+        {innerText: "Owner"},
+        {innerText: "Residents"},
     ];
     const table = createTable(headers);
     const buildings = newTown.getBuildings();
@@ -1232,10 +1232,10 @@ function showBuildingsTab() {
 function showJobsTab() {
     const container = newElement('div');
     const headers = [
-        {displayName: 'Job'},
-        {displayName: 'Person'},
-        {displayName: 'Salary'},
-        {displayName: 'Building'}
+        {innerText: 'Job'},
+        {innerText: 'Person'},
+        {innerText: 'Salary'},
+        {innerText: 'Building'}
     ];
     const table = createTable(headers);
     const jobs = newTown.getJobMarket();
@@ -1254,12 +1254,11 @@ function showJobsTab() {
 
 function showTownInfoTab() {
     const container = newElement('div');
-    const headers = [
-        {displayName: 'Metric'},
-        {displayName: 'Result'}
-    ];
-    const table = createTable(headers);
 
+    const popHeaders = [
+        {innerText: 'Population', 'colspan': 2},
+    ];
+    const populationTable = createTable(popHeaders);
     const livingPopulation = newTown.getLivingPopulation();
     const totalPopRow = createDataRow(['Total Population', newTown.getPopulation().length])
     const livingPopRow = createDataRow(['Living Population', livingPopulation.length])
@@ -1267,15 +1266,14 @@ function showTownInfoTab() {
 
     const startingYearRow = createDataRow(['Starting Year', newTown.getYearOfIncorporation()]);
     const currentYearRow = createDataRow(['Current Year', newTown.getCurrentYear()]);
+    addElements([totalPopRow, livingPopRow, deadPopRow, startingYearRow, currentYearRow], populationTable);
 
-    let homelessCount = 0;
-    for (let person of livingPopulation) {
-        if (!person.getResidency()) homelessCount++;
-    }
-
+    const jobHeaders = [
+        {innerText: 'Jobs', 'colspan': 2},
+    ];
+    const jobsTable = createTable(jobHeaders);
     const jobs = newTown.getJobMarket();
     const jobMarket = createDataRow(["Total Jobs", jobs.length]);
-
     let staffedJobs = 0;
     for (let job of jobs) {
         if (job.getPerson()) staffedJobs++;
@@ -1283,10 +1281,18 @@ function showTownInfoTab() {
     const staffed = createDataRow(["Staffed Jobs", staffedJobs]);
     const staffedRate = createDataRow(["Employment Rate", `${Math.round((staffedJobs / jobs.length) * 100)}%`]);
     const employmentRate = createDataRow(["Employment Rate", `${Math.round((staffedJobs / newTown.getLivingPopulation().length) * 100)}%`]);
+    addElements([jobMarket, staffed, staffedRate, employmentRate], jobsTable);
 
+    const buildingHeaders = [
+        {innerText: 'Buildings', 'colspan': 2},
+    ];
+    const buildingTable = createTable(buildingHeaders);
+    let homelessCount = 0;
+    for (let person of livingPopulation) {
+        if (!person.getResidency()) homelessCount++;
+    }
     const buildings = newTown.getBuildings();
     const townBuildings = createDataRow(["Buildings", buildings.length]);
-
     let occupied = 0;
     let owned = 0;
     for (let building of buildings) {
@@ -1296,9 +1302,9 @@ function showTownInfoTab() {
     const ownedBuildings = createDataRow(["Owned Buildings", owned]);
     const occupiedBuildings = createDataRow(["Occupied Buildings", occupied]);
     const homelessnessRate = createDataRow(["Homelessness Rate", `${Math.round((homelessCount / newTown.getLivingPopulation().length) * 100)}%`]);
+    addElements([townBuildings, ownedBuildings, occupiedBuildings, homelessnessRate], buildingTable);
 
-    addElements([totalPopRow, livingPopRow, deadPopRow, startingYearRow, currentYearRow, jobMarket, staffed, staffedRate, employmentRate, townBuildings, ownedBuildings, occupiedBuildings, homelessnessRate], table);
-    addElement(table, container);
+    addElements([populationTable, jobsTable, buildingTable], container);
     return container;
 }
 
