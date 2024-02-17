@@ -227,3 +227,8 @@ body:has(dialog[open]) {
     margin-right: .5em;
     margin-bottom: .5em;
 }
+th * {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
