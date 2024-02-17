@@ -57,9 +57,17 @@ function addElements(elements, target, position) {
 function sendEvent(element, event) {
     element.dispatchEvent(new Event(event));
 }
-function clearElement(element) {
-    while (element.children.length > 0) {
-        element.children[0].remove();
+function clearElement(element, selector) {
+    if (!selector) {
+        while (element.children.length > 0) {
+            element.children[0].remove();
+        }
+    }
+    else {
+        const matchingElements = qsa(`${selector}`, element);
+        for (let element of matchingElements) {
+            element.remove();
+        }
     }
 }
 function generateRange(low, high) {
