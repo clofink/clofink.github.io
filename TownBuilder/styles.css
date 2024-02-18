@@ -28,8 +28,9 @@ p {
 }
 #inputs label {
     display: block;
-    padding-bottom: .5em;
+    margin-bottom: .5em;
     width: fit-content;
+    user-select: none;
 }
 .hidden {
     display: none !important;
@@ -232,4 +233,7 @@ th * {
     display: block;
     margin-left: auto;
     margin-right: auto;
+}
+.nameField {
+    cursor: pointer;
 }
