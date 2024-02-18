@@ -595,7 +595,6 @@ function processLifeEvents(person, town, currentYear) {
     }
     function passAway() {
         const personName = person.getFullName();
-        log(`${personName} dies`);
         person.addLifeEvent(currentYear, "{P} died");
         if (getPersonById(person.personId, town.getOrphanage())) {
             town.removeFromOrphanage(person);
@@ -622,6 +621,8 @@ function processLifeEvents(person, town, currentYear) {
                 bestFriend.addLifeEvent(currentYear, `{PP} best friend ${personName} died`);
             }
         }
+        town.removePerson(person);
+        town.addToDeadPopulation(person);
         person.die(currentYear);
         if (spouse && spouse.getIsDead()) {
             if (person.getChildren().length > 0) {
@@ -633,8 +634,6 @@ function processLifeEvents(person, town, currentYear) {
                 }
             }
         }
-        town.removePerson(person);
-        town.addToDeadPopulation(person);
     }
 }
 
@@ -663,14 +662,12 @@ function yearPasses(town) {
                     town.addJobToMarket(newJob);
                 }
             }
-        }
+        }    
     }
-
     if (doesRandomEventHappen(10)) {
         // new random adult stranger comes to town (how to tell if they're an adult since the race will be random?)
         newVisitorArrives(town, currentYear);
     }
-
     // make a copy of living population so I can remove people who die from it without messing up the loop
     let currentLivingPeople = [...town.getLivingPopulation()];
     for (let person of currentLivingPeople) {
