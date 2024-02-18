@@ -98,9 +98,6 @@ function addYears() {
         return;
     }
     let years = qs('input[name="yearsToAdd"]').value;
-    if (!years) {
-        years = 50;
-    }
     for (let t = 0; t < years; t++) {
         yearPasses(newTown);
     }
@@ -912,12 +909,6 @@ function capitalizeFirstLetter(name) {
     return name[0].toUpperCase() + name.substring(1);
 }
 
-registerElement(eById('generate'), "click", generateNewTown);
-registerElement(eById('newTown'), "click", generateNewTown);
-registerElement(eById('extendTownTime'), "click", addYears);
-registerElement(eById('addRace'), "click", addRace);
-addRace();
-
 function rollStats() {
     const stats = [];
     for (let t = 0; t < 6; t++) {
@@ -1046,13 +1037,6 @@ function addTab(tabName, renderCallback) {
     if (eById("tabList")) showTabs();
 }
 
-addTab("Town Stats", showTownInfoTab);
-addTab("Living Population", showLivingPopulationTab);
-addTab("Dead Population", showDeadPopulationTab);
-addTab("Full Population", showFullPopulationTab);
-addTab("Buildings", showBuildingsTab);
-addTab("Jobs", showJobsTab);
-
 function showLivingPopulationTab() {
     const headers = [
         {innerText: "Name", "data-sort-direction": "asc"},
@@ -1129,7 +1113,7 @@ function getPopulationData(population) {
     const dataRows = [];
     for (let person of population) {
         const personId = person.getPersonId();
-        const nameElem = newElement('td', {innerText: person.getFullName()});
+        const nameElem = newElement('td', {innerText: person.getFullName(), class: ["nameField"]});
         registerElement(nameElem, "click", () => {
             let existingModal = qs(`[data-person-id="${personId}"]`);
             if (!existingModal) {
@@ -1254,66 +1238,6 @@ function showTownInfoTab() {
 
     addElements([populationTable, jobsTable, buildingTable], container);
     return container;
-}
-
-function fillPeopleTable(peopleList, table) {
-    for (let person of peopleList) {
-        const rowData = [];
-        const personId = person.getPersonId();
-        const nameElem = newElement('td', {innerText: person.getFullName()});
-        registerElement(nameElem, "click", () => {
-            let existingModal = qs(`[data-person-id="${personId}"]`);
-            if (!existingModal) {
-                existingModal = createModal(person);
-                document.body.appendChild(existingModal);
-            }
-            existingModal.showModal();
-        })
-        rowData.push(person.getAge());
-        rowData.push(person.getRace());
-        rowData.push(person.getBirthYear());
-        rowData.push(person.getDeathYear() ? person.getDeathYear() : '-');
-        rowData.push(person.getGender());
-        rowData.push(person.getGenderPreference());
-        rowData.push(person.getChildren().length);
-        rowData.push(person.getValue() ? person.getValue() : 0);
-        rowData.push(person.getJob() ? person.getJob().getTitle() : '-');
-        rowData.push(person.getJob() ? person.getJob().getYearsInPosition() : 0);
-        const personStats = person.getStats();
-        rowData.push(personStats.STR);
-        rowData.push(personStats.DEX);
-        rowData.push(personStats.CON);
-        rowData.push(personStats.INT);
-        rowData.push(personStats.WIS);
-        rowData.push(personStats.CHA);
-        const dataRow = createDataRow(rowData);
-        addElement(nameElem, dataRow, "afterbegin");
-        registerElement(dataRow, "click", logMorePersonInfo);
-        dataRow.id = personId;
-        addElement(dataRow, table);
-    }
-    return table;
-}
-
-function createPersonKey() {
-    const keyContainer = newElement("div", {id: "personChatKey"});
-    
-    const selectedSpan = createSection("self", "Selected Person");
-    const spouseSpan = createSection("spouse", "Their Spouse");
-    const childSpan = createSection("children", "Their Children");
-    const parentSpan = createSection("parent", "Their Parents");
-    const siblingsSpan = createSection("sibling", "Their Siblings");
-
-    addElements([selectedSpan, spouseSpan, childSpan, parentSpan, siblingsSpan], keyContainer);
-    return keyContainer;
-
-    function createSection(id, text) {
-        const span = newElement('span');
-        const person = newElement("div", {id: id});
-        const label = newElement("div", {innerText: text});
-        addElements([person, label], span);
-        return span;
-    }
 }
 
 class PagedTable {
@@ -1509,11 +1433,7 @@ function sortTable(event, headers, tableData) {
     }
 }
 
-
-
-
 class PersonTable extends PagedTable {
-
     constructor(population, populationName) {
         const dataRows = [];
         for (let person of population) {
@@ -1550,23 +1470,23 @@ class PersonTable extends PagedTable {
         }
 
         const headers = [
-            {innerText: "Name", "data-sort-direction": "asc", "data-sort-by": "name"},
-            {innerText: "Age", "data-sort-direction": "asc", "data-sort-by": "age"},
-            {innerText: "Race", "data-sort-direction": "asc", "data-sort-by": "race"},
-            {innerText: "Birth Year", "data-sort-direction": "asc", "data-sort-by": "birthYear"},
-            {innerText: "Death Year", "data-sort-direction": "asc", "data-sort-by": "deathyear"},
-            {innerText: "Gender", "data-sort-direction": "asc", "data-sort-by": "gender"},
-            {innerText: "Gender Preference", "data-sort-direction": "asc", "data-sort-by": "genderPreference"},
-            {innerText: "# Children", "data-sort-direction": "asc", "data-sort-by": "children"},
-            {innerText: "Worth", "data-sort-direction": "asc", "data-sort-by": "value"},
-            {innerText: "Job Title", "data-sort-direction": "asc", "data-sort-by": "title"},
-            {innerText: "Years in Job", "data-sort-direction": "asc", "data-sort-by": "yearsInPos"},
-            {innerText: "Strength", "data-sort-direction": "asc", "data-sort-by": "STR"},
-            {innerText: "Dexterity", "data-sort-direction": "asc", "data-sort-by": "DEX"},
-            {innerText: "Constitution", "data-sort-direction": "asc", "data-sort-by": "CON"},
-            {innerText: "Intelligence", "data-sort-direction": "asc", "data-sort-by": "INT"},
-            {innerText: "Wisdom", "data-sort-direction": "asc", "data-sort-by": "WIS"},
-            {innerText: "Charisma", "data-sort-direction": "asc", "data-sort-by": "CHA"},
+            {innerText: "Name", "data-sort-direction": "asc"},
+            {innerText: "Age", "data-sort-direction": "asc"},
+            {innerText: "Race", "data-sort-direction": "asc"},
+            {innerText: "Birth Year", "data-sort-direction": "asc"},
+            {innerText: "Death Year", "data-sort-direction": "asc"},
+            {innerText: "Gender", "data-sort-direction": "asc"},
+            {innerText: "Gender Preference", "data-sort-direction": "asc"},
+            {innerText: "# Children", "data-sort-direction": "asc"},
+            {innerText: "Worth", "data-sort-direction": "asc"},
+            {innerText: "Job Title", "data-sort-direction": "asc"},
+            {innerText: "Years in Job", "data-sort-direction": "asc"},
+            {innerText: "Strength", "data-sort-direction": "asc"},
+            {innerText: "Dexterity", "data-sort-direction": "asc"},
+            {innerText: "Constitution", "data-sort-direction": "asc"},
+            {innerText: "Intelligence", "data-sort-direction": "asc"},
+            {innerText: "Wisdom", "data-sort-direction": "asc"},
+            {innerText: "Charisma", "data-sort-direction": "asc"},
         ]
         super(headers, dataRows, 100, sortTable, {class: ["sortable"], "data-population": populationName});
     }
@@ -1611,3 +1531,16 @@ class PersonTable extends PagedTable {
         }
     }
 }
+
+registerElement(eById('generate'), "click", generateNewTown);
+registerElement(eById('newTown'), "click", generateNewTown);
+registerElement(eById('extendTownTime'), "click", addYears);
+registerElement(eById('addRace'), "click", addRace);
+addRace();
+
+addTab("Town Stats", showTownInfoTab);
+addTab("Living Population", showLivingPopulationTab);
+addTab("Dead Population", showDeadPopulationTab);
+addTab("Full Population", showFullPopulationTab);
+addTab("Buildings", showBuildingsTab);
+addTab("Jobs", showJobsTab);
