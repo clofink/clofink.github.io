@@ -29,6 +29,7 @@ p {
 #inputs label {
     display: block;
     padding-bottom: .5em;
+    width: fit-content;
 }
 .hidden {
     display: none !important;
