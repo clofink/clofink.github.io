@@ -504,7 +504,7 @@ function processLifeEvents(person, town, currentYear) {
                 jobBuilding.setOwner(person);
                 jobBuilding.addResident(person);
             }
-            if (job.getBuildingRequired() && job.getBuilding()) {
+            else if (job.getBuildingRequired() && job.getBuilding()) {
                 const jobBuilding = job.getBuilding();
                 if (!jobBuilding.getOwner()) {
                     jobBuilding.setOwner(person);
@@ -595,6 +595,7 @@ function processLifeEvents(person, town, currentYear) {
     }
     function passAway() {
         const personName = person.getFullName();
+        log(`${personName} dies`);
         person.addLifeEvent(currentYear, "{P} died");
         if (getPersonById(person.personId, town.getOrphanage())) {
             town.removeFromOrphanage(person);
@@ -621,11 +622,6 @@ function processLifeEvents(person, town, currentYear) {
                 bestFriend.addLifeEvent(currentYear, `{PP} best friend ${personName} died`);
             }
         }
-        if (currentJob) {
-            currentJob.removePerson();
-        }
-        town.removePerson(person);
-        town.addToDeadPopulation(person);
         person.die(currentYear);
         if (spouse && spouse.getIsDead()) {
             if (person.getChildren().length > 0) {
@@ -637,6 +633,8 @@ function processLifeEvents(person, town, currentYear) {
                 }
             }
         }
+        town.removePerson(person);
+        town.addToDeadPopulation(person);
     }
 }
 
@@ -665,12 +663,14 @@ function yearPasses(town) {
                     town.addJobToMarket(newJob);
                 }
             }
-        }    
+        }
     }
+
     if (doesRandomEventHappen(10)) {
         // new random adult stranger comes to town (how to tell if they're an adult since the race will be random?)
         newVisitorArrives(town, currentYear);
     }
+
     // make a copy of living population so I can remove people who die from it without messing up the loop
     let currentLivingPeople = [...town.getLivingPopulation()];
     for (let person of currentLivingPeople) {
@@ -1211,7 +1211,7 @@ function showTownInfoTab() {
         if (job.getPerson()) staffedJobs++;
     }
     const staffed = createDataRow(["Staffed Jobs", staffedJobs]);
-    const staffedRate = createDataRow(["Employment Rate", `${Math.round((staffedJobs / jobs.length) * 100)}%`]);
+    const staffedRate = createDataRow(["Staffed Rate", `${Math.round((staffedJobs / jobs.length) * 100)}%`]);
     const employmentRate = createDataRow(["Employment Rate", `${Math.round((staffedJobs / newTown.getLivingPopulation().length) * 100)}%`]);
     addElements([jobMarket, staffed, staffedRate, employmentRate], jobsTable);
 
