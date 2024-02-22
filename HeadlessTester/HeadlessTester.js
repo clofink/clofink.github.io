@@ -94,7 +94,8 @@ function loadGenesys(region, deployId) {
     element = newElement('script', {
         async: 1,
         src: `https://apps.${apiUrlMapping[region]}/genesys-bootstrap/genesys.min.js`,
-        charset: 'utf-8'
+        charset: 'utf-8',
+        debug: true
     })
     document.head.appendChild(element);
 }
