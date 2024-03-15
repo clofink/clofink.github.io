@@ -76,7 +76,7 @@ function showMergeTasksPage() {
     function updateTaskDisplay(taskDisplay, flowId) {
         const flowInfo = flowCache[flowId];
         clearElement(taskDisplay);
-        taskDisplay.appendChild(createHeader(flowInfo.name));
+        addElement(createHeader(flowInfo.name), taskDisplay);
         taskDisplay.setAttribute("data-flow-id", flowId);
         const list = newElement('div', { class: ["collection"] })
         for (let task of flowInfo.flowSequenceItemList) {
