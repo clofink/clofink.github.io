@@ -33,8 +33,8 @@ function showMainMenu() {
     ]);
     addElement(tabContainer.getTabContainer(), page);
     getOrgDetails().then(function(result) {
-        if (!result.status !== 200) {
-            log(result.message);
+        if (result.status !== 200) {
+            log(result.message, "error");
             logout();
             return;
         }
@@ -75,7 +75,9 @@ function getToken() {
 async function getOrgDetails() {
     const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/organizations/me`;
     const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-    return result.json(); 
+    const resultJson = await result.json(); 
+    resultJson.status = result.status;
+    return resultJson;
 }
 
 function loadFile(event) {
