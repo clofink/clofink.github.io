@@ -58,15 +58,14 @@ function sendEvent(element, event) {
     element.dispatchEvent(new Event(event));
 }
 function clearElement(element, selector) {
-    if (!selector) {
-        while (element.children.length > 0) {
-            element.children[0].remove();
+    let index = 0;
+    while (index < element.children.length) {
+        const currentElement = element.children[index];
+        if (!selector || (selector && currentElement.matches(selector))) {
+            currentElement.remove();
         }
-    }
-    else {
-        const matchingElements = qsa(`${selector}`, element);
-        for (let element of matchingElements) {
-            element.remove();
+        else {
+            index++;
         }
     }
 }
