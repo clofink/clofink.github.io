@@ -33,6 +33,10 @@ function showMainMenu() {
     ]);
     addElement(tabContainer.getTabContainer(), page);
     getOrgDetails().then(function(result) {
+        if (!result.status !== 200) {
+            log(result.message);
+            logout();
+        }
         eById("header").innerText = `Current Org Name: ${result.name} (${result.thirdPartyOrgName}) Current Org ID: ${result.id}`
     }).catch(function(error) {log(error, "error"); logout();});
 }
