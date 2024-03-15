@@ -1,38 +1,40 @@
-addTab("Queues", showQueuesPage);
+class QueuesTab extends Tab {
+    tabName = "Queues";
 
-function showQueuesPage() {
-    window.requiredFields = ["Name"];
-    window.allValidFields = ["Name", "Division", "Description", "Auto Answer", "Alerting Timeout", "SLA Percentage", "SLA Duration", "ACW", "ACW Timeout", "Manual Assignment", "Scoring Method", "Evaluation Method", "Script", "In-Queue Flow"];
-
-    const container = newElement('div', {id: "userInputs"});
-    const label = newElement('label', {innerText: "Queues CSV: "});
-    const fileInput = newElement('input', {type: "file", accept: ".csv"});
-    addElement(fileInput, label);
-    registerElement(fileInput, "change", loadFile);
-    const startButton = newElement('button', {innerText: "Start"});
-    registerElement(startButton, "click", importQueuesWrapper);
-    const logoutButton = newElement("button", {innerText: "Logout"});
-    registerElement(logoutButton, "click", logout);
-    const helpSection = addHelp([
-        `Must have "routing" scope`, 
-        `If using the Script column, "scripts-readonly" or "scripts" scope required. If using the In-Queue Flow column, "architect-readonly" or "architect" scope required`,
-        `Required CSV column "Name"`, 
-        `Default values are used for the queue if no override is provided`,
-        `Other valid fields are "Division", "Description", "Auto Answer", "Alerting Timeout", "SLA Percentage", "SLA Duration", "ACW", "ACW Timeout", "Manual Assignment", "Scoring Method", "Evaluation Method", "Script", "In-Queue Flow"`,
-        `SLA Percentage: value between 0 and 1`,
-        `ACW: one of OPTIONAL, MANDATORY, MANDATORY_TIMEOUT, MANDATORY_FORCED_TIMEOUT, AGENT_REQUESTED`,
-        `Scoring Method: one of TimestampAndPriority, PriorityOnly`,
-        `Evaluation Method: one of ALL, BEST, NONE`
-    ]);
-    const exampleLink = createDownloadLink("Queues Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
-    addElements([label, startButton, logoutButton, helpSection, exampleLink], container);
-    return container;
+    render() {
+        window.requiredFields = ["Name"];
+        window.allValidFields = ["Name", "Division", "Description", "Auto Answer", "Alerting Timeout", "SLA Percentage", "SLA Duration", "ACW", "ACW Timeout", "Manual Assignment", "Scoring Method", "Evaluation Method", "Script", "In-Queue Flow"];
+    
+        this.container = newElement('div', {id: "userInputs"});
+        const label = newElement('label', {innerText: "Queues CSV: "});
+        const fileInput = newElement('input', {type: "file", accept: ".csv"});
+        addElement(fileInput, label);
+        registerElement(fileInput, "change", loadFile);
+        const startButton = newElement('button', {innerText: "Start"});
+        registerElement(startButton, "click", this.importQueuesWrapper);
+        const logoutButton = newElement("button", {innerText: "Logout"});
+        registerElement(logoutButton, "click", logout);
+        const helpSection = addHelp([
+            `Must have "routing" scope`, 
+            `If using the Script column, "scripts-readonly" or "scripts" scope required. If using the In-Queue Flow column, "architect-readonly" or "architect" scope required`,
+            `Required CSV column "Name"`, 
+            `Default values are used for the queue if no override is provided`,
+            `Other valid fields are "Division", "Description", "Auto Answer", "Alerting Timeout", "SLA Percentage", "SLA Duration", "ACW", "ACW Timeout", "Manual Assignment", "Scoring Method", "Evaluation Method", "Script", "In-Queue Flow"`,
+            `SLA Percentage: value between 0 and 1`,
+            `ACW: one of OPTIONAL, MANDATORY, MANDATORY_TIMEOUT, MANDATORY_FORCED_TIMEOUT, AGENT_REQUESTED`,
+            `Scoring Method: one of TimestampAndPriority, PriorityOnly`,
+            `Evaluation Method: one of ALL, BEST, NONE`
+        ]);
+        const exampleLink = createDownloadLink("Queues Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
+        addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
+        return this.container;
+    }
         
-    function importQueuesWrapper() {
-        showLoading(importQueues, container);
+    importQueuesWrapper() {
+        showLoading(this.importQueues, this.container);
     }
     
-    async function importQueues() {
+    async importQueues() {
         if (!fileContents) throw "No valid file selected";
     
         const scripts = {};
@@ -80,8 +82,7 @@ function showQueuesPage() {
         }
         return Promise.all(results);
     }
-    
-    function resolveMapping(inputObj) {
+    resolveMapping(inputObj) {
         const newObj = {};
         const validQueueProperties = {
             "Name" : "name",
@@ -104,8 +105,7 @@ function showQueuesPage() {
         }
         return newObj;
     }
-
-    function parseInput(inputObj) {
+    parseInput(inputObj) {
         const example = {
             "name": "",
             "division": {

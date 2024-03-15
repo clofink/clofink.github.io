@@ -1,40 +1,41 @@
-addTab("Widgets", showWidgetsPage);
+class WidgetsTab extends Tab {
+    tabName = "Widgets";
 
-function showWidgetsPage() {
-    window.requiredFields = ["Configuration Name", "Inbound Flow Name", "Deployment Name"];
-    window.allValidFields = ["Configuration Name", "Inbound Flow Name", "Deployment Name", "Languages", "Default Language", "Home Screen", "Home Screen Logo URL", "Agent Typing Indicator", "Visitor Typing Indicator", "Auto-Start Conversations", "Rich Text Formatting", "Conversation Disconnect", "Clear Conversation", "Humanize Conversation", "Bot Name", "Bot Image URL", "Color", "Position", "Allow Co-Browse", "Allow Agent Control", "Predictive Engagement", "Headless Mode"]
-
-    const container = newElement('div', { id: "userInputs" });
-    const label = newElement('label', {innerText: "Widgets CSV: "});
-    const fileInput = newElement('input', { type: "file", accept: ".csv" });
-    addElement(fileInput, label);
-    registerElement(fileInput, "change", loadFile);
-    const startButton = newElement('button', {innerText: "Start"});
-    registerElement(startButton, "click", importWidgetsWrapper);
-    const logoutButton = newElement("button", {innerText: "Logout"});
-    registerElement(logoutButton, "click", logout);
-    const helpSection = addHelp([
-        `Must have "webdeployments" and "architect" scopes`,
-        `This will create an Inbound Message Flow (if one with a matching name doesn't exist), a Web Messenger Configuration (if one with a matching name doesn't exist), and a Web Messenger Deployment`,
-        `Required CSV columns "Configuration Name", "Inbound Flow Name", and "Deployment Name"`,
-        `Default values are used for the messenger configuration if no override is provided`,
-        `Other valid fields are "Languages", "Default Language", "Home Screen", "Home Screen Logo URL", "Agent Typing Indicator", "Visitor Typing Indicator", "Auto-Start Conversations", "Rich Text Formatting", "Conversation Disconnect", "Clear Conversation", "Humanize Conversation", "Bot Name", "Bot Image URL", "Color", "Position", "Allow Co-Browse", "Allow Agent Control", "Predictive Engagement", and "Headless Mode"`,
-        `Languages: comma-separated list of en-us, fr, es, ar, zh-cn, zh-tw, cs, da, nl, et, fi, de, he, it, ja, ko, lv, lt, no, pl, pt-br, pt-pt, ru, sv, th, tr`,
-        `Conversation Disconnect: one of none, display, disconnect`,
-        `Color: HEX value`,
-        `Position: one of left, right, auto`
-    ]);
-    const exampleLink = createDownloadLink("Widgets Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
-    addElements([label, startButton, logoutButton, helpSection, exampleLink], container);
-    return container;
-
-    async function getAllWidgetConfigs() {
+    render() {
+        window.requiredFields = ["Configuration Name", "Inbound Flow Name", "Deployment Name"];
+        window.allValidFields = ["Configuration Name", "Inbound Flow Name", "Deployment Name", "Languages", "Default Language", "Home Screen", "Home Screen Logo URL", "Agent Typing Indicator", "Visitor Typing Indicator", "Auto-Start Conversations", "Rich Text Formatting", "Conversation Disconnect", "Clear Conversation", "Humanize Conversation", "Bot Name", "Bot Image URL", "Color", "Position", "Allow Co-Browse", "Allow Agent Control", "Predictive Engagement", "Headless Mode"]
+    
+        this.container = newElement('div', { id: "userInputs" });
+        const label = newElement('label', {innerText: "Widgets CSV: "});
+        const fileInput = newElement('input', { type: "file", accept: ".csv" });
+        addElement(fileInput, label);
+        registerElement(fileInput, "change", loadFile);
+        const startButton = newElement('button', {innerText: "Start"});
+        registerElement(startButton, "click", this.importWidgetsWrapper);
+        const logoutButton = newElement("button", {innerText: "Logout"});
+        registerElement(logoutButton, "click", logout);
+        const helpSection = addHelp([
+            `Must have "webdeployments" and "architect" scopes`,
+            `This will create an Inbound Message Flow (if one with a matching name doesn't exist), a Web Messenger Configuration (if one with a matching name doesn't exist), and a Web Messenger Deployment`,
+            `Required CSV columns "Configuration Name", "Inbound Flow Name", and "Deployment Name"`,
+            `Default values are used for the messenger configuration if no override is provided`,
+            `Other valid fields are "Languages", "Default Language", "Home Screen", "Home Screen Logo URL", "Agent Typing Indicator", "Visitor Typing Indicator", "Auto-Start Conversations", "Rich Text Formatting", "Conversation Disconnect", "Clear Conversation", "Humanize Conversation", "Bot Name", "Bot Image URL", "Color", "Position", "Allow Co-Browse", "Allow Agent Control", "Predictive Engagement", and "Headless Mode"`,
+            `Languages: comma-separated list of en-us, fr, es, ar, zh-cn, zh-tw, cs, da, nl, et, fi, de, he, it, ja, ko, lv, lt, no, pl, pt-br, pt-pt, ru, sv, th, tr`,
+            `Conversation Disconnect: one of none, display, disconnect`,
+            `Color: HEX value`,
+            `Position: one of left, right, auto`
+        ]);
+        const exampleLink = createDownloadLink("Widgets Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
+        addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
+        return this.container;
+    }
+    async getAllWidgetConfigs() {
         const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/webdeployments/configurations/?showOnlyPublished=true`;
         const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
         return await result.json();
     }
-
-    async function createInitialVersion(flowId) {
+    
+    async createInitialVersion(flowId) {
         const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/flows/${flowId}/versions/`;
         const body = {
             "nextTrackingNumber": 12,
@@ -113,12 +114,12 @@ function showWidgetsPage() {
         }
         return resultJson;
     }
-
-    function importWidgetsWrapper() {
-        showLoading(importWidgets, container);
+    
+    importWidgetsWrapper() {
+        showLoading(this.importWidgets, this.container);
     }
-
-    async function importWidgets() {
+    
+    async importWidgets() {
         if (!fileContents) throw "No valid file selected";
 
         // get list of inbound flows
@@ -142,7 +143,7 @@ function showWidgetsPage() {
                 const inboundFlow = await makeCallAndHandleErrors(createItem, ["/api/v2/flows/", { "type": "inboundshortmessage", "name": initial["Inbound Flow Name"], "description": "" }], results, initial["Inbound Flow Name"], "Inbound Message Flow");
                 if (!inboundFlow) continue;
 
-                const initialFlowVersion = await makeCallAndHandleErrors(createInitialVersion, [inboundFlow.id], results, initial["Inbound Flow Name"], "Initial Flow Version");
+                const initialFlowVersion = await makeCallAndHandleErrors(this.createInitialVersion, [inboundFlow.id], results, initial["Inbound Flow Name"], "Initial Flow Version");
                 if (!initialFlowVersion) continue;
 
                 const publishedFlow = await makeCallAndHandleErrors(createItem, [`/api/v2/flows/actions/publish?flow=${inboundFlow.id}`, {}], results, initial["Inbound Flow Name"], "Flow Publish");
@@ -154,7 +155,7 @@ function showWidgetsPage() {
 
             // create the messenger config
             if (!widgetConfigMapping[initial["Configuration Name"]]) {
-                const newConfig = await makeCallAndHandleErrors(createItem, ["/api/v2/webdeployments/configurations/", parseInput(resolveMapping(initial))], results, initial["Configuration Name"], "Messenger Configuration");
+                const newConfig = await makeCallAndHandleErrors(createItem, ["/api/v2/webdeployments/configurations/", this.parseInput(this.resolveMapping(initial))], results, initial["Configuration Name"], "Messenger Configuration");
                 if (!newConfig) continue;
 
                 const publishedConfig = await makeCallAndHandleErrors(createItem, [`/api/v2/webdeployments/configurations/${newConfig.id}/versions/draft/publish`, {}], results, initial["Configuration Name"], "Messenger Configuration");
@@ -177,8 +178,8 @@ function showWidgetsPage() {
         }
         return results;
     }
-
-    function resolveMapping(inputObj) {
+    
+    resolveMapping(inputObj) {
         const newObj = {};
         const validConfigProperties = {
             "Configuration Name": "name",
@@ -225,8 +226,8 @@ function showWidgetsPage() {
         }
         return newObj;
     }
-
-    function parseInput(inputObj) {
+    
+    parseInput(inputObj) {
         const defaultWidget = {
             "name": "",
             "languages": ["en-us"],

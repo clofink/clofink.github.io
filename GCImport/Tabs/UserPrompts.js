@@ -1,33 +1,34 @@
-// addTab("Prompts", showPromptsPage);
+class UserPromptsTab extends Tab {
+    tabName = "User Prompts";
 
-function showPromptsPage() {
-    window.requiredFields = ["Name"];
-    window.allValidFields = ["Name", "EN-US Text", "Description"];
-
-    const container = newElement('div', { id: "userInputs" });
-    const label = newElement('label', { innerText: "Prompts CSV: " });
-    const fileInput = newElement('input', { type: "file", accept: ".csv" });
-    addElement(fileInput, label);
-    registerElement(fileInput, "change", loadFile);
-    const startButton = newElement('button', { innerText: "Start" });
-    registerElement(startButton, "click", importPromptsWrapper);
-    const logoutButton = newElement("button", { innerText: "Logout" });
-    registerElement(logoutButton, "click", logout);
-    const helpSection = addHelp([
-        `Must have "architect" scope`,
-        `Required CSV column "Name", and at least one "Text" field`,
-        `All languages can be used if the column name is <Language Code> Text`
-    ]);
-    const exampleLink = createDownloadLink("Prompts Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
-    addElements([label, startButton, logoutButton, helpSection, exampleLink], container);
-    return container;
-
-    function importPromptsWrapper() {
-        showLoading(importPrompts, container);
+    render() {
+        window.requiredFields = ["Name"];
+        window.allValidFields = ["Name", "EN-US Text", "Description"];
+    
+        this.container = newElement('div', { id: "userInputs" });
+        const label = newElement('label', { innerText: "Prompts CSV: " });
+        const fileInput = newElement('input', { type: "file", accept: ".csv" });
+        addElement(fileInput, label);
+        registerElement(fileInput, "change", loadFile);
+        const startButton = newElement('button', { innerText: "Start" });
+        registerElement(startButton, "click", this.importPromptsWrapper);
+        const logoutButton = newElement("button", { innerText: "Logout" });
+        registerElement(logoutButton, "click", logout);
+        const helpSection = addHelp([
+            `Must have "architect" scope`,
+            `Required CSV column "Name", and at least one "Text" field`,
+            `All languages can be used if the column name is <Language Code> Text`
+        ]);
+        const exampleLink = createDownloadLink("Prompts Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
+        addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
+        return this.container;
     }
 
+    importPromptsWrapper() {
+        showLoading(this.importPrompts, this.container);
+    }
 
-    async function importPrompts() {
+    async importPrompts() {
         if (!fileContents) throw "No valid file selected";
 
         const allPrompts = await getAll("/api/v2/architect/prompts?sortBy=name&sortOrder=asc", "entities", 200);

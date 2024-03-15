@@ -1,30 +1,31 @@
-addTab("Wrap-Up Codes", showWrapUpCodesPage);
+class WrapUpCodesTab extends Tab {
+    tabName = "Wrap-Up Codes";
 
-function showWrapUpCodesPage() {
-    window.requiredFields = ["Queue Name", "Wrap-Up Codes"];
-    window.allValidFields = ["Queue Name", "Wrap-Up Codes"];
-
-    const container = newElement('div', {id: "userInputs"});
-    const label = newElement('label', {innerText: "Wrap-Up Codes CSV: "});
-    const fileInput = newElement('input', {type: "file", accept: ".csv"});
-    addElement(fileInput, label);
-    registerElement(fileInput, "change", loadFile);
-    const startButton = newElement('button', {innerText: "Start"});
-    registerElement(startButton, "click", importWrapUpCodesWrapper);
-    const logoutButton = newElement("button", {innerText: "Logout"});
-    registerElement(logoutButton, "click", logout);
-    const helpSection = addHelp([
-        `Must have "routing" scope`, 
-        `Required CSV columns "Queue Name" and "Wrap-Up Codes"`, 
-        `Wrap-Up Codes column is a comma-separated list of wrap-up codes`, 
-        `If the code does not exist, it will be created`,
-        `Wrap-Up Codes are only added. If there are already codes on a queue, they will not be removed.`
-    ]);
-    const exampleLink = createDownloadLink("Wrapup Codes Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
-    addElements([label, startButton, logoutButton, helpSection, exampleLink], container);
-    return container;
+    render() {
+        window.requiredFields = ["Queue Name", "Wrap-Up Codes"];
+        window.allValidFields = ["Queue Name", "Wrap-Up Codes"];
     
-    async function addWrapUpCodes(queueId, codes) {
+        this.container = newElement('div', {id: "userInputs"});
+        const label = newElement('label', {innerText: "Wrap-Up Codes CSV: "});
+        const fileInput = newElement('input', {type: "file", accept: ".csv"});
+        addElement(fileInput, label);
+        registerElement(fileInput, "change", loadFile);
+        const startButton = newElement('button', {innerText: "Start"});
+        registerElement(startButton, "click", this.importWrapUpCodesWrapper);
+        const logoutButton = newElement("button", {innerText: "Logout"});
+        registerElement(logoutButton, "click", logout);
+        const helpSection = addHelp([
+            `Must have "routing" scope`, 
+            `Required CSV columns "Queue Name" and "Wrap-Up Codes"`, 
+            `Wrap-Up Codes column is a comma-separated list of wrap-up codes`, 
+            `If the code does not exist, it will be created`,
+            `Wrap-Up Codes are only added. If there are already codes on a queue, they will not be removed.`
+        ]);
+        const exampleLink = createDownloadLink("Wrapup Codes Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
+        addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
+        return this.container;
+    }
+    async addWrapUpCodes(queueId, codes) {
         const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/routing/queues/${queueId}/wrapupcodes`;
         const result = await fetch(url, {method: "POST", body: JSON.stringify(codes), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
         const resultsJson = await result.json();
@@ -34,11 +35,11 @@ function showWrapUpCodesPage() {
         return resultsJson;
     }
     
-    function importWrapUpCodesWrapper() {
-        showLoading(importWrapUpCodes, container);
+    importWrapUpCodesWrapper() {
+        showLoading(this.importWrapUpCodes, this.container);
     }
     
-    async function importWrapUpCodes() {
+    async importWrapUpCodes() {
         if (!fileContents) throw "No valid file selected";
     
         const queues = await getAll("/api/v2/routing/queues?sortOrder=asc&sortBy=name&name=**&divisionId", "entities", 25);
@@ -70,7 +71,7 @@ function showWrapUpCodesPage() {
                     }
                     codesToAdd.push({id: wrapupCodeMapping[trimmedCode]});
                 }
-                await makeCallAndHandleErrors(addWrapUpCodes, [queueMapping[item["Queue Name"]], codesToAdd], results, item["Queue Name"], "Code Mapping");
+                await makeCallAndHandleErrors(this.addWrapUpCodes, [queueMapping[item["Queue Name"]], codesToAdd], results, item["Queue Name"], "Code Mapping");
             }
         }
         return results;

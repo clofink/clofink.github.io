@@ -1,31 +1,33 @@
-addTab("Skills", showSkillsPage);
+class SkillsTab extends Tab {
+    tabName = "Skills";
 
-function showSkillsPage() {
-    window.requiredFields = ["Name"];
-    window.allValidFields = ["Name"];
+    render() {
+        window.requiredFields = ["Name"];
+        window.allValidFields = ["Name"];
+    
+        this.container = newElement('div', {id: "userInputs"});
+        const label = newElement('label', {innerText: "Skills CSV: "});
+        const fileInput = newElement('input', {type: "file", accept: ".csv"});
+        addElement(fileInput, label);
+        registerElement(fileInput, "change", loadFile);
+        const startButton = newElement('button', {innerText: "Start"});
+        registerElement(startButton, "click", this.importSkillsWrapper);
+        const logoutButton = newElement("button", {innerText: "Logout"});
+        registerElement(logoutButton, "click", logout);
+        const helpSection = addHelp([
+            `Must have "routing" scope`, 
+            `Required CSV column "Name"`
+        ]);
+        const exampleLink = createDownloadLink("Skills Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
+        addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
+        return this.container;
+    }
 
-    const container = newElement('div', {id: "userInputs"});
-    const label = newElement('label', {innerText: "Skills CSV: "});
-    const fileInput = newElement('input', {type: "file", accept: ".csv"});
-    addElement(fileInput, label);
-    registerElement(fileInput, "change", loadFile);
-    const startButton = newElement('button', {innerText: "Start"});
-    registerElement(startButton, "click", importSkillsWrapper);
-    const logoutButton = newElement("button", {innerText: "Logout"});
-    registerElement(logoutButton, "click", logout);
-    const helpSection = addHelp([
-        `Must have "routing" scope`, 
-        `Required CSV column "Name"`
-    ]);
-    const exampleLink = createDownloadLink("Skills Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
-    addElements([label, startButton, logoutButton, helpSection, exampleLink], container);
-    return container;
-
-    function importSkillsWrapper() {
-        showLoading(importSkills, container);
+    importSkillsWrapper() {
+        showLoading(this.importSkills, this.container);
     }
     
-    async function importSkills() {
+    async importSkills() {
         if (!fileContents) throw "No valid file selected";
     
         const results = [];

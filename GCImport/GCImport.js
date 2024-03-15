@@ -22,13 +22,19 @@ function showLoginPage() {
 function showMainMenu() {
     const page = eById('page');
     clearElement(page);
-    const tabList = newElement('div', {id: "tabList"});
-    const tabContent = newElement('div', {id: "tabContent"});
-    addElements([tabList, tabContent], page);
+    const tabContainer = new TabContainer([
+        new CannedResponsesTab(),
+        new SkillsTab(),
+        new QueuesTab(), 
+        new AgentAliasTab(),
+        new WrapUpCodesTab(),
+        new WidgetsTab(),
+        new UserPromptsTab(),
+    ]);
+    addElement(tabContainer.getTabContainer(), page);
     getOrgDetails().then(function(result) {
         eById("header").innerText = `Current Org Name: ${result.name} (${result.thirdPartyOrgName}) Current Org ID: ${result.id}`
     }).catch(function(error) {log(error, "error"); logout();});
-    showTabs();
 }
 
 function login() {

@@ -1,33 +1,35 @@
-addTab("Canned Responses", showCannedResponsePage);
+class CannedResponsesTab extends Tab {
+    tabName = "Canned Responses";
 
-function showCannedResponsePage() {
-    window.requiredFields = ["Name", "Library", "Type", "Content"];
-    window.allValidFields = ["Name", "Library", "Type", "Content"];
-
-    const container = newElement('div', {id: "userInputs"});
-    const label = newElement('label', {innerText: "Canned Responses CSV: "});
-    const fileInput = newElement('input', {type: "file", accept: ".csv"});
-    addElement(fileInput, label);
-    registerElement(fileInput, "change", loadFile);
-    const startButton = newElement('button', {innerText: "Start"});
-    registerElement(startButton, "click", importCannedWrapper);
-    const logoutButton = newElement("button", {innerText: "Logout"});
-    registerElement(logoutButton, "click", logout);
-    const helpSection = addHelp([
-        `Must have "response-management" scope`, 
-        `Required CSV columns "Name", "Library", "Type", and "Content"`, 
-        `If a library with a matching name does not exist, it will be created`, 
-        `If multiple libraries have the same name, the last one in the list returned from the API will be used`
-    ]);
-    const exampleLink = createDownloadLink("Canned Responses Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
-    addElements([label, startButton, logoutButton, helpSection, exampleLink], container);
-    return container;
+    render() {
+        window.requiredFields = ["Name", "Library", "Type", "Content"];
+        window.allValidFields = ["Name", "Library", "Type", "Content"];
     
-    function importCannedWrapper() {
-        showLoading(importCannedResponses, container);
+        this.container = newElement('div', {id: "userInputs"});
+        const label = newElement('label', {innerText: "Canned Responses CSV: "});
+        const fileInput = newElement('input', {type: "file", accept: ".csv"});
+        addElement(fileInput, label);
+        registerElement(fileInput, "change", loadFile);
+        const startButton = newElement('button', {innerText: "Start"});
+        registerElement(startButton, "click", this.importCannedWrapper);
+        const logoutButton = newElement("button", {innerText: "Logout"});
+        registerElement(logoutButton, "click", logout);
+        const helpSection = addHelp([
+            `Must have "response-management" scope`, 
+            `Required CSV columns "Name", "Library", "Type", and "Content"`, 
+            `If a library with a matching name does not exist, it will be created`, 
+            `If multiple libraries have the same name, the last one in the list returned from the API will be used`
+        ]);
+        const exampleLink = createDownloadLink("Canned Responses Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
+        addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
+        return this.container;
     }
     
-    async function importCannedResponses() {
+    importCannedWrapper() {
+        showLoading(importCannedResponses, this.container);
+    }
+    
+    async importCannedResponses() {
         if (!fileContents) throw "No valid file selected";
     
         const libraries = await getAll("/api/v2/responsemanagement/libraries?", "entities", 500);

@@ -8,19 +8,29 @@ class TabContainer {
     currentIndex = 0;
 
     constructor(tabs) {
-        const tabContainer = newElement('div', {id: "tabContainer"});
-        const tabList = newElement('div', {id: "tabList"});
-        const tabContent = newElement('div', {id: "tabContent"});
-        addElements([tabList, tabContent], tabContainer);
+        this.tabContainer = newElement('div', {id: "tabContainer"});
+        this.tabList = newElement('div', {id: "tabList"});
+        this.tabContent = newElement('div', {id: "tabContent"});
+        addElements([this.tabList, this.tabContent], this.tabContainer);
         this.addTabs(tabs);
-        return tabContainer;
+        return this;
     }
 
+    getTabContainer() {
+        return this.tabContainer;
+    }
     addTab(tab) {
         if (!tab instanceof Tab) {
             throw "Tab must be instance of Tab";
         }
         this.tabs.push(tab);
+        const tabHeader = newElement("div", {class: ["tabHeader"], innerText: tab.getName()});
+        registerElement(tabHeader, "click", (event) => {this.selectTab(this.tabHeaders.indexOf(event.target))});
+        this.tabHeaders.push(tabHeader);
+        addElement(tabHeader, this.tabList);
+        if (this.tabs.length === 1) {
+            this.selectTab(0);
+        }
     }
     addTabs(tabs) {
         for (let tab of tabs) {
@@ -28,45 +38,36 @@ class TabContainer {
         }
     }
     renderTab(tab) {
-        tab.render();
+        clearElement(this.tabContent);
+        addElement(tab.render(), this.tabContent);
     }
     selectTab(index) {
-        this.markSelected(this.tabs[index]);
-        this.tabs[index].render();
+        this.unmarkAllHeaders();
+        this.markSelected(this.tabHeaders[index]);
+        this.renderTab(this.tabs[index]);
     }
-    markSelected(tab) {
-        for (let tab of qsa(".tabHeader")) {
-            tab.classList.remove("selected");
-        }
-        newTab.classList.add("selected");
-        const tabContainer = eById("tabContent");
-        clearElement(tabContainer);
-        addElement(renderCallback(), tabContainer);
+    markSelected(tabHeader) {
+        tabHeader.classList.add("selected");
     }
-    addTab(tabName, renderCallback) {
-        const tabSelected = function() {
-            for (let tab of qsa(".tabHeader")) {
-                tab.classList.remove("selected");
-            }
-            newTab.classList.add("selected");
-            const tabContainer = eById("tabContent");
-            clearElement(tabContainer);
-            addElement(renderCallback(), tabContainer);
+    unmarkAllHeaders() {
+        for (let tabHeader of this.tabHeaders) {
+            tabHeader.classList.remove("selected");
         }
-        const newTab = newElement("div", {class: ["tabHeader"], innerText: tabName});
-        this.tabHeaders.push(newTab);
-        registerElement(newTab, "click", tabSelected);
-        tabs.push(newTab);
-        if (eById("tabList")) showTabs();
     }
 }
 
 class Tab {
+    tabName;
+
     constructor(tabName) {
+        this.tabName = tabName;
     }
-
     render() {
-
+        const container = newElement("div", {innerText: "This is: " + this.tabName});
+        return container;
+    }
+    getName() {
+        return this.tabName;
     }
 }
 

@@ -1,28 +1,29 @@
-addTab("Agent Aliases", showAgentAliasPage);
+class AgentAliasTab extends Tab {
+    tabName = "Agent Aliases";
 
-function showAgentAliasPage() {
-    window.requiredFields = ["Email", "Alias"];
-    window.allValidFields = ["Email", "Alias"];
-
-    const container = newElement('div', {id: "userInputs"});
-    const label = newElement('label', {innerText: "Agent Aliases CSV: "});
-    const fileInput = newElement('input', {type: "file", accept: ".csv"});
-    addElement(fileInput, label);
-    registerElement(fileInput, "change", loadFile);
-    const startButton = newElement('button', {innerText: "Start"});
-    registerElement(startButton, "click", importAgentAliasesWrapper);
-    const logoutButton = newElement("button", {innerText: "Logout"});
-    registerElement(logoutButton, "click", logout);
-    const helpSection = addHelp([
-        `Must have "users" scope`, 
-        `Required CSV columns "Email" and "Alias"`
-    ]);
-    const exampleLink = createDownloadLink("Agent Aliases Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
-    addElements([label, startButton, logoutButton, helpSection, exampleLink], container);
-    return container;
-
+    render() {
+        window.requiredFields = ["Email", "Alias"];
+        window.allValidFields = ["Email", "Alias"];
+    
+        this.container = newElement('div', {id: "userInputs"});
+        const label = newElement('label', {innerText: "Agent Aliases CSV: "});
+        const fileInput = newElement('input', {type: "file", accept: ".csv"});
+        addElement(fileInput, label);
+        registerElement(fileInput, "change", loadFile);
+        const startButton = newElement('button', {innerText: "Start"});
+        registerElement(startButton, "click", this.importAgentAliasesWrapper);
+        const logoutButton = newElement("button", {innerText: "Logout"});
+        registerElement(logoutButton, "click", logout);
+        const helpSection = addHelp([
+            `Must have "users" scope`, 
+            `Required CSV columns "Email" and "Alias"`
+        ]);
+        const exampleLink = createDownloadLink("Agent Aliases Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
+        addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
+        return this.container;
+    }
     // undocumented API from the UI
-    async function updateUserAlias(userInfo, alias) {
+    async updateUserAlias(userInfo, alias) {
         const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/users/${userInfo.id}/profile`;
         const body = {
             "agent": {
@@ -42,8 +43,8 @@ function showAgentAliasPage() {
         }
         return resultJson;
     }
-    
-    async function getAllUsers() {
+        
+    async getAllUsers() {
         const users= [];
         let pageNum = 0;
         let totalPages = 1;
@@ -74,14 +75,14 @@ function showAgentAliasPage() {
         return users;
     }
     
-    function importAgentAliasesWrapper() {
-        showLoading(importAgentAliases, container);
+    importAgentAliasesWrapper() {
+        showLoading(this.importAgentAliases, container);
     }
     
-    async function importAgentAliases() {
+    async importAgentAliases() {
         if (!fileContents) throw "No valid file selected";
     
-        const users = await getAllUsers();
+        const users = await this.getAllUsers();
         const userInfo = {};
         for (let user of users) {
             userInfo[user.email] = {id: user.id, version: user.version};
@@ -93,7 +94,7 @@ function showAgentAliasPage() {
                 results.push({name: user.Email, type: "Agent Alias", status: "failed", error: `No active user matching email ${user.Email}`});
                 continue;
             }
-            await makeCallAndHandleErrors(updateUserAlias, [userInfo[user.Email], user.Alias], results, user.Email, "Agent Alias");
+            await makeCallAndHandleErrors(this.updateUserAlias, [userInfo[user.Email], user.Alias], results, user.Email, "Agent Alias");
         }
         return results;
     }
