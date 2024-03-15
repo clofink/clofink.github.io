@@ -78,3 +78,8 @@ function generateRange(low, high) {
     }
     return range;
 }
+async function wait(time) {
+    return new Promise((resolve) => {
+        setTimeout(() => {resolve()}, time);
+    })
+}
