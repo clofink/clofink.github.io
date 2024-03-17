@@ -1,6 +1,8 @@
 // tab container
 // tab
 // sort/filter table
+// filtered list
+
 
 class TabContainer {
     tabs = [];
@@ -78,44 +80,24 @@ class PagedTable {
     currentPage;
     pageCount;
     filteredData;
+    sortable;
+    filtered;
     filters = [];
 
-    constructor(headers, dataRows, pageSize, sortFunc, tableInfo) {
+    constructor(headers, dataRows, pageSize, tableInfo, sortable, filtered) {
         this.headers = headers || [];
         this.fullData = dataRows || [];
         this.pageSize = pageSize || 0;
         this.filteredData = this.fullData;
         this.currentPage = 0;
-        if (sortFunc) this.sortFunc = sortFunc;
+        this.sortable = sortable !== undefined ? sortable : false;
+        this.filtered = filtered !== undefined ? filtered : false;
 
         this.container = newElement('div', {class: ["tableContainer"]});
         this.table = newElement("table", tableInfo);
+        if (this.sortable) this.table.classList.add('sortable');
 
-        const headerNames = [];
-        for (let header of headers) {
-            headerNames.push(header.innerText);
-            this.filters.push("");
-        }
-
-        this.headerRow = newElement('tr');
-        for (let header of headers) {
-            const tableHeader = newElement('th', header);
-            const tableSearchBar = newElement("input");
-            registerElement(tableSearchBar, "input", (event) => {
-                const headerIndex = headerNames.indexOf(header.innerText);
-                const newSearchString = event.target.value.toLowerCase().trim();
-                this.filters[headerIndex] = newSearchString;
-                this.applyFilters();
-            })
-            if (this.sortFunc) registerElement(tableHeader, "click", (event) => {
-                if (event.target.nodeName === "INPUT") return;
-                this.sortFunc(event, headerNames, this.filteredData);
-                this.updateTable();
-                this.setPage(0);
-            });
-            addElement(tableSearchBar, tableHeader);
-            addElement(tableHeader, this.headerRow);
-        }
+        this.headerRow = this.createHeaderRow(headers);
         addElement(this.headerRow, this.table);
 
         this.buttonContainer = newElement("div", {class: ["pageButtons"]});
@@ -160,15 +142,7 @@ class PagedTable {
         const dataLength = this.filteredData.length;
         const endIndex = startIndex + this.pageSize < dataLength ? startIndex + this.pageSize : dataLength;
         for (let i = startIndex; i < endIndex; i++) {
-            const row = this.filteredData[i];
-            const tableRow = newElement('tr');
-            for (let data of row) {
-                if (data instanceof Element) addElement(data, tableRow);
-                else {
-                    const tableData = newElement('td', {innerText: data});
-                    addElement(tableData, tableRow);
-                };
-            }
+            const tableRow = this.createRow(this.filteredData[i]);
             addElement(tableRow, this.table);
         }
     }
@@ -177,6 +151,48 @@ class PagedTable {
         this.currentPage = pageNum;
         this.updateButtons();
         this.updateTable();
+    }
+
+    createRow(rowData) {
+        const tableRow = newElement('tr');
+        for (let data of rowData) {
+            const tableData = newElement('td', {innerText: data});
+            addElement(tableData, tableRow);
+        }
+        return tableRow;
+    }
+
+    createHeaderRow(headerData) {
+        const headerRow = newElement('tr');
+        for (let header of headerData) {
+            const headerData = {innerText: header};
+            if (this.sortable) headerData['data-sort-direction'] = "asc"
+            const tableHeader = newElement('th', headerData);
+            if (this.filtered) this.addHeaderFiltering(tableHeader);
+            if (this.sortable) this.addHeaderSorting(tableHeader);
+            addElement(tableHeader, headerRow);
+        }
+        return headerRow;
+    }
+
+    addHeaderSorting(element) {
+        registerElement(element, "click", (event) => {
+            if (event.target.nodeName === "INPUT") return;
+            this.sortTable(event, this.headers, this.filteredData);
+            this.updateTable();
+            this.setPage(0);
+        });
+    }
+
+    addHeaderFiltering(element) {
+        const tableSearchBar = newElement("input");
+        registerElement(tableSearchBar, "input", (event) => {
+            const headerIndex = this.headers.indexOf(element.innerText);
+            const newSearchString = event.target.value.toLowerCase().trim();
+            this.filters[headerIndex] = newSearchString;
+            this.applyFilters();
+        })
+        addElement(tableSearchBar, element);
     }
 
     updateButtons() {
@@ -208,5 +224,57 @@ class PagedTable {
             addElement(nextAll, this.buttonContainer);
         }
         return this.buttonContainer;
+    }
+
+    sortTable(event, headerNames, data) {
+        const sortBy = event.target.innerText;
+        const sortDirection = event.target.dataset.sortDirection;
+        if (sortDirection === 'asc') {
+            event.target.dataset.sortDirection = 'desc';
+        }
+        else if (sortDirection === 'desc') {
+            event.target.dataset.sortDirection = 'asc';
+        }
+    
+        data.sort(customSort);
+        
+        function customSort(a, b) {
+            const headerIndex = headerNames.indexOf(sortBy);
+            let valueA;
+            let valueB;
+            if (a[headerIndex] instanceof Element) {
+                valueA = a[headerIndex].innerText;
+            }
+            else {
+                valueA = a[headerIndex];
+            }
+            if (b[headerIndex] instanceof Element) {
+                valueB = b[headerIndex].innerText;
+            }
+            else {
+                valueB = b[headerIndex];
+            }
+    
+            valueA = !isNaN(parseInt(valueA)) ? parseInt(valueA) : valueA;
+            valueB = !isNaN(parseInt(valueB)) ? parseInt(valueB) : valueB;
+    
+            if (sortDirection === "asc") {
+                if (valueA < valueB) {
+                  return -1;
+                }
+                if (valueA > valueB) {
+                  return 1;
+                }
+            }
+            else {
+                if (valueA > valueB) {
+                    return -1;
+                  }
+                  if (valueA < valueB) {
+                    return 1;
+                  }  
+            }
+            return 0;
+        }
     }
 }
