@@ -113,6 +113,7 @@ class PagedTable {
         let filteredRows = this.fullData;
         for (let i = 0; i < this.filters.length; i++) {
             const currentFilter = this.filters[i];
+            if (!currentFilter) continue;
             const newFiltered = []
             for (let row of filteredRows) {
                 let currentValue = row[i].toString().toLowerCase().trim();
