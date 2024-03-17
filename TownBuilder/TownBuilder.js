@@ -1036,74 +1036,74 @@ function addTab(tabName, renderCallback) {
 
 function showLivingPopulationTab() {
     const headers = [
-        {innerText: "Name", "data-sort-direction": "asc"},
-        {innerText: "Age", "data-sort-direction": "asc"},
-        {innerText: "Race", "data-sort-direction": "asc"},
-        {innerText: "Birth Year", "data-sort-direction": "asc"},
-        {innerText: "Death Year", "data-sort-direction": "asc"},
-        {innerText: "Gender", "data-sort-direction": "asc"},
-        {innerText: "Gender Preference", "data-sort-direction": "asc"},
-        {innerText: "# Children", "data-sort-direction": "asc"},
-        {innerText: "Worth", "data-sort-direction": "asc"},
-        {innerText: "Job Title", "data-sort-direction": "asc"},
-        {innerText: "Years in Job", "data-sort-direction": "asc"},
-        {innerText: "Strength", "data-sort-direction": "asc"},
-        {innerText: "Dexterity", "data-sort-direction": "asc"},
-        {innerText: "Constitution", "data-sort-direction": "asc"},
-        {innerText: "Intelligence", "data-sort-direction": "asc"},
-        {innerText: "Wisdom", "data-sort-direction": "asc"},
-        {innerText: "Charisma", "data-sort-direction": "asc"},
+        "Name",
+        "Age",
+        "Race",
+        "Birth Year",
+        "Death Year",
+        "Gender",
+        "Gender Preference",
+        "# Children",
+        "Worth",
+        "Job Title",
+        "Years in Job",
+        "Strength",
+        "Dexterity",
+        "Constitution",
+        "Intelligence",
+        "Wisdom",
+        "Charisma",
     ]
 
-    return new PagedTable(headers, getPopulationData(newTown.getLivingPopulation()), 100, sortTable, {class: ["sortable"], "data-population": "dead"});
+    return new PersonTable(headers, getPopulationData(newTown.getLivingPopulation()), 100, {"data-population": "dead"}, true, true);
 }
 
 function showFullPopulationTab() {
     const headers = [
-        {innerText: "Name", "data-sort-direction": "asc"},
-        {innerText: "Age", "data-sort-direction": "asc"},
-        {innerText: "Race", "data-sort-direction": "asc"},
-        {innerText: "Birth Year", "data-sort-direction": "asc"},
-        {innerText: "Death Year", "data-sort-direction": "asc"},
-        {innerText: "Gender", "data-sort-direction": "asc"},
-        {innerText: "Gender Preference", "data-sort-direction": "asc"},
-        {innerText: "# Children", "data-sort-direction": "asc"},
-        {innerText: "Worth", "data-sort-direction": "asc"},
-        {innerText: "Job Title", "data-sort-direction": "asc"},
-        {innerText: "Years in Job", "data-sort-direction": "asc"},
-        {innerText: "Strength", "data-sort-direction": "asc"},
-        {innerText: "Dexterity", "data-sort-direction": "asc"},
-        {innerText: "Constitution", "data-sort-direction": "asc"},
-        {innerText: "Intelligence", "data-sort-direction": "asc"},
-        {innerText: "Wisdom", "data-sort-direction": "asc"},
-        {innerText: "Charisma", "data-sort-direction": "asc"},
+        "Name",
+        "Age",
+        "Race",
+        "Birth Year",
+        "Death Year",
+        "Gender",
+        "Gender Preference",
+        "# Children",
+        "Worth",
+        "Job Title",
+        "Years in Job",
+        "Strength",
+        "Dexterity",
+        "Constitution",
+        "Intelligence",
+        "Wisdom",
+        "Charisma",
     ]
 
-    return new PagedTable(headers, getPopulationData(newTown.getPopulation()), 100, sortTable, {class: ["sortable"], "data-population": "dead"});
+    return new PersonTable(headers, getPopulationData(newTown.getPopulation()), 100, {"data-population": "dead"}, true, true);
 }
 
 function showDeadPopulationTab() {
     const headers = [
-        {innerText: "Name", "data-sort-direction": "asc"},
-        {innerText: "Age", "data-sort-direction": "asc"},
-        {innerText: "Race", "data-sort-direction": "asc"},
-        {innerText: "Birth Year", "data-sort-direction": "asc"},
-        {innerText: "Death Year", "data-sort-direction": "asc"},
-        {innerText: "Gender", "data-sort-direction": "asc"},
-        {innerText: "Gender Preference", "data-sort-direction": "asc"},
-        {innerText: "# Children", "data-sort-direction": "asc"},
-        {innerText: "Worth", "data-sort-direction": "asc"},
-        {innerText: "Job Title", "data-sort-direction": "asc"},
-        {innerText: "Years in Job", "data-sort-direction": "asc"},
-        {innerText: "Strength", "data-sort-direction": "asc"},
-        {innerText: "Dexterity", "data-sort-direction": "asc"},
-        {innerText: "Constitution", "data-sort-direction": "asc"},
-        {innerText: "Intelligence", "data-sort-direction": "asc"},
-        {innerText: "Wisdom", "data-sort-direction": "asc"},
-        {innerText: "Charisma", "data-sort-direction": "asc"},
+        "Name",
+        "Age",
+        "Race",
+        "Birth Year",
+        "Death Year",
+        "Gender",
+        "Gender Preference",
+        "# Children",
+        "Worth",
+        "Job Title",
+        "Years in Job",
+        "Strength",
+        "Dexterity",
+        "Constitution",
+        "Intelligence",
+        "Wisdom",
+        "Charisma",
     ]
 
-    return new PagedTable(headers, getPopulationData(newTown.getDeadPopulation()), 100, sortTable, {class: ["sortable"], "data-population": "dead"});
+    return new PersonTable(headers, getPopulationData(newTown.getDeadPopulation()), 100, {"data-population": "dead"}, true, true);
 }
 
 function getPopulationData(population) {
@@ -1145,9 +1145,9 @@ function getPopulationData(population) {
 
 function showBuildingsTab() {
     const headers = [
-        {innerText: "Name", "data-sort-direction": "asc"},
-        {innerText: "Owner", "data-sort-direction": "asc"},
-        {innerText: "Residents", "data-sort-direction": "asc"},
+        "Name",
+        "Owner",
+        "Residents",
     ];
     const dataRows = [];
     const buildings = newTown.getBuildings();
@@ -1158,15 +1158,15 @@ function showBuildingsTab() {
             building.getResidents().length
         ]);
     }
-    return new PagedTable(headers, dataRows, 50, sortTable, {class: ["sortable"]});
+    return new PagedTable(headers, dataRows, 50, {}, true, true);
 }
 
 function showJobsTab() {
     const headers = [
-        {innerText: 'Job', "data-sort-direction": "asc"},
-        {innerText: 'Person', "data-sort-direction": "asc"},
-        {innerText: 'Salary', "data-sort-direction": "asc"},
-        {innerText: 'Building', "data-sort-direction": "asc"},
+        "Job",
+        "Person",
+        "Salary",
+        "Building",
     ];
     const jobs = newTown.getJobMarket();
     const dataRows = [];
@@ -1178,7 +1178,7 @@ function showJobsTab() {
             job.getBuilding() ? job.getBuilding().getBuildingName() : "-"
         ])
     }
-    return new PagedTable(headers, dataRows, 50, sortTable, {class: ["sortable"]});
+    return new PagedTable(headers, dataRows, 50, {}, true, true);
 }
 
 function showTownInfoTab() {
@@ -1237,295 +1237,17 @@ function showTownInfoTab() {
     return container;
 }
 
-class PagedTable {
-    headers;
-    fullData;
-    pageSize;
-    currentPage;
-    pageCount;
-    filteredData;
-    filters = [];
-
-    constructor(headers, dataRows, pageSize, sortFunc, tableInfo) {
-        this.headers = headers || [];
-        this.fullData = dataRows || [];
-        this.pageSize = pageSize || 0;
-        this.filteredData = this.fullData;
-        this.currentPage = 0;
-        if (sortFunc) this.sortFunc = sortFunc;
-
-        this.container = newElement('div', {class: ["tableContainer"]});
-        this.table = newElement("table", tableInfo);
-
-        const headerNames = [];
-        for (let header of headers) {
-            headerNames.push(header.innerText);
-            this.filters.push("");
-        }
-
-        this.headerRow = newElement('tr');
-        for (let header of headers) {
-            const tableHeader = newElement('th', header);
-            const tableSearchBar = newElement("input");
-            registerElement(tableSearchBar, "input", (event) => {
-                const headerIndex = headerNames.indexOf(header.innerText);
-                const newSearchString = event.target.value.toLowerCase().trim();
-                this.filters[headerIndex] = newSearchString;
-                this.applyFilters();
-            })
-            if (this.sortFunc) registerElement(tableHeader, "click", (event) => {
-                if (event.target.nodeName === "INPUT") return;
-                this.sortFunc(event, headerNames, this.filteredData);
-                this.updateTable();
-                this.setPage(0);
-            });
-            addElement(tableSearchBar, tableHeader);
-            addElement(tableHeader, this.headerRow);
-        }
-        addElement(this.headerRow, this.table);
-
-        this.buttonContainer = newElement("div", {class: ["pageButtons"]});
-        this.updateTable();
-        this.updateButtons();
-
-        addElements([this.table, this.buttonContainer], this.container);
-
-        return this.container;
-    }
-
-    applyFilters() {
-        let filteredRows = this.fullData;
-        for (let i = 0; i < this.filters.length; i++) {
-            const currentFilter = this.filters[i];
-            const newFiltered = []
-            for (let row of filteredRows) {
-                let currentValue = row[i].toString().toLowerCase().trim();
-                if (row[i] instanceof Element) currentValue = row[i].innerText.toLowerCase().trim();
-
-                if (currentValue.indexOf(currentFilter) >= 0) {
-                    newFiltered.push(row);
-                }
-            }
-            filteredRows = newFiltered;
-        }
-        this.filteredData = filteredRows;
-        this.updateTable();
-        this.updateButtons();
-    }
-
-    changePage(pageChange) {
-        this.currentPage += pageChange;
-
-        this.updateTable();
-        this.updateButtons();
-    }
-
-    updateTable() {
-        clearElement(this.table, "tr:has(td)");
-        const startIndex = this.pageSize * this.currentPage;
-        const dataLength = this.filteredData.length;
-        const endIndex = startIndex + this.pageSize < dataLength ? startIndex + this.pageSize : dataLength;
-        for (let i = startIndex; i < endIndex; i++) {
-            const row = this.filteredData[i];
-            const tableRow = newElement('tr');
-            for (let data of row) {
-                if (data instanceof Element) addElement(data, tableRow);
-                else {
-                    const tableData = newElement('td', {innerText: data});
-                    addElement(tableData, tableRow);
-                };
-            }
-            addElement(tableRow, this.table);
-        }
-    }
-
-    setPage(pageNum) {
-        this.currentPage = pageNum;
-        this.updateButtons();
-        this.updateTable();
-    }
-
-    updateButtons() {
-        this.pageCount = Math.ceil(this.filteredData.length / this.pageSize);
-
-        clearElement(this.buttonContainer);
-        if (this.currentPage > 1) {
-            const previousAll = newElement("button", {innerText: "<<"});
-            registerElement(previousAll, "click", () => {this.setPage(0)});
-            addElement(previousAll, this.buttonContainer);
-        }
-        if (this.currentPage > 0) {
-            const previousButton = newElement("button", {innerText: "<"});
-            registerElement(previousButton, "click", () => {this.changePage(-1)});
-            addElement(previousButton, this.buttonContainer);
-        }
-        if (this.pageCount > 1) {
-            const pageCount = newElement("span", {innerText: `${this.currentPage + 1}/${this.pageCount}`})
-            addElement(pageCount, this.buttonContainer);
-        }
-        if (this.currentPage < this.pageCount - 1 && this.pageCount > 1) {
-            const nextButton = newElement("button", {innerText: ">"});
-            registerElement(nextButton, "click", () => {this.changePage(1)});
-            addElement(nextButton, this.buttonContainer);
-        }
-        if (this.currentPage < this.pageCount - 2 && this.pageCount > 2) {
-            const nextAll = newElement("button", {innerText: ">>"});
-            registerElement(nextAll, "click", () => {this.setPage(this.pageCount - 1)});
-            addElement(nextAll, this.buttonContainer);
-        }
-        return this.buttonContainer;
-    }
-}
-
-function sortTable(event, headers, tableData) {
-    const sortBy = event.target.innerText;
-    const sortDirection = event.target.dataset.sortDirection;
-
-    if (sortDirection === 'asc') {
-        event.target.dataset.sortDirection = 'desc';
-    }
-    else if (sortDirection === 'desc') {
-        event.target.dataset.sortDirection = 'asc';
-    }
-
-    tableData.sort(customSort);
-    
-    function customSort(a, b) {
-        const headerIndex = headers.indexOf(sortBy);
-        let valueA;
-        let valueB;
-        if (a[headerIndex] instanceof Element) {
-            valueA = a[headerIndex].innerText;
-        }
-        else {
-            valueA = a[headerIndex];
-        }
-        if (b[headerIndex] instanceof Element) {
-            valueB = b[headerIndex].innerText;
-        }
-        else {
-            valueB = b[headerIndex];
-        }
-
-        valueA = !isNaN(parseInt(valueA)) ? parseInt(valueA) : valueA;
-        valueB = !isNaN(parseInt(valueB)) ? parseInt(valueB) : valueB;
-
-        if (sortDirection === "asc") {
-            if (valueA < valueB) {
-              return -1;
-            }
-            if (valueA > valueB) {
-              return 1;
-            }
-        }
-        else {
-            if (valueA > valueB) {
-                return -1;
-              }
-              if (valueA < valueB) {
-                return 1;
-              }  
-        }
-        return 0;
-    }
-}
-
 class PersonTable extends PagedTable {
-    constructor(population, populationName) {
-        const dataRows = [];
-        for (let person of population) {
-            const personId = person.getPersonId();
-            const nameElem = newElement('td', {innerText: person.getFullName()});
-            registerElement(nameElem, "click", () => {
-                let existingModal = qs(`[data-person-id="${personId}"]`);
-                if (!existingModal) {
-                    existingModal = createModal(person);
-                    document.body.appendChild(existingModal);
-                }
-                existingModal.showModal();
-            })
-            const personStats = person.getStats();
-            dataRows.push({id: personId, data: [
-                nameElem,
-                person.getAge(),
-                person.getRace(),
-                person.getBirthYear(),
-                person.getDeathYear() ? person.getDeathYear() : '-',
-                person.getGender(),
-                person.getGenderPreference(),
-                person.getChildren().length,
-                person.getValue() ? person.getValue() : 0,
-                person.getJob() ? person.getJob().getTitle() : '-',
-                person.getJob() ? person.getJob().getYearsInPosition() : 0,
-                personStats.STR,
-                personStats.DEX,
-                personStats.CON,
-                personStats.INT,
-                personStats.WIS,
-                personStats.CHA,
-            ]})
+    createRow(rowData) {
+        const tableRow = newElement('tr');
+        for (let data of rowData) {
+            if (data instanceof Element) addElement(data, tableRow);
+            else {
+                const tableData = newElement('td', {innerText: data});
+                addElement(tableData, tableRow);
+            };
         }
-
-        const headers = [
-            {innerText: "Name", "data-sort-direction": "asc"},
-            {innerText: "Age", "data-sort-direction": "asc"},
-            {innerText: "Race", "data-sort-direction": "asc"},
-            {innerText: "Birth Year", "data-sort-direction": "asc"},
-            {innerText: "Death Year", "data-sort-direction": "asc"},
-            {innerText: "Gender", "data-sort-direction": "asc"},
-            {innerText: "Gender Preference", "data-sort-direction": "asc"},
-            {innerText: "# Children", "data-sort-direction": "asc"},
-            {innerText: "Worth", "data-sort-direction": "asc"},
-            {innerText: "Job Title", "data-sort-direction": "asc"},
-            {innerText: "Years in Job", "data-sort-direction": "asc"},
-            {innerText: "Strength", "data-sort-direction": "asc"},
-            {innerText: "Dexterity", "data-sort-direction": "asc"},
-            {innerText: "Constitution", "data-sort-direction": "asc"},
-            {innerText: "Intelligence", "data-sort-direction": "asc"},
-            {innerText: "Wisdom", "data-sort-direction": "asc"},
-            {innerText: "Charisma", "data-sort-direction": "asc"},
-        ]
-        super(headers, dataRows, 100, sortTable, {class: ["sortable"], "data-population": populationName});
-    }
-    
-    updateTable() {
-        clearElement(this.table, "tr:has(td)");
-        const startIndex = this.pageSize * this.currentPage;
-        const dataLength = this.filteredData.length;
-        const endIndex = startIndex + this.pageSize < dataLength ? startIndex + this.pageSize : dataLength;
-        for (let i = startIndex; i < endIndex; i++) {
-            const row = this.filteredData[i];
-            const tableRow = newElement('tr');
-            for (let data of row) {
-                if (data instanceof Element) addElement(data, tableRow);
-                else {
-                    const tableData = newElement('td', {innerText: data});
-                    addElement(tableData, tableRow);
-                };
-            }
-            addElement(tableRow, this.table);
-        }
-    }
-
-    createPersonKey() {
-        const keyContainer = newElement("div", {id: "personChatKey"});
-        
-        const selectedSpan = createSection("self", "Selected Person");
-        const spouseSpan = createSection("spouse", "Their Spouse");
-        const childSpan = createSection("children", "Their Children");
-        const parentSpan = createSection("parent", "Their Parents");
-        const siblingsSpan = createSection("sibling", "Their Siblings");
-    
-        addElements([selectedSpan, spouseSpan, childSpan, parentSpan, siblingsSpan], keyContainer);
-        return keyContainer;
-    
-        function createSection(id, text) {
-            const span = newElement('span');
-            const person = newElement("div", {id: id});
-            const label = newElement("div", {innerText: text});
-            addElements([person, label], span);
-            return span;
-        }
+        return tableRow;
     }
 }
 
