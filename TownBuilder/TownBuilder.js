@@ -999,111 +999,88 @@ function createModal(person) {
     return modal;
 }
 
-function showTabs() {
-    const tabList = eById('tabList');
-    clearElement(tabList);
+class LivingPopulationTab extends Tab {
+    tabName = "Living Population";
 
-    for (let i = 0; i < window.tabs.length; i++) {
-        addElement(tabs[i], tabList);
-        if (i === 0) tabs[i].click();
+    render() {
+        const headers = [
+            "Name",
+            "Age",
+            "Race",
+            "Birth Year",
+            "Death Year",
+            "Gender",
+            "Gender Preference",
+            "# Children",
+            "Worth",
+            "Job Title",
+            "Years in Job",
+            "Strength",
+            "Dexterity",
+            "Constitution",
+            "Intelligence",
+            "Wisdom",
+            "Charisma",
+        ]
+    
+        return new PersonTable(headers, getPopulationData(newTown.getLivingPopulation()), 100, {"data-population": "dead"}, true, true);
     }
 }
 
-function showTownInfo() {
-    const page = eById('page');
-    clearElement(page);
-    const tabList = newElement('div', {id: "tabList"});
-    const tabContent = newElement('div', {id: "tabContent"});
-    addElements([tabList, tabContent], page);
-    showTabs();
-}
+class FullPopulationTab extends Tab {
+    tabName = "Full Population";
 
-function addTab(tabName, renderCallback) {
-    const tabSelected = function() {
-        for (let tab of qsa(".tabHeader")) {
-            tab.classList.remove("selected");
-        }
-        newTab.classList.add("selected");
-        const tabContainer = eById("tabContent");
-        clearElement(tabContainer);
-        addElement(renderCallback(), tabContainer);
+    render() {
+        const headers = [
+            "Name",
+            "Age",
+            "Race",
+            "Birth Year",
+            "Death Year",
+            "Gender",
+            "Gender Preference",
+            "# Children",
+            "Worth",
+            "Job Title",
+            "Years in Job",
+            "Strength",
+            "Dexterity",
+            "Constitution",
+            "Intelligence",
+            "Wisdom",
+            "Charisma",
+        ]
+    
+        return new PersonTable(headers, getPopulationData(newTown.getPopulation()), 100, {"data-population": "dead"}, true, true);
     }
-    const newTab = newElement("div", {class: ["tabHeader"], innerText: tabName});
-    registerElement(newTab, "click", tabSelected);
-    tabs.push(newTab);
-    if (eById("tabList")) showTabs();
 }
 
-function showLivingPopulationTab() {
-    const headers = [
-        "Name",
-        "Age",
-        "Race",
-        "Birth Year",
-        "Death Year",
-        "Gender",
-        "Gender Preference",
-        "# Children",
-        "Worth",
-        "Job Title",
-        "Years in Job",
-        "Strength",
-        "Dexterity",
-        "Constitution",
-        "Intelligence",
-        "Wisdom",
-        "Charisma",
-    ]
+class DeadPopulationTab extends Tab {
+    tabName = "Dead Population";
 
-    return new PersonTable(headers, getPopulationData(newTown.getLivingPopulation()), 100, {"data-population": "dead"}, true, true);
-}
-
-function showFullPopulationTab() {
-    const headers = [
-        "Name",
-        "Age",
-        "Race",
-        "Birth Year",
-        "Death Year",
-        "Gender",
-        "Gender Preference",
-        "# Children",
-        "Worth",
-        "Job Title",
-        "Years in Job",
-        "Strength",
-        "Dexterity",
-        "Constitution",
-        "Intelligence",
-        "Wisdom",
-        "Charisma",
-    ]
-
-    return new PersonTable(headers, getPopulationData(newTown.getPopulation()), 100, {"data-population": "dead"}, true, true);
-}
-
-function showDeadPopulationTab() {
-    const headers = [
-        "Name",
-        "Age",
-        "Race",
-        "Birth Year",
-        "Death Year",
-        "Gender",
-        "Gender Preference",
-        "# Children",
-        "Worth",
-        "Job Title",
-        "Years in Job",
-        "Strength",
-        "Dexterity",
-        "Constitution",
-        "Intelligence",
-        "Wisdom",
-        "Charisma",
-    ]
-
-    return new PersonTable(headers, getPopulationData(newTown.getDeadPopulation()), 100, {"data-population": "dead"}, true, true);
+    render() {
+        const headers = [
+            "Name",
+            "Age",
+            "Race",
+            "Birth Year",
+            "Death Year",
+            "Gender",
+            "Gender Preference",
+            "# Children",
+            "Worth",
+            "Job Title",
+            "Years in Job",
+            "Strength",
+            "Dexterity",
+            "Constitution",
+            "Intelligence",
+            "Wisdom",
+            "Charisma",
+        ]
+    
+        return new PersonTable(headers, getPopulationData(newTown.getDeadPopulation()), 100, {"data-population": "dead"}, true, true);
+    }
 }
 
 function getPopulationData(population) {
@@ -1143,98 +1120,124 @@ function getPopulationData(population) {
     return dataRows;
 }
 
-function showBuildingsTab() {
-    const headers = [
-        "Name",
-        "Owner",
-        "Residents",
-    ];
-    const dataRows = [];
-    const buildings = newTown.getBuildings();
-    for (let building of buildings) {
-        dataRows.push([
-            building.getBuildingName(),
-            building.getOwner() ? building.getOwner().getFullName() : "-",
-            building.getResidents().length
-        ]);
+class BuildingsTab extends Tab {
+    tabName = "Buildings";
+
+    render() {
+        const headers = [
+            "Name",
+            "Owner",
+            "Residents",
+        ];
+        const dataRows = [];
+        const buildings = newTown.getBuildings();
+        for (let building of buildings) {
+            dataRows.push([
+                building.getBuildingName(),
+                building.getOwner() ? building.getOwner().getFullName() : "-",
+                building.getResidents().length
+            ]);
+        }
+        return new PagedTable(headers, dataRows, 50, {}, true, true);
     }
-    return new PagedTable(headers, dataRows, 50, {}, true, true);
 }
 
-function showJobsTab() {
-    const headers = [
-        "Job",
-        "Person",
-        "Salary",
-        "Building",
-    ];
-    const jobs = newTown.getJobMarket();
-    const dataRows = [];
-    for (let job of jobs) {
-        dataRows.push([
-            job.getTitle(),
-            job.getPerson() ? job.getPerson().getFullName() : "-",
-            job.getSalary(),
-            job.getBuilding() ? job.getBuilding().getBuildingName() : "-"
-        ])
+class JobsTab extends Tab {
+    tabName = "Jobs";
+
+    render() {
+        const headers = [
+            "Job",
+            "Person",
+            "Salary",
+            "Building",
+        ];
+        const jobs = newTown.getJobMarket();
+        const dataRows = [];
+        for (let job of jobs) {
+            dataRows.push([
+                job.getTitle(),
+                job.getPerson() ? job.getPerson().getFullName() : "-",
+                job.getSalary(),
+                job.getBuilding() ? job.getBuilding().getBuildingName() : "-"
+            ])
+        }
+        return new PagedTable(headers, dataRows, 50, {}, true, true);
     }
-    return new PagedTable(headers, dataRows, 50, {}, true, true);
 }
 
-function showTownInfoTab() {
-    const container = newElement('div');
+class TownInfoTab extends Tab {
+    tabName = "Town Stats";
 
-    const popHeaders = [
-        {innerText: 'Population', 'colspan': 2},
-    ];
-    const populationTable = createTable(popHeaders);
-    const livingPopulation = newTown.getLivingPopulation();
-    const totalPopRow = createDataRow(['Total Population', newTown.getPopulation().length])
-    const livingPopRow = createDataRow(['Living Population', livingPopulation.length])
-    const deadPopRow = createDataRow(['Dead Population', newTown.getDeadPopulation().length]);
-
-    const startingYearRow = createDataRow(['Starting Year', newTown.getYearOfIncorporation()]);
-    const currentYearRow = createDataRow(['Current Year', newTown.getCurrentYear()]);
-    addElements([totalPopRow, livingPopRow, deadPopRow, startingYearRow, currentYearRow], populationTable);
-
-    const jobHeaders = [
-        {innerText: 'Jobs', 'colspan': 2},
-    ];
-    const jobsTable = createTable(jobHeaders);
-    const jobs = newTown.getJobMarket();
-    const jobMarket = createDataRow(["Total Jobs", jobs.length]);
-    let staffedJobs = 0;
-    for (let job of jobs) {
-        if (job.getPerson()) staffedJobs++;
+    render () {
+        const container = newElement('div');
+    
+        const popHeaders = [
+            {innerText: 'Population', 'colspan': 2},
+        ];
+        const populationTable = createTable(popHeaders);
+        const livingPopulation = newTown.getLivingPopulation();
+        const totalPopRow = createDataRow(['Total Population', newTown.getPopulation().length])
+        const livingPopRow = createDataRow(['Living Population', livingPopulation.length])
+        const deadPopRow = createDataRow(['Dead Population', newTown.getDeadPopulation().length]);
+    
+        const startingYearRow = createDataRow(['Starting Year', newTown.getYearOfIncorporation()]);
+        const currentYearRow = createDataRow(['Current Year', newTown.getCurrentYear()]);
+        addElements([totalPopRow, livingPopRow, deadPopRow, startingYearRow, currentYearRow], populationTable);
+    
+        const jobHeaders = [
+            {innerText: 'Jobs', 'colspan': 2},
+        ];
+        const jobsTable = createTable(jobHeaders);
+        const jobs = newTown.getJobMarket();
+        const jobMarket = createDataRow(["Total Jobs", jobs.length]);
+        let staffedJobs = 0;
+        for (let job of jobs) {
+            if (job.getPerson()) staffedJobs++;
+        }
+        const staffed = createDataRow(["Staffed Jobs", staffedJobs]);
+        const staffedRate = createDataRow(["Staffed Rate", `${Math.round((staffedJobs / jobs.length) * 100)}%`]);
+        const employmentRate = createDataRow(["Employment Rate", `${Math.round((staffedJobs / newTown.getLivingPopulation().length) * 100)}%`]);
+        addElements([jobMarket, staffed, staffedRate, employmentRate], jobsTable);
+    
+        const buildingHeaders = [
+            {innerText: 'Buildings', 'colspan': 2},
+        ];
+        const buildingTable = createTable(buildingHeaders);
+        let homelessCount = 0;
+        for (let person of livingPopulation) {
+            if (!person.getResidency()) homelessCount++;
+        }
+        const buildings = newTown.getBuildings();
+        const townBuildings = createDataRow(["Buildings", buildings.length]);
+        let occupied = 0;
+        let owned = 0;
+        for (let building of buildings) {
+            if (building.getOwner()) owned++;
+            if (building.getResidents().length > 0) occupied++;
+        }
+        const ownedBuildings = createDataRow(["Owned Buildings", owned]);
+        const occupiedBuildings = createDataRow(["Occupied Buildings", occupied]);
+        const homelessnessRate = createDataRow(["Homelessness Rate", `${Math.round((homelessCount / newTown.getLivingPopulation().length) * 100)}%`]);
+        addElements([townBuildings, ownedBuildings, occupiedBuildings, homelessnessRate], buildingTable);
+    
+        addElements([populationTable, jobsTable, buildingTable], container);
+        return container;
     }
-    const staffed = createDataRow(["Staffed Jobs", staffedJobs]);
-    const staffedRate = createDataRow(["Staffed Rate", `${Math.round((staffedJobs / jobs.length) * 100)}%`]);
-    const employmentRate = createDataRow(["Employment Rate", `${Math.round((staffedJobs / newTown.getLivingPopulation().length) * 100)}%`]);
-    addElements([jobMarket, staffed, staffedRate, employmentRate], jobsTable);
+}
 
-    const buildingHeaders = [
-        {innerText: 'Buildings', 'colspan': 2},
-    ];
-    const buildingTable = createTable(buildingHeaders);
-    let homelessCount = 0;
-    for (let person of livingPopulation) {
-        if (!person.getResidency()) homelessCount++;
-    }
-    const buildings = newTown.getBuildings();
-    const townBuildings = createDataRow(["Buildings", buildings.length]);
-    let occupied = 0;
-    let owned = 0;
-    for (let building of buildings) {
-        if (building.getOwner()) owned++;
-        if (building.getResidents().length > 0) occupied++;
-    }
-    const ownedBuildings = createDataRow(["Owned Buildings", owned]);
-    const occupiedBuildings = createDataRow(["Occupied Buildings", occupied]);
-    const homelessnessRate = createDataRow(["Homelessness Rate", `${Math.round((homelessCount / newTown.getLivingPopulation().length) * 100)}%`]);
-    addElements([townBuildings, ownedBuildings, occupiedBuildings, homelessnessRate], buildingTable);
-
-    addElements([populationTable, jobsTable, buildingTable], container);
-    return container;
+function showTownInfo() {
+    const page = eById('page');
+    clearElement(page);
+    const tabContainer = new TabContainer([
+        new TownInfoTab(),
+        new LivingPopulationTab(),
+        new DeadPopulationTab(),
+        new FullPopulationTab(),
+        new BuildingsTab(),
+        new JobsTab(),
+    ])
+    addElement(tabContainer.getTabContainer(), page);
 }
 
 class PersonTable extends PagedTable {
@@ -1256,10 +1259,3 @@ registerElement(eById('newTown'), "click", generateNewTown);
 registerElement(eById('extendTownTime'), "click", addYears);
 registerElement(eById('addRace'), "click", addRace);
 addRace();
-
-addTab("Town Stats", showTownInfoTab);
-addTab("Living Population", showLivingPopulationTab);
-addTab("Dead Population", showDeadPopulationTab);
-addTab("Full Population", showFullPopulationTab);
-addTab("Buildings", showBuildingsTab);
-addTab("Jobs", showJobsTab);
