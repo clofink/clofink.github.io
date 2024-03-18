@@ -184,11 +184,16 @@ class PagedTable {
     createHeaderRow(headerData) {
         const headerRow = newElement('tr');
         for (let header of headerData) {
-            const headerData = { innerText: header };
-            if (this.sortable) headerData['data-sort-direction'] = "asc"
+            const headerData = {};
+            const headerLabel = newElement('span', { innerText: header });
+            if (this.sortable) {
+                headerLabel.dataset.sortDirection = "asc";
+                headerLabel.dataset.currentSort = "false";
+            }
             const tableHeader = newElement('th', headerData);
+            addElement(headerLabel, tableHeader);
             if (this.filtered) this.addHeaderFiltering(tableHeader);
-            if (this.sortable) this.addHeaderSorting(tableHeader);
+            if (this.sortable) this.addHeaderSorting(headerLabel);
             addElement(tableHeader, headerRow);
         }
         return headerRow;
@@ -196,7 +201,6 @@ class PagedTable {
 
     addHeaderSorting(element) {
         registerElement(element, "click", (event) => {
-            if (event.target.nodeName === "INPUT") return;
             this.sortTable(event, this.headers, this.filteredData);
             this.updateTable();
             this.setPage(0);
@@ -251,6 +255,13 @@ class PagedTable {
         const sortBy = event.target.innerText;
         const sortDirection = event.target.dataset.sortDirection;
         const headers = this.headers;
+        // this header is the one currently sorted by
+        if (event.target.dataset.currentSort !== "true") {
+            for (let header of qsa("th span", this.headerRow)) {
+                header.dataset.currentSort = "false";
+            }
+            event.target.dataset.currentSort = "true";
+        }
         if (sortDirection === 'asc') {
             event.target.dataset.sortDirection = 'desc';
         }
@@ -284,20 +295,20 @@ class PagedTable {
                 if (valueA === "-") return 1;
                 if (valueB === "-") return -1;
                 if (valueA < valueB) {
-                    return -1;
+                    return 1;
                 }
                 if (valueA > valueB) {
-                    return 1;
+                    return -1;
                 }
             }
             else {
                 if (valueA === "-") return 1;
                 if (valueB === "-") return -1;
                 if (valueA > valueB) {
-                    return -1;
+                    return 1;
                 }
                 if (valueA < valueB) {
-                    return 1;
+                    return -1;
                 }
             }
             return 0;

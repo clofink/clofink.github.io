@@ -82,9 +82,6 @@ td, th {
 th {
     user-select: none;
 }
-table.sortable th {
-    cursor: pointer;
-}
 #self {
     height: 1em;
     width: 1em;
@@ -235,5 +232,21 @@ th * {
     margin-right: auto;
 }
 .nameField {
+    cursor: pointer;
+}
+
+[data-current-sort="true"][data-sort-direction="asc"]::after {
+    content: " ▲";
+    font-size: .75em;
+}
+[data-current-sort="true"][data-sort-direction="desc"]::after {
+    content: " ▼";
+    font-size: .75em;
+}
+th span {
+    padding-top: .5em;
+    padding-bottom: .5em;
+}
+table.sortable th span {
     cursor: pointer;
 }
