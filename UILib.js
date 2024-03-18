@@ -28,9 +28,9 @@ class TabContainer {
     currentIndex = 0;
 
     constructor(tabs) {
-        this.tabContainer = newElement('div', {id: "tabContainer"});
-        this.tabList = newElement('div', {id: "tabList"});
-        this.tabContent = newElement('div', {id: "tabContent"});
+        this.tabContainer = newElement('div', { id: "tabContainer" });
+        this.tabList = newElement('div', { id: "tabList" });
+        this.tabContent = newElement('div', { id: "tabContent" });
         addElements([this.tabList, this.tabContent], this.tabContainer);
         this.addTabs(tabs);
         return this;
@@ -44,8 +44,8 @@ class TabContainer {
             throw "Tab must be instance of Tab";
         }
         this.tabs.push(tab);
-        const tabHeader = newElement("div", {class: ["tabHeader"], innerText: tab.getName()});
-        registerElement(tabHeader, "click", (event) => {this.selectTab(this.tabHeaders.indexOf(event.target))});
+        const tabHeader = newElement("div", { class: ["tabHeader"], innerText: tab.getName() });
+        registerElement(tabHeader, "click", (event) => { this.selectTab(this.tabHeaders.indexOf(event.target)) });
         this.tabHeaders.push(tabHeader);
         addElement(tabHeader, this.tabList);
         if (this.tabs.length === 1) {
@@ -83,7 +83,7 @@ class Tab {
         this.tabName = tabName;
     }
     render() {
-        const container = newElement("div", {innerText: "This is: " + this.tabName});
+        const container = newElement("div", { innerText: "This is: " + this.tabName });
         return container;
     }
     getName() {
@@ -111,14 +111,14 @@ class PagedTable {
         this.sortable = sortable !== undefined ? sortable : false;
         this.filtered = filtered !== undefined ? filtered : false;
 
-        this.container = newElement('div', {class: ["tableContainer"]});
+        this.container = newElement('div', { class: ["tableContainer"] });
         this.table = newElement("table", tableInfo);
         if (this.sortable) this.table.classList.add('sortable');
 
         this.headerRow = this.createHeaderRow(headers);
         addElement(this.headerRow, this.table);
 
-        this.buttonContainer = newElement("div", {class: ["pageButtons"]});
+        this.buttonContainer = newElement("div", { class: ["pageButtons"] });
         this.updateTable();
         this.updateButtons();
 
@@ -175,7 +175,7 @@ class PagedTable {
     createRow(rowData) {
         const tableRow = newElement('tr');
         for (let data of rowData) {
-            const tableData = newElement('td', {innerText: data});
+            const tableData = newElement('td', { innerText: data });
             addElement(tableData, tableRow);
         }
         return tableRow;
@@ -184,7 +184,7 @@ class PagedTable {
     createHeaderRow(headerData) {
         const headerRow = newElement('tr');
         for (let header of headerData) {
-            const headerData = {innerText: header};
+            const headerData = { innerText: header };
             if (this.sortable) headerData['data-sort-direction'] = "asc"
             const tableHeader = newElement('th', headerData);
             if (this.filtered) this.addHeaderFiltering(tableHeader);
@@ -218,28 +218,28 @@ class PagedTable {
         this.pageCount = Math.ceil(this.filteredData.length / this.pageSize);
 
         clearElement(this.buttonContainer);
-        const previousAll = newElement("button", {innerText: "<<"});
-        registerElement(previousAll, "click", () => {this.setPage(0)});
+        const previousAll = newElement("button", { innerText: "<<" });
+        registerElement(previousAll, "click", () => { this.setPage(0) });
         addElement(previousAll, this.buttonContainer);
         if (this.currentPage <= 1) {
             previousAll.setAttribute("disabled", true);
         }
-        const previousButton = newElement("button", {innerText: "<"});
-        registerElement(previousButton, "click", () => {this.changePage(-1)});
+        const previousButton = newElement("button", { innerText: "<" });
+        registerElement(previousButton, "click", () => { this.changePage(-1) });
         addElement(previousButton, this.buttonContainer);
         if (this.currentPage === 0) {
             previousButton.setAttribute("disabled", true);
         }
-        const pageCount = newElement("span", {innerText: `${this.currentPage + 1}/${this.pageCount}`})
+        const pageCount = newElement("span", { innerText: `${this.currentPage + 1}/${this.pageCount}` })
         addElement(pageCount, this.buttonContainer);
-        const nextButton = newElement("button", {innerText: ">"});
-        registerElement(nextButton, "click", () => {this.changePage(1)});
+        const nextButton = newElement("button", { innerText: ">" });
+        registerElement(nextButton, "click", () => { this.changePage(1) });
         addElement(nextButton, this.buttonContainer);
         if (this.currentPage >= this.pageCount - 1) {
             nextButton.setAttribute("disabled", true);
         }
-        const nextAll = newElement("button", {innerText: ">>"});
-        registerElement(nextAll, "click", () => {this.setPage(this.pageCount - 1)});
+        const nextAll = newElement("button", { innerText: ">>" });
+        registerElement(nextAll, "click", () => { this.setPage(this.pageCount - 1) });
         addElement(nextAll, this.buttonContainer);
         if (this.currentPage >= this.pageCount - 2) {
             nextAll.setAttribute("disabled", true);
@@ -247,20 +247,21 @@ class PagedTable {
         return this.buttonContainer;
     }
 
-    sortTable(event, headerNames, data) {
+    sortTable(event) {
         const sortBy = event.target.innerText;
         const sortDirection = event.target.dataset.sortDirection;
+        const headers = this.headers;
         if (sortDirection === 'asc') {
             event.target.dataset.sortDirection = 'desc';
         }
         else if (sortDirection === 'desc') {
             event.target.dataset.sortDirection = 'asc';
         }
-    
-        data.sort(customSort);
-        
+
+        this.filteredData.sort(customSort);
+
         function customSort(a, b) {
-            const headerIndex = headerNames.indexOf(sortBy);
+            const headerIndex = headers.indexOf(sortBy);
             let valueA;
             let valueB;
             if (a[headerIndex] instanceof Element) {
@@ -275,25 +276,29 @@ class PagedTable {
             else {
                 valueB = b[headerIndex];
             }
-    
+
             valueA = !isNaN(parseInt(valueA)) ? parseInt(valueA) : valueA;
             valueB = !isNaN(parseInt(valueB)) ? parseInt(valueB) : valueB;
-    
+
             if (sortDirection === "asc") {
+                if (valueA === "-") return 1;
+                if (valueB === "-") return -1;
                 if (valueA < valueB) {
-                  return -1;
+                    return -1;
                 }
                 if (valueA > valueB) {
-                  return 1;
+                    return 1;
                 }
             }
             else {
+                if (valueA === "-") return 1;
+                if (valueB === "-") return -1;
                 if (valueA > valueB) {
                     return -1;
-                  }
-                  if (valueA < valueB) {
+                }
+                if (valueA < valueB) {
                     return 1;
-                  }  
+                }
             }
             return 0;
         }
