@@ -2,7 +2,25 @@
 // tab
 // sort/filter table
 // filtered list
+class ScrollableList {
 
+    constructor(items) {
+
+    }
+
+    createList(items) {
+        const listContainer = newElement();
+        for (let item of items) {
+            const itemElement = this.createItem(item);
+            addElement(itemElement, listContainer);
+        }
+        return listContainer
+    }
+    createItem(item) {
+        const element = newElement();
+        return element;
+    }
+}
 
 class TabContainer {
     tabs = [];
@@ -200,29 +218,31 @@ class PagedTable {
         this.pageCount = Math.ceil(this.filteredData.length / this.pageSize);
 
         clearElement(this.buttonContainer);
-        if (this.currentPage > 1) {
-            const previousAll = newElement("button", {innerText: "<<"});
-            registerElement(previousAll, "click", () => {this.setPage(0)});
-            addElement(previousAll, this.buttonContainer);
+        const previousAll = newElement("button", {innerText: "<<"});
+        registerElement(previousAll, "click", () => {this.setPage(0)});
+        addElement(previousAll, this.buttonContainer);
+        if (this.currentPage <= 1) {
+            previousAll.setAttribute("disabled", true);
         }
-        if (this.currentPage > 0) {
-            const previousButton = newElement("button", {innerText: "<"});
-            registerElement(previousButton, "click", () => {this.changePage(-1)});
-            addElement(previousButton, this.buttonContainer);
+        const previousButton = newElement("button", {innerText: "<"});
+        registerElement(previousButton, "click", () => {this.changePage(-1)});
+        addElement(previousButton, this.buttonContainer);
+        if (this.currentPage === 0) {
+            previousButton.setAttribute("disabled", true);
         }
-        if (this.pageCount > 1) {
-            const pageCount = newElement("span", {innerText: `${this.currentPage + 1}/${this.pageCount}`})
-            addElement(pageCount, this.buttonContainer);
+        const pageCount = newElement("span", {innerText: `${this.currentPage + 1}/${this.pageCount}`})
+        addElement(pageCount, this.buttonContainer);
+        const nextButton = newElement("button", {innerText: ">"});
+        registerElement(nextButton, "click", () => {this.changePage(1)});
+        addElement(nextButton, this.buttonContainer);
+        if (this.currentPage >= this.pageCount - 1) {
+            nextButton.setAttribute("disabled", true);
         }
-        if (this.currentPage < this.pageCount - 1 && this.pageCount > 1) {
-            const nextButton = newElement("button", {innerText: ">"});
-            registerElement(nextButton, "click", () => {this.changePage(1)});
-            addElement(nextButton, this.buttonContainer);
-        }
-        if (this.currentPage < this.pageCount - 2 && this.pageCount > 2) {
-            const nextAll = newElement("button", {innerText: ">>"});
-            registerElement(nextAll, "click", () => {this.setPage(this.pageCount - 1)});
-            addElement(nextAll, this.buttonContainer);
+        const nextAll = newElement("button", {innerText: ">>"});
+        registerElement(nextAll, "click", () => {this.setPage(this.pageCount - 1)});
+        addElement(nextAll, this.buttonContainer);
+        if (this.currentPage >= this.pageCount - 2) {
+            nextAll.setAttribute("disabled", true);
         }
         return this.buttonContainer;
     }
