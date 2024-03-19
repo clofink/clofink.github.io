@@ -32,6 +32,12 @@ class Person {
     value = 0;
     stats = {};
     haveKidsChance;
+    minHeight = 0;
+    maxHeight = 0;
+    adultHeight;
+    minWeight = 0;
+    maxWeight = 0;
+    adultWeight;
 
     constructor(options) {
         options = options || {};
@@ -47,6 +53,9 @@ class Person {
         else {
             this.gender = this.randomGender();
         }
+        if (options.height) this.adultHeight = options.height;
+        if (options.weight) this.adultWeight = options.weight;
+        
         if (this.gender == 'male') {
             this.pronoun = "he";
             this.objectPronoun = "him";
@@ -188,6 +197,12 @@ class Person {
         this.name = this.randomFirstName();
         this.lastName = this.randomLastName();
     }
+    generateHeight() {
+        this.adultHeight = getRandomNumberInRange(this.minHeight, this.maxHeight);
+    }
+    generateWeight() {
+        this.adultWeight = getRandomNumberInRange(this.minWeight, this.maxWeight);
+    }
     getAdolescence() {
         return this.adolescence;
     }
@@ -202,6 +217,18 @@ class Person {
     }
     getChildren() {
         return this.children;
+    }
+    getCurrentHeight() {
+        if (this.age >= this.adolescence) {
+            return this.adultHeight;
+        }
+        return Math.round((this.age / this.adolescence) * this.adultHeight)
+    }
+    getCurrentWeight() {
+        if (this.age >= this.adolescence) {
+            return this.adultWeight;
+        }
+        return Math.round((this.age / this.adolescence) * this.adultWeight)
     }
     getDeathChanceAtAge() {
         let percentageOfMaxAge = (this.age / this.maxAge) * 100;
@@ -405,7 +432,22 @@ class Dragonborn extends Person {
     maxAge = 80;
     adolescence = 15;
     haveKidsChance = 25;
+    minHeight = 65;
+    maxHeight = 83;
+    minWeight = 162;
+    maxWeight = 360;
 
+    constructor() {
+        super();
+        if (!this.adultHeight) this.generateHeight();
+        if (!this.adultWeight) this.generateWeight();
+    }
+    generateHeight() {
+        this.adultHeight = getRandomNumberInRange(this.minHeight, this.maxHeight);
+    }
+    generateWeight() {
+        this.adultWeight = getRandomNumberInRange(this.minWeight, this.maxWeight);
+    }
     getFullName() {
         // return full name with any modifiers needed
         return `${this.name} '${this.nickname}' ${this.lastName}`
@@ -492,7 +534,22 @@ class Dwarf extends Person {
     maxAge = 350;
     adolescence = 50;
     haveKidsChance = 12;
+    minHeight = 44;
+    maxHeight = 58;
+    minWeight = 112;
+    maxWeight = 235;
 
+    constructor() {
+        super();
+        if (!this.adultHeight) this.generateHeight();
+        if (!this.adultWeight) this.generateWeight();
+    }
+    generateHeight() {
+        this.adultHeight = getRandomNumberInRange(this.minHeight, this.maxHeight);
+    }
+    generateWeight() {
+        this.adultWeight = getRandomNumberInRange(this.minWeight, this.maxWeight);
+    }
     randomFirstName() {
         const nameList1 = ["Ad", "Am", "Arm", "Baer", "Daer", "Bal", "Ban", "Bar", "Bel", "Ben", "Ber", "Bhal", "Bhar", "Bhel", "Bram", "Bran", "Brom", "Brum", "Bun", "Dal", "Dar", "Dol", "Dul", "Eb", "Em", "Erm", "Far", "Gal", "Gar", "Ger", "Gim", "Gral", "Gram", "Gran", "Grem", "Gren", "Gril", "Gry", "Gul", "Har", "Hjal", "Hjol", "Hjul", "Hor", "Hul", "Hur", "Kar", "Khar", "Kram", "Krom", "Krum", "Mag", "Mal", "Mel", "Mor", "Muir", "Mur", "Rag", "Ran", "Reg", "Rot", "Thal", "Thar", "Thel", "Ther", "Tho", "Thor", "Thul", "Thur", "Thy", "Tor", "Ty", "Um", "Urm", "Von"];
         const nameList2 = ["adin", "bek", "brek", "dahr", "dain", "dal", "dan", "dar", "dek", "dir", "dohr", "dor", "drak", "dram", "dren", "drom", "drum", "drus", "duhr", "dur", "dus", "garn", "gram", "gran", "grim", "grom", "gron", "grum", "grun", "gurn", "gus", "iggs", "kahm", "kam", "kohm", "kom", "kuhm", "kum", "kyl", "man", "mand", "mar", "mek", "miir", "min", "mir", "mond", "mor", "mun", "mund", "mur", "mus", "myl", "myr", "nam", "nar", "nik", "nir", "nom", "num", "nur", "nus", "nyl", "rak", "ram", "ren", "rig", "rigg", "rik", "rim", "rom", "ron", "rum", "rus", "ryl", "tharm", "tharn", "thran", "thrum", "thrun"];
@@ -558,7 +615,22 @@ class Elf extends Person {
     maxAge = 750;
     adolescence = 100;
     haveKidsChance = 18;
+    minHeight = 58;
+    maxHeight = 76;
+    minWeight = 90;
+    maxWeight = 230;
 
+    constructor() {
+        super();
+        if (!this.adultHeight) this.generateHeight();
+        if (!this.adultWeight) this.generateWeight();
+    }
+    generateHeight() {
+        this.adultHeight = getRandomNumberInRange(this.minHeight, this.maxHeight);
+    }
+    generateWeight() {
+        this.adultWeight = getRandomNumberInRange(this.minWeight, this.maxWeight);
+    }
     randomFirstName() {
         if (this.gender == 'male') {
             const nameList1 = ["Ad", "Ae", "Bal", "Bei", "Car", "Cra", "Dae", "Dor", "El", "Ela", "Er", "Far", "Fen", "Gen", "Glyn", "Hei", "Her", "Ian", "Ili", "Kea", "Kel", "Leo", "Lu", "Mira", "Mor", "Nae", "Nor", "Olo", "Oma", "Pa", "Per", "Pet", "Qi", "Qin", "Ralo", "Ro", "Sar", "Syl", "The", "Tra", "Ume", "Uri", "Va", "Vir", "Waes", "Wran", "Yel", "Yin", "Zin", "Zum"];
@@ -638,7 +710,22 @@ class Gnome extends Person {
     maxAge = 425;
     adolescence = 40;
     haveKidsChance = 8;
+    minHeight = 36;
+    maxHeight = 46;
+    minWeight = 34;
+    maxWeight = 54;
 
+    constructor() {
+        super();
+        if (!this.adultHeight) this.generateHeight();
+        if (!this.adultWeight) this.generateWeight();
+    }
+    generateHeight() {
+        this.adultHeight = getRandomNumberInRange(this.minHeight, this.maxHeight);
+    }
+    generateWeight() {
+        this.adultWeight = getRandomNumberInRange(this.minWeight, this.maxWeight);
+    }
     randomFirstName() {
         if (this.gender == 'male') {
             const nameType1 = ["Al", "Ari", "Bil", "Bri", "Cal", "Cor", "Dav", "Dor", "Eni", "Er", "Far", "Fel", "Ga", "Gra", "His", "Hor", "Ian", "Ipa", "Je", "Jor", "Kas", "Kel", "Lan", "Lo", "Man", "Mer", "Nes", "Ni", "Or", "Oru", "Pana", "Po", "Qua", "Quo", "Ras", "Ron", "Sa", "Sal", "Sin", "Tan", "To", "Tra", "Um", "Uri", "Val", "Vor", "War", "Wil", "Wre", "Xal", "Xo", "Ye", "Yos", "Zan", "Zil"];
@@ -725,7 +812,22 @@ class Goliath extends Person {
     maxAge = 100;
     adolescence = 18;
     haveKidsChance = 20;
+    minHeight = 75;
+    maxHeight = 97;
+    minWeight = 187;
+    maxWeight = 473;
 
+    constructor() {
+        super();
+        if (!this.adultHeight) this.generateHeight();
+        if (!this.adultWeight) this.generateWeight();
+    }
+    generateHeight() {
+        this.adultHeight = getRandomNumberInRange(this.minHeight, this.maxHeight);
+    }
+    generateWeight() {
+        this.adultWeight = getRandomNumberInRange(this.minWeight, this.maxWeight);
+    }
     randomFirstName() {
         if (this.gender == 'male') {
             const nameList1 = ["Ag", "Apa", "Ar", "Au", "Aug", "Aur", "Eag", "Eg", "Erg", "Ga", "Gau", "Gea", "Gha", "Gra", "Ila", "Ili", "Ira", "Kana", "Kava", "Kaza", "Keo", "Khu", "Kora", "Kra", "La", "Lau", "Laza", "Loro", "Ma", "Mara", "Mau", "Mea", "Mo", "Na", "Nara", "Nau", "Neo", "Pa", "Pu", "Tara", "Tau", "Tha", "Thava", "Tho", "Va", "Vara", "Vau", "Vaura", "Vega", "Vi", "Vo", "Za", "Zau"];
@@ -772,7 +874,22 @@ class Halfling extends Person {
     maxAge = 250;
     adolescence = 20;
     haveKidsChance = 7;
+    minHeight = 32;
+    maxHeight = 42;
+    minWeight = 34;
+    maxWeight = 54;
 
+    constructor() {
+        super();
+        if (!this.adultHeight) this.generateHeight();
+        if (!this.adultWeight) this.generateWeight();
+    }
+    generateHeight() {
+        this.adultHeight = getRandomNumberInRange(this.minHeight, this.maxHeight);
+    }
+    generateWeight() {
+        this.adultWeight = getRandomNumberInRange(this.minWeight, this.maxWeight);
+    }
     randomFirstName() {
         if (this.gender == 'male') {
             const nameList1 = ["An", "Ar", "Bar", "Bel", "Con", "Cor", "Dan", "Dav", "El", "Er", "Fal", "Fin", "Flyn", "Gar", "Go", "Hal", "Hor", "Ido", "Ira", "Jan", "Jo", "Kas", "Kor", "La", "Lin", "Mar", "Mer", "Ne", "Nor", "Ori", "Os", "Pan", "Per", "Pim", "Quin", "Quo", "Ri", "Ric", "San", "Shar", "Tar", "Te", "Ul", "Uri", "Val", "Vin", "Wen", "Wil", "Xan", "Xo", "Yar", "Yen", "Zal", "Zen"];
@@ -806,7 +923,22 @@ class Halfelf extends Person {
     maxAge = 180;
     adolescence = 20;
     haveKidsChance = 9;
+    minHeight = 58;
+    maxHeight = 76;
+    minWeight = 102;
+    maxWeight = 260;
 
+    constructor() {
+        super();
+        if (!this.adultHeight) this.generateHeight();
+        if (!this.adultWeight) this.generateWeight();
+    }
+    generateHeight() {
+        this.adultHeight = getRandomNumberInRange(this.minHeight, this.maxHeight);
+    }
+    generateWeight() {
+        this.adultWeight = getRandomNumberInRange(this.minWeight, this.maxWeight);
+    }
     randomFirstName() {
         if (this.gender == 'male') {
             const nameList1 = ["Al", "Aro", "Bar", "Bel", "Cor", "Cra", "Dav", "Dor", "Eir", "El", "Fal", "Fril", "Gaer", "Gra", "Hal", "Hor", "Ian", "Ilo", "Jam", "Kev", "Kri", "Leo", "Lor", "Mar", "Mei", "Nil", "Nor", "Ori", "Os", "Pan", "Pet", "Quo", "Raf", "Ri", "Sar", "Syl", "Tra", "Tyr", "Uan", "Ul", "Van", "Vic", "Wal", "Wil", "Xan", "Xav", "Yen", "Yor", "Zan", "Zyl"];
@@ -833,7 +965,22 @@ class Halforc extends Person {
     maxAge = 75;
     adolescence = 14;
     haveKidsChance = 22;
+    minHeight = 58;
+    maxHeight = 80;
+    minWeight = 137;
+    maxWeight = 375;
 
+    constructor() {
+        super();
+        if (!this.adultHeight) this.generateHeight();
+        if (!this.adultWeight) this.generateWeight();
+    }
+    generateHeight() {
+        this.adultHeight = getRandomNumberInRange(this.minHeight, this.maxHeight);
+    }
+    generateWeight() {
+        this.adultWeight = getRandomNumberInRange(this.minWeight, this.maxWeight);
+    }
     randomFirstName() {
         if (this.gender == 'male') {
             const nameList1 = ["Ag", "Agg", "Ar", "Arn", "As", "At", "Atr", "B", "Bar", "Bel", "Bor", "Br", "Brak", "C", "Cr", "D", "Dor", "Dr", "Dur", "G", "Gal", "Gan", "Gar", "Gna", "Gor", "Got", "Gr", "Gram", "Grim", "Grom", "Grum", "Gul", "H", "Hag", "Han", "Har", "Hog", "Hon", "Hor", "Hun", "Hur", "K", "Kal", "Kam", "Kar", "Kel", "Kil", "Kom", "Kor", "Kra", "Kru", "Kul", "Kur", "Lum", "M", "Mag", "Mahl", "Mak", "Mal", "Mar", "Mog", "Mok", "Mor", "Mug", "Muk", "Mura", "N", "Oggu", "Ogu", "Ok", "Oll", "Or", "Rek", "Ren", "Ron", "Rona", "S", "Sar", "Sor", "T", "Tan", "Th", "Thar", "Ther", "Thr", "Thur", "Trak", "Truk", "Ug", "Uk", "Ukr", "Ull", "Ur", "Urth", "Urtr", "Z", "Za", "Zar", "Zas", "Zav", "Zev", "Zor", "Zur", "Zus"];
@@ -864,6 +1011,22 @@ class Human extends Person {
     maxAge = 100;
     adolescence = 18;
     haveKidsChance = 16;
+    minHeight = 56;
+    maxHeight = 78;
+    minWeight = 107;
+    maxWeight = 297;
+
+    constructor() {
+        super();
+        if (!this.adultHeight) this.generateHeight();
+        if (!this.adultWeight) this.generateWeight();
+    }
+    generateHeight() {
+        this.adultHeight = getRandomNumberInRange(this.minHeight, this.maxHeight);
+    }
+    generateWeight() {
+        this.adultWeight = getRandomNumberInRange(this.minWeight, this.maxWeight);
+    }
 }
 
 class Tabaxi extends Person {
@@ -871,7 +1034,22 @@ class Tabaxi extends Person {
     maxAge = 100;
     adolescence = 18;
     haveKidsChance = 16;
+    minHeight = 61;
+    maxHeight = 75;
+    minWeight = 84;
+    maxWeight = 272;
 
+    constructor() {
+        super();
+        if (!this.adultHeight) this.generateHeight();
+        if (!this.adultWeight) this.generateWeight();
+    }
+    generateHeight() {
+        this.adultHeight = getRandomNumberInRange(this.minHeight, this.maxHeight);
+    }
+    generateWeight() {
+        this.adultWeight = getRandomNumberInRange(this.minWeight, this.maxWeight);
+    }
     randomFirstName() {
         const nameList1 = ["Afternoon Nap (Nap)", "Animal in the Woods (Woods)", "Answered Riddle (Riddle)", "Art of Shadows (Art)", "Aura of Passion (Aura)", "Aurora of Winter (Aurora)", "Autumn Harvest (Autumn)", "Beats of a Heart (Beats)", "Beauty of Summer (Summer)", "Beauty's Eye (Beauty)", "Belly of a Beast (Beast)", "Berry Bush (Bush)", "Big Heart (Big)", "Bird Feather (Bird)", "Bite Marks (Bite)", "Blank Board (Board)", "Blank Canvas (Canvas)", "Blazing Fire (Blaze)", "Blossoms in Summer (Blossom)", "Branch of a River (River)", "Breath of Fresh Air (Breath)", "Broken Chain (Chain)", "Bubble of a Cauldron (Bubble)", "Burden of Chains (Chains)", "Burning Desire (Desire)", "Burning Fire (Fire)", "Bush in the Forest (Forest)", "Bushy Branch (Branch)", "Busy Bee (Bee)", "Cadence of Water (Cadence)", "Cake of Chocolate (Cake)", "Call of a Bird (Bird)", "Call of the Owl (Owl)", "Call to Action (Action)", "Candle in the Dark (Candle)", "Cannon on Deck (Cannon)", "Carriage on the Road (Road)", "Clanking Bottle (Clank)", "Cloaking Dagger (Dagger)", "Cloud in the Sky (Sky)", "Coursing River (River)", "Cover of Clouds (Cover)", "Crescent Moon (Moon)", "Dangling Button (Button)", "Dangling Lace (Lace)", "Daydream at Night (Dream)", "Dew on the Grass (Dew)", "Dream of Days (Dream)", "Drifting Cloud (Cloud)", "Drifting Snowflake (Snowflake)", "Drop in a Pond (Drop)", "Dust of Chalk (Dust)", "Dust on the Road (Dust)", "Eclipse of the Moon (Eclipse)", "Edge of the World (Edge)", "End of Winter (Winter)", "Endless Time (Time)", "Fall of Water (Water)", "Fallen Twig (Twig)", "Fang of a Snake (Fang)", "Feather in the Wind (Feather)", "Fire in the Distance (Fire)", "Fish in the River (River)", "Flame of Passion (Passion)", "Flame of the Spirit (Flame)", "Flickering Fire (Fire)", "Flickering Flame (Flame)", "Flight of a Robin (Robin)", "Flow of the River (Flow)", "Flower in the Field (Flower)", "Flower of Ivory (Ivory)", "Forgotten Link (Link)", "Four-Leaf Clover (Clover)", "Fragrance of Spring (Spring)", "Friend of Foe (Friend)", "Gale of the Storm (Gale)", "Game of Chance (Game)", "Garden of Flowers (Flower)", "Gift of a Guest (Gift)", "Glow of the Sun (Sun)", "Grass of Spring (Grass)", "Guest at Home (Guest)", "Guide of Life (Guide)", "Hawk Feather (Hawk)", "Hen of the Flock (Hen)", "Hidden Depths (Depth)", "Hidden Treasure (Treasure)", "Hide of the Beast (Hide)", "High Noon (Noon)", "Honey of Bees (Honey)", "Hot Flame (Flame)", "Hot as Fire (Fire)", "Ice in Summer (Ice)", "Ice on the Lake (Ice)", "Ink on Skin (Ink)", "Jewel of the Mountain (Jewel)", "Kite in the Wind (Kite)", "Leaf on the Water (Leaf)", "Leaping Frog (Frog)", "Light in the Morning (Light)", "Lightning After Thunder (Lightning)", "Little Flower (Little)", "Lock on an Open Door (Lock)", "Locket on a Heart (Locket)", "Looping Coil (Coil)", "Loose String (String)", "Luck of the Draw (Luck)", "Marble in the Sky (Marble)", "Mark of Life (Mark)", "Melting of Snow (Snow)", "Mirror's Reflection (Mirror)", "Mist in the Morning (Mist)", "Mountain Boulder (Boulder)", "Needle in Hay (Needle)", "Night of Dreams (Night)", "Open Gates (Gate)", "Owl in the Morning (Owl)", "Page of a Book (Page)", "Paint on a Canvas (Paint)", "Patch in the Forest (Patch)", "Paw of a Bear (Paw)", "Peak of Mountains (Peak)", "Piece of the Puzzle (Piece)", "Plume in the Wind (Plume)", "Plume of Smoke (Smoke)", "Poem of Summer (Poem)", "Print of a Boot (Boot)", "Print of an Animal (Animal)", "Quill in the Grass (Quill)", "Rain in Summer (Rain)", "Rain of Fall (Rain)", "Rainbow After Rain (Rainbow)", "Rays of the Sun (Ray)", "Remnants of History (Remnant)", "Rhythm of Drums (Rhythm)", "Ringing of Bells (Bell)", "Rinkling Chains (Chains)", "Roar of a Bear (Roar)", "Rope in a Knot (Knot)", "Rustling of a Deer (Deer)", "Sailing Ship (Ship)", "Sand of the Beach (Sand)", "Sands of Time (Sand)", "Scarf in Summer (Scarf)", "Scratch on Wood (Scratch)", "Screech of Bats (Bat)", "Sea of Opportunity (Sea)", "Second Chance (Chance)", "Serpent Scale (Scale)", "Shadow of a Star (Shadow)", "Shadows in the Wind (Shadow)", "Sky Full of Stars (Sky)", "Sky of a Sunset (Sky)", "Sleight Hand (Hand)", "Smooth as Silk (Silk)", "Snapping Branch (Snap)", "Snow of the Mountain (Snow)", "Solstice of Summer (Solstice)", "Song of Paradise (Song)", "Sound of the Drum (Drum)", "Spark of Life (Spark)", "Sparkle of Light (Sparkle)", "Spell of Rain (Spell)", "Spots of a Leopard (Spot)", "Spring Blossom (Spring)", "Spring Winds (Spring)", "Star in the Morning (Star)", "Steady Rock (Rock)", "Stitch of Fabric (Stitch)", "Stone in Water (Stone)", "Storm at Sea (Sea)", "Storm on the Horizon (Storm)", "Strength of Love (Love)", "Stripes of a Tiger (Tiger)", "Stroke of a Brush (Brush)", "Summer Afternoon (Summer)", "Sunshine at Night (Sunshine)", "Tale of Wonder (Tale)", "Taste of Fruit (Taste)", "Three Tree (Three)", "Thrill of Life (Thrill)", "Thunder in the Morning (Thunder)", "Ticking Clock (Clock)", "Tome of Secrets (Tome)", "Top Card (Card)", "Trail in the Woods (Trail)", "Tree Blossom (Blossom)", "Tree in the Woods (Tree)", "Tricking Treat (Trick)", "Two River (River)", "Unpulled Cart (Cart)", "Unread Book (Book)", "Veil of Shadows (Veil)", "Veil of a Mask (Veil)", "Wave on the Shore (Wave)", "Windy Shore (Shore)", "Wing of an Angel (Angel)", "Winter Breath (Winter)", "Wish Upon a Star (Wish)", "Wonder of the World (Wonder)"];
         const nameList2 = ["Active", "Agile", "Amused", "Amusing", "Ancient", "Angelic", "Arctic", "Austere", "Bizarre", "Bold", "Brash", "Brave", "Bright", "Bronze", "Cheeky", "Clever", "Curious", "Defiant", "Dynamic", "Eager", "Elegant", "Elite", "Emerald", "Ethereal", "Faint", "Fine", "Five", "Flawless", "Four", "Fragile", "Fragrant", "Free", "Fresh", "Gentle", "Gold", "Golden", "Grand", "Half", "Happy", "Hearty", "Hidden", "Humble", "Hushed", "Icy", "Jade", "Jolly", "Kind", "Lazy", "Light", "Little", "Lone", "Lost", "Lucky", "Magic", "Mellow", "Merry", "Misty", "Mystery", "Nimble", "Odd", "Opal", "Prime", "Proud", "Pure", "Quick", "Quiet", "Quirky", "Radiant", "Rare", "Ruby", "Sapphire", "Secret", "Serene", "Seven", "Shady", "Silent", "Single", "Six", "Smooth", "Stout", "Subtle", "Sweet", "Swift", "Three", "Tranquil", "True", "Twin", "Two", "Velvet", "Vibrant", "Violet", "Wild"];
@@ -899,7 +1077,22 @@ class Tiefling extends Person {
     maxAge = 110;
     adolescence = 18;
     haveKidsChance = 15;
+    minHeight = 60;
+    maxHeight = 70;
+    minWeight = 104;
+    maxWeight = 244;
 
+    constructor() {
+        super();
+        if (!this.adultHeight) this.generateHeight();
+        if (!this.adultWeight) this.generateWeight();
+    }
+    generateHeight() {
+        this.adultHeight = getRandomNumberInRange(this.minHeight, this.maxHeight);
+    }
+    generateWeight() {
+        this.adultWeight = getRandomNumberInRange(this.minWeight, this.maxWeight);
+    }
     getFullName() {
         return this.name;
     }
@@ -931,7 +1124,22 @@ class Tortle extends Person {
     maxAge = 50;
     adolescence = 15;
     haveKidsChance = 55;
+    minHeight = 57;
+    maxHeight = 79;
+    minWeight = 372;
+    maxWeight = 562;
 
+    constructor() {
+        super();
+        if (!this.adultHeight) this.generateHeight();
+        if (!this.adultWeight) this.generateWeight();
+    }
+    generateHeight() {
+        this.adultHeight = getRandomNumberInRange(this.minHeight, this.maxHeight);
+    }
+    generateWeight() {
+        this.adultWeight = getRandomNumberInRange(this.minWeight, this.maxWeight);
+    }
     randomFirstName() {
         const nameList1 = ["", "", "", "", "b", "d", "g", "j", "k", "kr", "l", "n", "pl", "q", "s", "t", "w", "x", "y"];
         const nameList2 = ["ue", "uo", "ua", "ia", "a", "e", "i", "o", "u", "a", "e", "i", "o", "u", "a", "e", "i", "o", "u", "a", "e", "i", "o", "u", "a", "e", "i", "o", "u"];
@@ -964,7 +1172,22 @@ class Warforged extends Person {
     maxAge = 100;
     adolescence = 18;
     haveKidsChance = 16;
+    minHeight = 73;
+    maxHeight = 79;
+    minWeight = 282;
+    maxWeight = 312;
 
+    constructor() {
+        super();
+        if (!this.adultHeight) this.generateHeight();
+        if (!this.adultWeight) this.generateWeight();
+    }
+    generateHeight() {
+        this.adultHeight = getRandomNumberInRange(this.minHeight, this.maxHeight);
+    }
+    generateWeight() {
+        this.adultWeight = getRandomNumberInRange(this.minWeight, this.maxWeight);
+    }
     randomFirstName() {
         const nameList1 = ["Abider", "Achiever", "Actor", "Adapter", "Adviser", "Aegis", "Agent", "Animal", "Apparatus", "Armament", "Artist", "Audience", "Author", "Awakener", "Basher", "Bastion", "Battler", "Bear", "Beast", "Beauty", "Beetle", "Bender", "Binder", "Blade", "Book", "Booster", "Boot", "Bouncer", "Brain", "Brander", "Brawler", "Breaker", "Bringer", "Browser", "Bruiser", "Buffet", "Bug", "Builder", "Bulwark", "Calmer", "Candle", "Cannon", "Carer", "Carriage", "Carrier", "Cart", "Carver", "Case", "Caster", "Catcher", "Chain", "Chains", "Challenger", "Champion", "Chaperon", "Charger", "Chaser", "Chopper", "Claymore", "Cleaver", "Climber", "Clock", "Club", "Clubber", "Coil", "Commander", "Controller", "Cook", "Counter", "Creator", "Creature", "Creese", "Crew", "Croaker", "Crow", "Crumbler", "Crusher", "Curator", "Curtana", "Custodian", "Cutlas", "Cutlass", "Cutter", "Dagger", "Data", "Dealer", "Decipherer", "Defender", "Definer", "Delver", "Designer", "Destroyer", "Diagnoser", "Director", "Dirk", "Diver", "Doctor", "Dozer", "Dreamer", "Drifter", "Driver", "Drone", "Echo", "Edge", "Enchanter", "Epee", "Eraser", "Estoc", "Etcher", "Examiner", "Expert", "Falchion", "Familiar", "Fighter", "Figure", "Fire", "Five", "Flail", "Flame", "Fluke", "Foil", "Follower", "Forger", "Four", "Friend", "Fumbler", "Gasher", "Gauger", "Ghost", "Giant", "Gift", "Glaive", "Glancer", "Griller", "Grunter", "Guardian", "Guest", "Guide", "Hacker", "Hammer", "Handler", "Heart", "Help", "Hook", "Horn", "Host", "Hummer", "Hunter", "Image", "Inspector", "Iron", "Judge", "Junior", "Jury", "Katana", "Kid", "Killer", "Knife", "Knocker", "Kris", "Launcher", "Leaper", "Lifter", "Lock", "Locket", "Lurker", "Mace", "Machine", "Mark", "Marker", "Mask", "Masker", "Mauler", "Melter", "Menace", "Mentor", "Merger", "Metal", "Mime", "Mistake", "Model", "Molder", "Murderer", "Nameless", "Needle", "Nemo", "Novice", "Nurse", "Observer", "Officer", "Ogler", "One", "Ornament", "Painter", "Passenger", "Patient", "Patriot", "Pierce", "Pilot", "Pious", "Player", "Porter", "Preacher", "Pretender", "Prize", "Probe", "Protector", "Prowler", "Punisher", "Query", "Ravager", "Reader", "Reckoner", "Relic", "Render", "Rescuer", "Responder", "Reviewer", "Rider", "Rune", "Saber", "Sabre", "Safeguard", "Salvager", "Saviour", "Scimitar", "Scorcher", "Scratcher", "Scrubber", "Searcher", "Security", "Seeker", "Senior", "Senser", "Sentinel", "Sentry", "Servant", "Shaper", "Shepherd", "Shield", "Shielder", "Shredder", "Slasher", "Slicer", "Smasher", "Smiter", "Snooper", "Spark", "Sparkle", "Special", "Spirit", "Sprinter", "Sprite", "Squasher", "Stalker", "Status", "Steel", "Steeple", "Stick", "Sticks", "Stitcher", "Striker", "Student", "Stumbler", "Subject", "Suit", "Sunderer", "Supporter", "Surveyor", "Sword", "Tackler", "Taunter", "Teacher", "Teaser", "Tempter", "Tester", "Thief", "Thinker", "Three", "Thunder", "Tinkerer", "Titan", "Toad", "Toledo", "Tutor", "Twister", "Two", "Undoer", "Unit", "Unmaker", "Unsung", "Vessel", "Victor", "Visitor", "Voice", "Walker", "Ward", "Warden", "Watcher", "Whisperer", "Wielder", "Winker", "Winner", "Wonderer", "Wrestler", "Zealot", "Zero"];
         const randomNum1 = randomFunction() * nameList1.length | 0;

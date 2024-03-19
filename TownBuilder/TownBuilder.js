@@ -884,6 +884,10 @@ function getRandomItemInList(list) {
     return list[getRandomNumberInRange(0, list.length -1)];
 }
 
+function getDisplayHeight(height) {
+    return `${Math.floor(height/12)}'${height%12}"`;
+}
+
 function addRace() {
     const template = qs('#newRace');
     const clonedTemplate = template.content.cloneNode(true);
@@ -1006,6 +1010,8 @@ class LivingPopulationTab extends Tab {
         const headers = [
             "Name",
             "Age",
+            "Height",
+            "Weight",
             "Race",
             "Birth Year",
             "Death Year",
@@ -1034,6 +1040,8 @@ class FullPopulationTab extends Tab {
         const headers = [
             "Name",
             "Age",
+            "Height",
+            "Weight",
             "Race",
             "Birth Year",
             "Death Year",
@@ -1062,6 +1070,8 @@ class DeadPopulationTab extends Tab {
         const headers = [
             "Name",
             "Age",
+            "Height",
+            "Weight",
             "Race",
             "Birth Year",
             "Death Year",
@@ -1100,6 +1110,8 @@ function getPopulationData(population) {
         dataRows.push([
             nameElem,
             person.getAge(),
+            getDisplayHeight(person.getCurrentHeight()),
+            `${person.getCurrentWeight()} lbs`,
             person.getRace(),
             person.getBirthYear(),
             person.getDeathYear() ? person.getDeathYear() : '-',
@@ -1251,6 +1263,73 @@ class PersonTable extends PagedTable {
             };
         }
         return tableRow;
+    }
+    sortTable(event) {
+        const sortBy = event.target.innerText;
+        const sortDirection = event.target.dataset.sortDirection;
+        const headers = this.headers;
+        // this header is the one currently sorted by
+        if (event.target.dataset.currentSort !== "true") {
+            for (let header of qsa("th span", this.headerRow)) {
+                header.dataset.currentSort = "false";
+            }
+            event.target.dataset.currentSort = "true";
+        }
+        if (sortDirection === 'asc') {
+            event.target.dataset.sortDirection = 'desc';
+        }
+        else if (sortDirection === 'desc') {
+            event.target.dataset.sortDirection = 'asc';
+        }
+
+        this.filteredData.sort(customSort);
+
+        function customSort(a, b) {
+            const headerIndex = headers.indexOf(sortBy);
+            let valueA;
+            let valueB;
+            if (a[headerIndex] instanceof Element) {
+                valueA = a[headerIndex].innerText;
+            }
+            else {
+                valueA = a[headerIndex];
+            }
+            if (b[headerIndex] instanceof Element) {
+                valueB = b[headerIndex].innerText;
+            }
+            else {
+                valueB = b[headerIndex];
+            }
+            if (sortBy === "Height") {
+                valueA = (parseInt(a[headerIndex].split("'")[0]) * 12) + (parseInt(a[headerIndex].split("'")[1].split("\"")[0]))
+                valueB = (parseInt(b[headerIndex].split("'")[0]) * 12) + (parseInt(b[headerIndex].split("'")[1].split("\"")[0]))
+            }
+
+            valueA = !isNaN(parseInt(valueA)) ? parseInt(valueA) : valueA;
+            valueB = !isNaN(parseInt(valueB)) ? parseInt(valueB) : valueB;
+
+            if (sortDirection === "asc") {
+                if (valueA === "-") return 1;
+                if (valueB === "-") return -1;
+                if (valueA < valueB) {
+                    return 1;
+                }
+                if (valueA > valueB) {
+                    return -1;
+                }
+            }
+            else {
+                if (valueA === "-") return 1;
+                if (valueB === "-") return -1;
+                if (valueA > valueB) {
+                    return 1;
+                }
+                if (valueA < valueB) {
+                    return -1;
+                }
+            }
+            return 0;
+        }
     }
 }
 
