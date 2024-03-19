@@ -222,13 +222,13 @@ class Person {
         if (this.age >= this.adolescence) {
             return this.adultHeight;
         }
-        return Math.round((this.age / this.adolescence) * this.adultHeight)
+        return Math.round(((this.age + 1) / this.adolescence) * this.adultHeight)
     }
     getCurrentWeight() {
         if (this.age >= this.adolescence) {
             return this.adultWeight;
         }
-        return Math.round((this.age / this.adolescence) * this.adultWeight)
+        return Math.round(((this.age + 1) / this.adolescence) * this.adultWeight)
     }
     getDeathChanceAtAge() {
         let percentageOfMaxAge = (this.age / this.maxAge) * 100;
