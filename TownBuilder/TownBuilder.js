@@ -885,7 +885,7 @@ function getRandomItemInList(list) {
 }
 
 function getDisplayHeight(height) {
-    return `${Math.floor(height/12)}'${height%12}"`;
+    return `${Math.floor(height/12)}' ${height%12}"`;
 }
 
 function addRace() {
@@ -1301,8 +1301,8 @@ class PersonTable extends PagedTable {
                 valueB = b[headerIndex];
             }
             if (sortBy === "Height") {
-                valueA = (parseInt(a[headerIndex].split("'")[0]) * 12) + (parseInt(a[headerIndex].split("'")[1].split("\"")[0]))
-                valueB = (parseInt(b[headerIndex].split("'")[0]) * 12) + (parseInt(b[headerIndex].split("'")[1].split("\"")[0]))
+                valueA = (parseInt(a[headerIndex].split("' ")[0]) * 12) + (parseInt(a[headerIndex].split("' ")[1].split("\"")[0]))
+                valueB = (parseInt(b[headerIndex].split("' ")[0]) * 12) + (parseInt(b[headerIndex].split("' ")[1].split("\"")[0]))
             }
 
             valueA = !isNaN(parseInt(valueA)) ? parseInt(valueA) : valueA;
