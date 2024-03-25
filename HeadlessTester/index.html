@@ -48,12 +48,13 @@
                     <option>Launcher</option>
                     <option>MessagingService</option>
                     <option>Messenger</option>
+                    <option>Toaster</option>
                 </select>
             </label>
-            <details class="config" id="events" data-depends-on="plugin" data-depends-value="Auth,CoBrowseService,CobrowseVoice,Conversations,Database,Journey,Knowledge,KnowledgeService,Launcher,MessagingService,Messenger">
+            <details class="config" id="events" data-depends-on="plugin" data-depends-value="Auth,CoBrowseService,CobrowseVoice,Conversations,Database,Journey,Knowledge,KnowledgeService,Launcher,MessagingService,Messenger,Toaster">
                 <summary>Events</summary>
-                <button id="selectAll" data-depends-on="plugin" data-depends-value="Auth,CoBrowseService,CobrowseVoice,Conversations,Database,Journey,Knowledge,KnowledgeService,Launcher,MessagingService,Messenger">Select All</button>
-                <button id="addEvents" data-depends-on="plugin" data-depends-value="Auth,CoBrowseService,CobrowseVoice,Conversations,Database,Journey,Knowledge,KnowledgeService,Launcher,MessagingService,Messenger">Add Events</button>
+                <button id="selectAll" data-depends-on="plugin" data-depends-value="Auth,CoBrowseService,CobrowseVoice,Conversations,Database,Journey,Knowledge,KnowledgeService,Launcher,MessagingService,Messenger,Toaster">Select All</button>
+                <button id="addEvents" data-depends-on="plugin" data-depends-value="Auth,CoBrowseService,CobrowseVoice,Conversations,Database,Journey,Knowledge,KnowledgeService,Launcher,MessagingService,Messenger,Toaster">Add Events</button>
                 <div class="scrollable">
                     <label data-depends-on="plugin" data-depends-value="Auth">
                         <input id="Auth.ready" type="checkbox">Ready
@@ -334,11 +335,29 @@
                     <label data-depends-on="plugin" data-depends-value="Messenger">Closed: 
                         <input id="Messenger.closed" type="checkbox">
                     </label>
+                    <label data-depends-on="plugin" data-depends-value="Toaster">Ready: 
+                        <input id="Messenger.closed" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Toaster">Opened: 
+                        <input id="Messenger.closed" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Toaster">Accepted: 
+                        <input id="Messenger.closed" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Toaster">Declined: 
+                        <input id="Messenger.closed" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Toaster">Closed: 
+                        <input id="Messenger.closed" type="checkbox">
+                    </label>
+                    <label data-depends-on="plugin" data-depends-value="Toaster">Error: 
+                        <input id="Messenger.closed" type="checkbox">
+                    </label>
                 </div>
             </details>
-            <details class="config" id="commands" data-depends-on="plugin" data-depends-value="Messenger,Database,MessagingService,Launcher,KnowledgeService,Journey,Engagement,CoBrowseService,AuthProvider,Auth">
+            <details class="config" id="commands" data-depends-on="plugin" data-depends-value="Messenger,Database,MessagingService,Launcher,KnowledgeService,Journey,Engagement,CoBrowseService,AuthProvider,Auth,Toaster">
                 <summary>Commands</summary>
-                <label data-depends-on="plugin" data-depends-value="Messenger,Database,MessagingService,Launcher,KnowledgeService,Journey,Engagement,CoBrowseService,AuthProvider,Auth">Command: 
+                <label data-depends-on="plugin" data-depends-value="Messenger,Database,MessagingService,Launcher,KnowledgeService,Journey,Engagement,CoBrowseService,AuthProvider,Auth,Toaster">Command: 
                     <select id="command">
                         <option data-depends-on="plugin" data-depends-value="Auth">Auth.logout</option>
                         <option data-depends-on="plugin" data-depends-value="Auth">Auth.getTokens</option>
@@ -399,12 +418,16 @@
                         <option data-depends-on="plugin" data-depends-value="Messenger">Messenger.openSearch</option>
                         <option data-depends-on="plugin" data-depends-value="Messenger">Messenger.openCobrowse</option>
                         <option data-depends-on="plugin" data-depends-value="Messenger">Messenger.close</option>
+                        <option data-depends-on="plugin" data-depends-value="Toaster">Toaster.open</option>
+                        <option data-depends-on="plugin" data-depends-value="Toaster">Toaster.accept</option>
+                        <option data-depends-on="plugin" data-depends-value="Toaster">Toaster.decline</option>
+                        <option data-depends-on="plugin" data-depends-value="Toaster">Toaster.close</option>
                     </select>
                 </label>
-                <label data-depends-on="plugin" data-depends-value="Messenger,Database,MessagingService,Launcher,KnowledgeService,Journey,Engagement,CoBrowseService,AuthProvider,Auth">Command Body: 
+                <label data-depends-on="plugin" data-depends-value="Messenger,Database,MessagingService,Launcher,KnowledgeService,Journey,Engagement,CoBrowseService,AuthProvider,Auth,Toaster">Command Body: 
                     <textarea id="commandBody">{}</textarea>
                 </label>
-                <button id="runCommand" data-depends-on="plugin" data-depends-value="Messenger,Database,MessagingService,Launcher,KnowledgeService,Journey,Engagement,CoBrowseService,AuthProvider,Auth">Run Command</button>    
+                <button id="runCommand" data-depends-on="plugin" data-depends-value="Messenger,Database,MessagingService,Launcher,KnowledgeService,Journey,Engagement,CoBrowseService,AuthProvider,Auth,Toaster">Run Command</button>
             </details>
         </div>
         <div class="panel panel2">

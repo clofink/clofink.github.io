@@ -61,7 +61,11 @@ function getSampleCommandInput(command) {
         "Messenger.openConversation": {},
         "Messenger.openSearch": {},
         "Messenger.openCobrowse": {},
-        "Messenger.close": {}
+        "Messenger.close": {},
+        "Toaster.open": {title: "Welcome to Genesys Cloud", body: "Encountering issues? Our support team is ready to troubleshoot and assist you.", buttons: {type: "binary", primary: "Get Support", secondary: "Maybe Later"}},
+        "Toaster.accept": {},
+        "Toaster.decline": {},
+        "Toaster.close": {}
     }
     return commandMapping[command];
 }
