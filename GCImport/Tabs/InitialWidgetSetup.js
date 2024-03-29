@@ -11,7 +11,8 @@ class WidgetsTab extends Tab {
         addElement(fileInput, label);
         registerElement(fileInput, "change", loadFile);
         const startButton = newElement('button', {innerText: "Start"});
-        registerElement(startButton, "click", this.importWidgetsWrapper);
+        const buttonClickHandler = this.importWidgetsWrapper.bind(this);
+        registerElement(startButton, "click", buttonClickHandler);
         const logoutButton = newElement("button", {innerText: "Logout"});
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([

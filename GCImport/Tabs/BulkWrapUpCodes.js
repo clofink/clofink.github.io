@@ -11,7 +11,8 @@ class WrapUpCodesTab extends Tab {
         addElement(fileInput, label);
         registerElement(fileInput, "change", loadFile);
         const startButton = newElement('button', {innerText: "Start"});
-        registerElement(startButton, "click", this.importWrapUpCodesWrapper);
+        const buttonClickHandler = this.importWrapUpCodesWrapper.binf(this);
+        registerElement(startButton, "click", buttonClickHandler);
         const logoutButton = newElement("button", {innerText: "Logout"});
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
