@@ -26,7 +26,7 @@ class CannedResponsesTab extends Tab {
     }
     
     importCannedWrapper() {
-        showLoading(importCannedResponses, this.container);
+        showLoading(this.importCannedResponses, this.container);
     }
     
     async importCannedResponses() {
