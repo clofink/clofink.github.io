@@ -117,7 +117,8 @@ class WidgetsTab extends Tab {
     }
     
     importWidgetsWrapper() {
-        showLoading(this.importWidgets, this.container);
+        const boundFunc = this.importWidgets.bind(this);
+        showLoading(boundFunc, this.container);
     }
     
     async importWidgets() {
@@ -131,7 +132,7 @@ class WidgetsTab extends Tab {
         }
 
         // get list of configurations
-        const widgetConfigs = await getAllWidgetConfigs();
+        const widgetConfigs = await this.getAllWidgetConfigs();
         const widgetConfigMapping = {};
         for (let config of widgetConfigs.entities) {
             widgetConfigMapping[config.name] = { id: config.id, version: config.version };
