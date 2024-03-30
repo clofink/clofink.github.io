@@ -30,6 +30,7 @@ function showMainMenu() {
         new WrapUpCodesTab(),
         new WidgetsTab(),
         new UserPromptsTab(),
+        new UserSkillsTab(),
     ]);
     addElement(tabContainer.getTabContainer(), page);
     getOrgDetails().then(function(result) {
