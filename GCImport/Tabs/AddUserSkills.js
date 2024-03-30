@@ -19,7 +19,9 @@ class UserSkillsTab extends Tab {
             `Must have "users" scope`, 
             `Required CSV column "Email", "Skills"`,
             `"Skills" is a comma-separated list of skill names.`,
-            `Each skill can have a proficiency too. The format is <skillName>:<proficiency>`
+            `Skill names are not case-sensitive`,
+            `Each skill can have a proficiency too. The format is <skillName>:<proficiency>`,
+            `If a skill is referenced that does not exist, it will be created`
         ]);
         const exampleLink = createDownloadLink("User Skills Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
         addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
@@ -97,8 +99,8 @@ class UserSkillsTab extends Tab {
             for (let value of values) {
                 const parts = value.split(":"); 
                 if (!skillsInfo[parts[0].toLowerCase()]) {
-                    results.push({name: parts[0], type: "User Skill", status: "failed", error: `No existing skill for skill ${parts[0]}`})
-                    continue;
+                    const newSkill = await makeCallAndHandleErrors(createItem, ["/api/v2/routing/skills", {name: parts[0]}], results, parts[0], "Skill");
+                    skillsInfo[parts[0].toLowerCase()] = newSkill.id;
                 }
                 if (parts[1] && (isNaN(parseInt(parts[1])) || [0,1,2,3,4,5].indexOf(parseInt(parts[1])) < 0)) {
                     results.push({name: parts[0], type: "User Skill", status: "failed", error: `Invalid proficiency ${parts[1]} for skill ${parts[0]}`})
