@@ -1,27 +1,3 @@
-// tab container
-// tab
-// sort/filter table
-// filtered list
-class ScrollableList {
-
-    constructor(items) {
-
-    }
-
-    createList(items) {
-        const listContainer = newElement();
-        for (let item of items) {
-            const itemElement = this.createItem(item);
-            addElement(itemElement, listContainer);
-        }
-        return listContainer
-    }
-    createItem(item) {
-        const element = newElement();
-        return element;
-    }
-}
-
 class TabContainer {
     tabs = [];
     tabHeaders = [];
