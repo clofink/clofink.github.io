@@ -144,8 +144,9 @@ class Guard extends Job {
         return getRandomNumberInRange(minSalary * this.getLevel(), maxSalary * this.getLevel());
     }
     meetsRequirements(town) {
-        if (town.getLivingPopulation().length > 10) {
-            if (town.numberOfJobInMarket('Guard') <= Math.floor(town.getLivingPopulation().length / 10)) {
+        const livingPopCount = town.getLivingPopulationCount();
+        if (livingPopCount > 10) {
+            if (town.numberOfJobInMarket('Guard') <= Math.floor(livingPopCount / 10)) {
                 return true;
             }
         }
@@ -175,8 +176,9 @@ class Patrol extends Job {
         return getRandomNumberInRange(minSalary * this.getLevel(), maxSalary * this.getLevel());
     }
     meetsRequirements(town) {
-        if (town.getLivingPopulation().length > 30) {
-            if (town.numberOfJobInMarket('Patrol') <= Math.floor(town.getLivingPopulation().length / 15)) {
+        const livingPopCount = town.getLivingPopulationCount();
+        if (livingPopCount > 30) {
+            if (town.numberOfJobInMarket('Patrol') <= Math.floor(livingPopCount / 15)) {
                 return true;
             }
         }
@@ -203,8 +205,9 @@ class Barkeep extends Job {
         return getRandomNumberInRange(minSalary * this.getLevel(), maxSalary * this.getLevel());
     }
     meetsRequirements(town) {
-        if (town.getLivingPopulation().length > 10) {
-            if (town.numberOfJobInMarket('Barkeep') <= Math.floor(town.getLivingPopulation().length / 50)) {
+        const livingPopCount = town.getLivingPopulationCount();
+        if (livingPopCount > 10) {
+            if (town.numberOfJobInMarket('Barkeep') <= Math.floor(livingPopCount / 50)) {
                 return true;
             }
         }
@@ -234,9 +237,10 @@ class Healer extends Job {
         return getRandomNumberInRange(minSalary * this.getLevel(), maxSalary * this.getLevel());
     }
     meetsRequirements(town) {
-        if (town.getLivingPopulation().length > 10) {
+        const livingPopCount = town.getLivingPopulationCount();
+        if (livingPopCount > 10) {
             // only need 1 healer per 100 people
-            if (town.numberOfJobInMarket('Healer') <= Math.floor(town.getLivingPopulation().length / 100)) {
+            if (town.numberOfJobInMarket('Healer') <= Math.floor(livingPopCount / 100)) {
                 return true;
             }
         }
@@ -266,9 +270,10 @@ class Smith extends Job {
         return getRandomNumberInRange(minSalary * this.getLevel(), maxSalary * this.getLevel());
     }
     meetsRequirements(town) {
+        const livingPopCount = town.getLivingPopulationCount();
         // 1 smith for every 30 people?
-        if (town.getLivingPopulation().length > 10) {
-            if (town.numberOfJobInMarket('Smith') <= Math.floor(town.getLivingPopulation().length / 30)) {
+        if (livingPopCount > 10) {
+            if (town.numberOfJobInMarket('Smith') <= Math.floor(livingPopCount / 30)) {
                 return true;
             }
         }
@@ -298,8 +303,9 @@ class Innkeeper extends Job {
         return getRandomNumberInRange(minSalary * this.getLevel(), maxSalary * this.getLevel());
     }
     meetsRequirements(town) {
-        if (town.getLivingPopulation().length > 30) {
-            if (town.numberOfJobInMarket('Innkeeper') <= Math.floor(town.getLivingPopulation().length / 50)) {
+        const livingPopCount = town.getLivingPopulationCount();
+        if (livingPopCount > 30) {
+            if (town.numberOfJobInMarket('Innkeeper') <= Math.floor(livingPopCount / 50)) {
                 return true;
             }
         }
@@ -329,8 +335,9 @@ class Baker extends Job {
         return getRandomNumberInRange(minSalary * this.getLevel(), maxSalary * this.getLevel());
     }
     meetsRequirements(town) {
-        if (town.getLivingPopulation().length > 10) {
-            if (town.numberOfJobInMarket('Baker') <= Math.floor(town.getLivingPopulation().length / 15)) {
+        const livingPopCount = town.getLivingPopulationCount();
+        if (livingPopCount > 10) {
+            if (town.numberOfJobInMarket('Baker') <= Math.floor(livingPopCount / 15)) {
                 return true;
             }
         }
@@ -359,8 +366,9 @@ class Farmer extends Job {
         return getRandomNumberInRange(minSalary * this.getLevel(), maxSalary * this.getLevel());
     }
     meetsRequirements(town) {
-        if (town.getLivingPopulation().length > 10) {
-            if (town.numberOfJobInMarket('Farmer') <= Math.floor(town.getLivingPopulation().length / 10)) {
+        const livingPopCount = town.getLivingPopulationCount();
+        if (livingPopCount > 10) {
+            if (town.numberOfJobInMarket('Farmer') <= Math.floor(livingPopCount / 10)) {
                 return true;
             }
         }
@@ -387,8 +395,9 @@ class Leatherworker extends Job {
         return getRandomNumberInRange(minSalary * this.getLevel(), maxSalary * this.getLevel());
     }
     meetsRequirements(town) {
-        if (town.getLivingPopulation().length > 10) {
-            if (town.numberOfJobInMarket('Leatherworker') <= Math.floor(town.getLivingPopulation().length / 40)) {
+        const livingPopCount = town.getLivingPopulationCount();
+        if (livingPopCount > 10) {
+            if (town.numberOfJobInMarket('Leatherworker') <= Math.floor(livingPopCount / 40)) {
                 return true;
             }
         }

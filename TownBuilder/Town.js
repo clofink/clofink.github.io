@@ -21,9 +21,12 @@ class Town {
     }
     yearOfIncorporation;
     numberOfFounders;
-    population = [];
-    livingPopulation = [];
-    deadPopulation = [];
+    population = {};
+    livingPopulation = {};
+    deadPopulation = {};
+    populationIds = [];
+    livingPopulationIds = [];
+    deadPopulationIds = [];
     orphanage = [];
     currentYear;
     jobMarket = [];
@@ -105,27 +108,52 @@ class Town {
     getLivingPopulation() {
         return this.livingPopulation;
     }
+    getLivingPopulationIds() {
+        return this.livingPopulationIds;
+    }
+    getDeadPopulationIds() {
+        return this.deadPopulationIds;
+    }
+    getPopulationIds() {
+        return this.populationIds;
+    }
+    getLivingPopulationCount() {
+        return this.livingPopulationIds.length;
+    }
+    getDeadPopulationCount() {
+        return this.deadPopulationIds.length;
+    }
+    getPopulationCount() {
+        return this.populationIds.length;
+    }
     getDeadPopulation() {
         return this.deadPopulation;
     }
-    addToDeadPopulation(deadPerson) {
-        this.deadPopulation.push(deadPerson);
+    addToDeadPopulation(person) {
+        const personId = person.getPersonId();
+        if (this.deadPopulationIds.indexOf(personId) >= 0) debugger
+        this.deadPopulationIds.push(personId);
+        this.deadPopulation[personId] = person;
     }
     getPopulation() {
         return this.population;
     }
     addToPopulation(person) {
-        this.livingPopulation.push(person);
-        this.population.push(person);
+        const personId = person.getPersonId();
+        this.livingPopulationIds.push(personId);
+        this.livingPopulation[personId] = person;
+        this.populationIds.push(personId);
+        this.population[personId] = person;
     }
-    removePerson(deadPerson) {
-        let currentLivingPopulation = this.getLivingPopulation();
-        if (currentLivingPopulation.length < 2) {
-            this.livingPopulation.pop();
+    removePerson(personId) {
+        const currentLivingPopulationIds = [...this.livingPopulationIds];
+        if (currentLivingPopulationIds.length < 2) {
+            this.livingPopulationIds.pop();
         }
         else {
-            this.livingPopulation.splice(currentLivingPopulation.indexOf(deadPerson), 1);
+            this.livingPopulationIds.splice(currentLivingPopulationIds.indexOf(personId), 1);
         }
+        delete this.livingPopulation[personId];
     }
     incrementCurrentYear() {
         this.currentYear = this.getCurrentYear() + 1;

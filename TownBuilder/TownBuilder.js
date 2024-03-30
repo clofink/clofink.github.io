@@ -1,13 +1,8 @@
-var population = [];
 var tabs = [];
 var newTown;
 
 function getPersonById(personId, personList) {
-    for (let person of personList) {
-        if (person.getPersonId() == personId) {
-            return person;
-        }
-    }
+    return personList[personId];
 }
 
 function getPersonByName(name, personList) {
@@ -18,8 +13,8 @@ function getPersonByName(name, personList) {
     }
 }
 
-function getRandomPerson(personList) {
-    return personList[getRandomNumberInRange(0, personList.length - 1)];
+function getRandomPerson(popIds) {
+    return popIds[getRandomNumberInRange(0, popIds.length - 1)];
 }
 
 function getRandomNumberInRange(min, max) {
@@ -116,7 +111,7 @@ function populateTown(town) {
         let newPerson = createPerson(getRandomItemInList(townRaces), {currentYear: town.getCurrentYear()});
         newPerson.addLifeEvent(newPerson.getBirthYear(), "{P} was born");
         newPerson.setStats(assignStats(rollStats()));
-        town.addToPopulation(newPerson)
+        town.addToPopulation(newPerson);
     }
 }
 
@@ -324,7 +319,7 @@ function processLifeEvents(person, town, currentYear) {
     // meet people
     let meetChance = currentJob ? currentJob.getMeetChance() : 36;
     for (let p = 0; p < meetChance; p++) {
-        meetOtherPeople(person, town.getLivingPopulation(), currentYear);
+        meetOtherPeople(person, town, currentYear);
     }
 
     shuffleArray(lifeEvents);
@@ -621,7 +616,7 @@ function processLifeEvents(person, town, currentYear) {
                 bestFriend.addLifeEvent(currentYear, `{PP} best friend ${personName} died`);
             }
         }
-        town.removePerson(person);
+        town.removePerson(person.getPersonId());
         town.addToDeadPopulation(person);
         person.die(currentYear);
         if (spouse && spouse.getIsDead()) {
@@ -654,7 +649,7 @@ function yearPasses(town) {
     const currentYear = town.getCurrentYear();
     // check for adding new jobs to the job market here?
     // try to add up to 5 jobs every year as long as the number of jobs in the marker is less than 60% of people (to account for people too young/old to work)
-    if (town.getJobMarket().length < Math.round(town.getLivingPopulation().length * 0.6)) {
+    if (town.getJobMarket().length < Math.round(town.getLivingPopulationCount() * 0.6)) {
         for (let y = 0; y < 5; y++) {
             if (doesRandomEventHappen(50)) {
                 const newJob = createJob(getRandomJobName());
@@ -669,8 +664,10 @@ function yearPasses(town) {
         newVisitorArrives(town, currentYear);
     }
     // make a copy of living population so I can remove people who die from it without messing up the loop
-    let currentLivingPeople = [...town.getLivingPopulation()];
-    for (let person of currentLivingPeople) {
+    const livingPop = town.getLivingPopulation();
+    const currentLivingPeople = town.getLivingPopulationIds();
+    for (const personId of currentLivingPeople) {
+        const person = livingPop[personId];
         processLifeEvents(person, town, currentYear);
     }
 }
@@ -684,14 +681,15 @@ function newVisitorArrives(town, currentYear) {
     town.addToPopulation(newPerson);
 }
 
-function meetOtherPeople(person, population, currentYear) {
-    let meetPerson = getRandomPerson(population);
+function meetOtherPeople(person, town, currentYear) {
+    const popIds = town.getLivingPopulationIds();
+    const meetPersonId = getRandomPerson(popIds);
+    const meetPerson = getPersonById(meetPersonId, town.getLivingPopulation());
     // can't meet dead people
     if (meetPerson.getIsDead()) {
         return;
     }
     // only get the meetPerson's person ID once
-    const meetPersonId = meetPerson.getPersonId();
     const personId = person.getPersonId();
     const personName = person.getFullName();
     const meetPersonName = meetPerson.getFullName();
@@ -968,7 +966,7 @@ function generateTestTowns(count) {
     let total = 0;
     for (let i = 0; i < count; i++) {
         let town = generateNewTown();
-        const pop = town.getLivingPopulation().length;
+        const pop = town.getLivingPopulationCount();
         populations.push(pop);
         total += pop;
     }
@@ -1095,8 +1093,8 @@ class DeadPopulationTab extends Tab {
 
 function getPopulationData(population) {
     const dataRows = [];
-    for (let person of population) {
-        const personId = person.getPersonId();
+    for (const personId in population) {
+        const person = population[personId];
         const nameElem = newElement('td', {innerText: person.getFullName(), class: ["nameField"]});
         registerElement(nameElem, "click", () => {
             let existingModal = qs(`[data-person-id="${personId}"]`);
@@ -1189,9 +1187,14 @@ class TownInfoTab extends Tab {
         ];
         const populationTable = createTable(popHeaders);
         const livingPopulation = newTown.getLivingPopulation();
-        const totalPopRow = createDataRow(['Total Population', newTown.getPopulation().length])
-        const livingPopRow = createDataRow(['Living Population', livingPopulation.length])
-        const deadPopRow = createDataRow(['Dead Population', newTown.getDeadPopulation().length]);
+
+        const livingPopCount = newTown.getLivingPopulationCount();
+        const deadPopCount = newTown.getDeadPopulationCount();
+        const totalPopCount = newTown.getPopulationCount();
+
+        const totalPopRow = createDataRow(['Total Population', totalPopCount]);
+        const livingPopRow = createDataRow(['Living Population', livingPopCount]);
+        const deadPopRow = createDataRow(['Dead Population', deadPopCount]);
     
         const startingYearRow = createDataRow(['Starting Year', newTown.getYearOfIncorporation()]);
         const currentYearRow = createDataRow(['Current Year', newTown.getCurrentYear()]);
@@ -1209,7 +1212,7 @@ class TownInfoTab extends Tab {
         }
         const staffed = createDataRow(["Staffed Jobs", staffedJobs]);
         const staffedRate = createDataRow(["Staffed Rate", `${Math.round((staffedJobs / jobs.length) * 100)}%`]);
-        const employmentRate = createDataRow(["Employment Rate", `${Math.round((staffedJobs / newTown.getLivingPopulation().length) * 100)}%`]);
+        const employmentRate = createDataRow(["Employment Rate", `${Math.round((staffedJobs / livingPopCount) * 100)}%`]);
         addElements([jobMarket, staffed, staffedRate, employmentRate], jobsTable);
     
         const buildingHeaders = [
@@ -1217,8 +1220,8 @@ class TownInfoTab extends Tab {
         ];
         const buildingTable = createTable(buildingHeaders);
         let homelessCount = 0;
-        for (let person of livingPopulation) {
-            if (!person.getResidency()) homelessCount++;
+        for (let person in livingPopulation) {
+            if (!livingPopulation[person].getResidency()) homelessCount++;
         }
         const buildings = newTown.getBuildings();
         const townBuildings = createDataRow(["Buildings", buildings.length]);
@@ -1230,7 +1233,7 @@ class TownInfoTab extends Tab {
         }
         const ownedBuildings = createDataRow(["Owned Buildings", owned]);
         const occupiedBuildings = createDataRow(["Occupied Buildings", occupied]);
-        const homelessnessRate = createDataRow(["Homelessness Rate", `${Math.round((homelessCount / newTown.getLivingPopulation().length) * 100)}%`]);
+        const homelessnessRate = createDataRow(["Homelessness Rate", `${Math.round((homelessCount / livingPopCount) * 100)}%`]);
         addElements([townBuildings, ownedBuildings, occupiedBuildings, homelessnessRate], buildingTable);
     
         addElements([populationTable, jobsTable, buildingTable], container);
