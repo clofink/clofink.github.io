@@ -77,7 +77,8 @@ class AgentAliasTab extends Tab {
     }
     
     importAgentAliasesWrapper() {
-        showLoading(this.importAgentAliases, container);
+        const boundFunc = this.importAgentAliases.bind(this);
+        showLoading(boundFunc, container);
     }
     
     async importAgentAliases() {
