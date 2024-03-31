@@ -37,7 +37,8 @@ class WrapUpCodesTab extends Tab {
     }
     
     importWrapUpCodesWrapper() {
-        showLoading(this.importWrapUpCodes, this.container);
+        const boundFunc = this.importWrapUpCodes.bind(this);
+        showLoading(boundFunc, this.container);
     }
     
     async importWrapUpCodes() {
