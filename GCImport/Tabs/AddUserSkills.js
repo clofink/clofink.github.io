@@ -98,9 +98,10 @@ class UserSkillsTab extends Tab {
             const values = user.Skills.split(",");
             for (let value of values) {
                 const parts = value.split(":"); 
-                if (!skillsInfo[parts[0].toLowerCase()]) {
+                const skillName = parts[0].toLowerCase().trim();
+                if (!skillsInfo[skillName]) {
                     const newSkill = await makeCallAndHandleErrors(createItem, ["/api/v2/routing/skills", {name: parts[0]}], results, parts[0], "Skill");
-                    skillsInfo[parts[0].toLowerCase()] = newSkill.id;
+                    skillsInfo[skillName] = newSkill.id;
                 }
                 if (parts[1] && (isNaN(parseInt(parts[1])) || [0,1,2,3,4,5].indexOf(parseInt(parts[1])) < 0)) {
                     results.push({name: parts[0], type: "User Skill", status: "failed", error: `Invalid proficiency ${parts[1]} for skill ${parts[0]}`})
@@ -109,7 +110,7 @@ class UserSkillsTab extends Tab {
                 const skill = {};
                 if (!parts[1]) skill.proficiency = 0;
                 else skill.proficiency = parseInt(parts[1]);
-                skill.id = skillsInfo[parts[0].toLowerCase()];
+                skill.id = skillsInfo[skillName];
                 skills.push(skill);
             }
             if (skills.length < 1) continue;
