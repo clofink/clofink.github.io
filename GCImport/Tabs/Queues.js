@@ -32,7 +32,8 @@ class QueuesTab extends Tab {
     }
         
     importQueuesWrapper() {
-        showLoading(this.importQueues, this.container);
+        const boundFunc = this.importQueues.bind(this);
+        showLoading(boundFunc, this.container);
     }
     
     async importQueues() {
@@ -77,8 +78,8 @@ class QueuesTab extends Tab {
                         log(`No In-Queue Flow with the name: ${queue["In-Queue Flow"]}`)
                     }
                 }
-                const mappedQueue = resolveMapping(queue);
-                await makeCallAndHandleErrors(createItem, ["/api/v2/routing/queues", parseInput({...mappedQueue, ...newFields})], results, mappedQueue.name, "Queue");
+                const mappedQueue = this.resolveMapping(queue);
+                await makeCallAndHandleErrors(createItem, ["/api/v2/routing/queues", this.parseInput({...mappedQueue, ...newFields})], results, mappedQueue.name, "Queue");
             }
         }
         return Promise.all(results);
