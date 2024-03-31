@@ -75,11 +75,6 @@ class UtilizationTab extends Tab {
     async bulkUpdateUtilization() {
         if (!fileContents) throw "No valid file selected";
 
-        const allSkills = await getAll("/api/v2/routing/skills?", "entities", 200);
-        const skillsInfo = {};
-        for (let skill of allSkills) {
-            skillsInfo[skill.name.toLowerCase()] = skill.id;
-        }
         const allUsers = await this.getAllUsers();
         const userInfo = {};
         for (let user of allUsers) {
