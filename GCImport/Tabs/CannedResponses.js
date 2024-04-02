@@ -2,8 +2,8 @@ class CannedResponsesTab extends Tab {
     tabName = "Canned Responses";
 
     render() {
-        window.requiredFields = ["Name", "Library", "Type", "Content"];
-        window.allValidFields = ["Name", "Library", "Type", "Content"];
+        window.requiredFields = ["Name", "Library", "Content"];
+        window.allValidFields = ["Name", "Library", "Content"];
     
         this.container = newElement('div', {id: "userInputs"});
         const label = newElement('label', {innerText: "Canned Responses CSV: "});
@@ -17,7 +17,7 @@ class CannedResponsesTab extends Tab {
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
             `Must have "response-management" scope`, 
-            `Required CSV columns "Name", "Library", "Type", and "Content"`, 
+            `Required CSV columns "Name", "Library", and "Content"`, 
             `If a library with a matching name does not exist, it will be created`, 
             `If multiple libraries have the same name, the last one in the list returned from the API will be used`
         ]);
@@ -48,7 +48,7 @@ class CannedResponsesTab extends Tab {
                 if (newLibrary) libraryInfo[response.Library] = newLibrary.id;
             }
             libraryId = libraryInfo[response.Library];
-            if (response.Name && response.Content && response.Type) {
+            if (response.Name && response.Content) {
                 let substitutions = [];
                 const matches = response.Content.match(/({{[\w\d_-]+}})/g);
                 if (matches && matches.length >= 0) {
@@ -69,7 +69,7 @@ class CannedResponsesTab extends Tab {
                     "texts": [
                         {
                             "content": response.Content,
-                            "contentType": response.Type
+                            "contentType": "text/html"
                         }
                     ],
                 }
