@@ -157,10 +157,10 @@ class WidgetsTab extends Tab {
 
             // create the messenger config
             if (!widgetConfigMapping[initial["Configuration Name"]]) {
-                const newConfig = await makeCallAndHandleErrors(createItem, ["/api/v2/webdeployments/configurations/", this.parseInput(this.resolveMapping(initial))], results, initial["Configuration Name"], "Messenger Configuration");
+                const newConfig = await makeCallAndHandleErrors(createItem, ["/api/v2/webdeployments/configurations/", this.parseInput(this.resolveMapping(initial))], results, initial["Configuration Name"], "Create Messenger Configuration");
                 if (!newConfig) continue;
 
-                const publishedConfig = await makeCallAndHandleErrors(createItem, [`/api/v2/webdeployments/configurations/${newConfig.id}/versions/draft/publish`, {}], results, initial["Configuration Name"], "Messenger Configuration");
+                const publishedConfig = await makeCallAndHandleErrors(createItem, [`/api/v2/webdeployments/configurations/${newConfig.id}/versions/draft/publish`, {}], results, initial["Configuration Name"], "Publish Messenger Configuration");
                 if (!publishedConfig) continue;
 
                 widgetConfigMapping[initial["Configuration Name"]] = { id: publishedConfig.id, version: publishedConfig.version };
