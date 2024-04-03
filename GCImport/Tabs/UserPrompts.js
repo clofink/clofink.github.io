@@ -41,7 +41,6 @@ class UserPromptsTab extends Tab {
         const results = [];
         for (let prompt of fileContents.data) {
             if (promptMapping.hasOwnProperty(prompt["Name"])) {
-                log(`Prompt already exists with name ${prompt["Name"]}`);
                 results.push({name: prompt["Name"], type: "Prompt", status: "failed", error: `Prompt already exists with name ${prompt["Name"]}`});
                 continue;
             }
