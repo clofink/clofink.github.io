@@ -16,7 +16,7 @@ class UserRolesTab extends Tab {
         const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
-            `Must have "users" scope`,
+            `Must have "users:readonly", "authorization" scopes`,
             `Required CSV column "Email", "Roles"`,
             `"Roles is a comma-separated list of roles to add to the user`,
             `"Roles" can include a division as well in the format <RoleName>:<DivisionName>`,
@@ -58,6 +58,12 @@ class UserRolesTab extends Tab {
             const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/users/search`;
             const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
             const resultJson = await result.json();
+            if (result.ok) {
+                resultJson.status = 200;
+            }
+            else {
+                throw resultJson.message;
+            }    
             users.push(...resultJson.results);
             totalPages = resultJson.pageCount;
         }
@@ -73,6 +79,7 @@ class UserRolesTab extends Tab {
         }
         else {
             resultJson.status = result.status;
+            resultJson.message = `Request to update user roles failed with status ${result.status}`;
         }
         return resultJson;
     }
