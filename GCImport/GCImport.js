@@ -15,8 +15,22 @@ function showLoginPage() {
     registerElement(loginButton, "click", login);
     const parent = eById('page');
     clearElement(parent);
+    const helpSection = addHelp([
+        `Must have "organization:readonly" scope`,
+        `Each tool has its own scopes listed`,
+        `Canned Responses: response-management`,
+        `Skills: routing`,
+        `Queues: routing`,
+        `Agent Aliases: users`,
+        `Wrap-Up Codes: routing`,
+        `Widgets: webdeployments, architect`,
+        `User Prompts: architect`,
+        `User Skills: routing:readonly, users`,
+        `Utilization: users:readonly, routing`,
+        `User Roles: users:readonly, authorization`,
+    ]);
     addElements([clientIdLabel, environmentLabel, loginButton], inputsWrapper);
-    addElement(inputsWrapper, parent);
+    addElements([inputsWrapper, helpSection], parent);
 }
 
 function showMainMenu() {
