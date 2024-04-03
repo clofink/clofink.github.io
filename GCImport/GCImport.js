@@ -152,6 +152,12 @@ async function getAll(path, resultsKey, pageSize) {
         const url = `https://api.${window.localStorage.getItem('environment')}${path}&pageNumber=${pageNum}&pageSize=${pageSize}`;
         const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
         const resultJson = await result.json();
+        if (result.ok) {
+            resultJson.status = 200;
+        }
+        else {
+            throw resultJson.message;
+        }
         items.push(...resultJson[resultsKey]);
         totalPages = resultJson.pageCount;
     }
@@ -186,7 +192,13 @@ function addTab(tabName, renderCallback) {
 
 async function showLoading(loadingFunc, containerElement) {
     eById("loadIcon").classList.add("shown");
-    const results = await loadingFunc();
+    let results = [];
+    try {
+        results = await loadingFunc();
+    }
+    catch(error) {
+        results = [{name: "", type: "Loading Info", status: "failed", error: error}]
+    }
     eById("loadIcon").classList.remove("shown");
     
     let resultsContainer = qs(".resultsContainer");
