@@ -16,7 +16,7 @@ class UtilizationTab extends Tab {
         const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
-            `Must have "users" scope`,
+            `Must have "users:readonly", "routing" scopes`,
             `Required CSV column "User Email"`,
             `Other possible columns are "Call", "Message", "Chat", "Email", "Message", "Callback", and "Workitem"`,
             `Each column just takes a number for the utlization limit`,
@@ -56,6 +56,12 @@ class UtilizationTab extends Tab {
             const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/users/search`;
             const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
             const resultJson = await result.json();
+            if (result.ok) {
+                resultJson.status = 200;
+            }
+            else {
+                throw resultJson.message;
+            }    
             users.push(...resultJson.results);
             totalPages = resultJson.pageCount;
         }
