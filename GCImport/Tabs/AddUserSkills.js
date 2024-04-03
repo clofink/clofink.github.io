@@ -16,7 +16,7 @@ class UserSkillsTab extends Tab {
         const logoutButton = newElement("button", {innerText: "Logout"});
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
-            `Must have "users" scope`, 
+            `Must have "routing:readonly", "users" scope`, 
             `Required CSV column "Email", "Skills"`,
             `"Skills" is a comma-separated list of skill names.`,
             `Skill names are not case-sensitive`,
@@ -58,6 +58,12 @@ class UserSkillsTab extends Tab {
             const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/users/search`;
             const result = await fetch(url, {method: "POST", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
             const resultJson = await result.json();
+            if (result.ok) {
+                resultJson.status = 200;
+            }
+            else {
+                throw resultJson.message;
+            }
             users.push(...resultJson.results);
             totalPages = resultJson.pageCount;
         }
