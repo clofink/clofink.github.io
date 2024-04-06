@@ -17,6 +17,7 @@ function showLoginPage() {
     clearElement(parent);
     const helpSection = addHelp([
         `Must have "organization:readonly" scope`,
+        `All used scopes: response-management, routing, users, architect, webdeployments, authorization`,
         `Each tool has its own scopes listed`,
         `Canned Responses: response-management`,
         `Skills: routing`,
