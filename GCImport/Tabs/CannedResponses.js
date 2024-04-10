@@ -41,7 +41,7 @@ class CannedResponsesTab extends Tab {
         }
     
         for (let response of fileContents.data) {
-            if (Object.keys(response).length != 4) continue;
+            if (Object.keys(response).length != 3) continue;
             let libraryId;
             if (response.Library && !libraryInfo[response.Library]) {
                 const newLibrary = await makeCallAndHandleErrors(createItem, ["/api/v2/responsemanagement/libraries", {name: response.Library}], results, response.Library, "Response Library");
