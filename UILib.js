@@ -120,8 +120,7 @@ class PagedTable {
             filteredRows = newFiltered;
         }
         this.filteredData = filteredRows;
-        this.updateTable();
-        this.updateButtons();
+        this.setPage(0);
     }
 
     changePage(pageChange) {
