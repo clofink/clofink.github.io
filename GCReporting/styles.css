@@ -1,0 +1,84 @@
+#inputs label {
+    display: block;
+    margin-bottom: .5em;
+    width: fit-content;
+    user-select: none;
+}
+table, th, td {
+    padding: 5px;
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+table {
+    margin: .5em;
+}
+td, th {
+    text-align: center;
+}
+th {
+    user-select: none;
+}
+.raceSelector {
+    padding-top: .5em;
+}
+dialog {
+    position: fixed;
+    top: 10vh;
+    border: solid black 1px;
+    margin-left: auto;
+    margin-top: 0;
+}
+dialog div {
+    max-height: calc(80vh - 4em - 2px - 1.5em);
+    overflow-y: scroll;
+}
+dialog h2 {
+    margin-top: .5em;
+    margin-bottom: .5em;
+}
+body:has(dialog[open]) {
+    overflow: hidden;
+}
+.modal-close {
+    float: right;
+    user-select: none;
+    cursor: pointer;
+}
+#page {
+    margin-top: .5em;
+}
+.tableContainer {
+    width: fit-content;
+}
+.pageButtons {
+    text-align: center;
+}
+.pageButtons button {
+    margin-left: .5em;
+    margin-right: .5em;
+    margin-bottom: .5em;
+}
+th * {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+.nameField {
+    cursor: pointer;
+}
+
+[data-current-sort="true"][data-sort-direction="asc"]::after {
+    content: " ▲";
+    font-size: .75em;
+}
+[data-current-sort="true"][data-sort-direction="desc"]::after {
+    content: " ▼";
+    font-size: .75em;
+}
+th span {
+    padding-top: .5em;
+    padding-bottom: .5em;
+}
+table.sortable th span {
+    cursor: pointer;
+}
