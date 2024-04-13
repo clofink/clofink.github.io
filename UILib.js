@@ -102,7 +102,7 @@ class PagedTable {
 
         addElements([this.table, this.buttonContainer], this.container);
 
-        return this.container;
+        return this;
     }
 
     applyFilters() {
@@ -123,6 +123,10 @@ class PagedTable {
         }
         this.filteredData = filteredRows;
         this.setPage(0);
+    }
+
+    getContainer() {
+        return this.container;
     }
 
     changePage(pageChange) {
