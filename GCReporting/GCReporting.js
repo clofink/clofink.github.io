@@ -559,23 +559,32 @@ async function run() {
     const start = eById("startDate").value;
     const end = eById("endDate").value;
     const dataLevel = eById("level").value;
+
     if (!start || !end) throw new Error("Need a start or end date");
+    const conversationsCacheKey = btoa(encodeURIComponent(`${window.orgId}:${start}:${end}`));
+    const orgInfoCacheKey = btoa(encodeURIComponent(window.orgId));
 
     const startDate = start + "T00:00:00.000Z";
     const endDate = end + "T23:59:59.999Z";
 
-    const users = await getAllUsers();
-    window.usersMapping = mapProperty("id", "name", users);
-    const queues = await getAll("/api/v2/routing/queues?sortOrder=asc&sortBy=name&name=**&divisionId", "entities", 25);
-    window.queueMapping = mapProperty("id", "name", queues);
-    const wrapupCodes = await getAll("/api/v2/routing/wrapupcodes?sortBy=name&sortOrder=ascending", "entities", 25);
-    window.wrapupCodeMapping = mapProperty("id", "name", wrapupCodes);
-    const divisions = await getAll("/api/v2/authorization/divisions?", "entities", 200);
-    window.divisionMapping = mapProperty("id", "name", divisions);
-    const knowledgeBases = await getAll("/api/v2/knowledge/knowledgeBases?sortOrder=ASC&sortBy=name", "entities", 25);
-    window.knowledgeBaseMapping = mapProperty("id", "name", knowledgeBases);
+    if (window.orgInfoCacheKey !== orgInfoCacheKey) {
+        const users = await getAllUsers();
+        window.usersMapping = mapProperty("id", "name", users);
+        const queues = await getAll("/api/v2/routing/queues?sortOrder=asc&sortBy=name&name=**&divisionId", "entities", 25);
+        window.queueMapping = mapProperty("id", "name", queues);
+        const wrapupCodes = await getAll("/api/v2/routing/wrapupcodes?sortBy=name&sortOrder=ascending", "entities", 25);
+        window.wrapupCodeMapping = mapProperty("id", "name", wrapupCodes);
+        const divisions = await getAll("/api/v2/authorization/divisions?", "entities", 200);
+        window.divisionMapping = mapProperty("id", "name", divisions);
+        const knowledgeBases = await getAll("/api/v2/knowledge/knowledgeBases?sortOrder=ASC&sortBy=name", "entities", 25);
+        window.knowledgeBaseMapping = mapProperty("id", "name", knowledgeBases);
+        window.orgInfoCacheKey = orgInfoCacheKey;
+    }
 
-    const conversations = await conversationDetailsJob(startDate, endDate);
+    if (window.conversationsCacheKey !== conversationsCacheKey) {
+        window.conversationsData = await conversationDetailsJob(startDate, endDate);
+        window.conversationsCacheKey = conversationsCacheKey;
+    }
     const selectedFields = qsa(".fieldOption", eById('fieldContainer'));
 
     const headers = [];
@@ -597,7 +606,7 @@ async function run() {
         }
     }
     let dataRows = [];
-    for (let conversation of conversations) {
+    for (let conversation of window.conversationsData) {
         window.allConversations[conversation.conversationId] = conversation;
         getConversationTurns(conversation);
         dataRows = dataRows.concat(getAllConversationSegments(conversation, fields, dataLevel));
@@ -747,6 +756,8 @@ function showMainMenu() {
             logout();
             return;
         }
+        window.orgName = result.name;
+        window.orgId = result.id;
         eById("header").innerText = `Current Org Name: ${result.name} (${result.thirdPartyOrgName}) Current Org ID: ${result.id}`
     }).catch(function (error) { log(error, "error"); logout(); });
 }
