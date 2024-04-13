@@ -329,7 +329,7 @@ function agentParticipant(participant, conversationId) {
                             addFlowTimes(agentStats, "holdTimes", "maxHoldTime", "averageHoldTime", segment, { conversationId: conversationId, agent: usersMapping.hasOwnProperty(session.selectedAgentId) ? usersMapping[session.selectedAgentId] : session.selectedAgentId });
                             break;
                         default:
-                            console.log(conversationId, segment.segmentType);
+                            console.log(conversationId, segment.segmentType, segment);
                             break;
                     }
                 }
@@ -342,7 +342,7 @@ function agentParticipant(participant, conversationId) {
                 break;
             }
             default:
-                console.log(conversationId, session.mediaType);
+                console.log(conversationId, session.mediaType, session);
                 break;
         }
     }
@@ -408,7 +408,7 @@ function getConversationTurns(conversation) {
             case "customer":
                 break;
             default:
-                console.log(conversation.conversationId, participant.purpose);
+                console.log(conversation.conversationId, participant.purpose, participant);
                 break;
         }
     }
