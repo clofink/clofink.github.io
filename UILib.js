@@ -71,6 +71,7 @@ class PagedTable {
     headers;
     fullData;
     pageSize;
+    emptyValue;
     currentPage;
     pageCount;
     filteredData;
@@ -78,7 +79,7 @@ class PagedTable {
     filtered;
     filters = [];
 
-    constructor(headers, dataRows, pageSize, tableInfo, sortable, filtered) {
+    constructor(headers, dataRows, pageSize, tableInfo, sortable, filtered, emptyValue) {
         this.headers = headers || [];
         this.fullData = dataRows || [];
         this.pageSize = pageSize || 0;
@@ -86,6 +87,7 @@ class PagedTable {
         this.currentPage = 0;
         this.sortable = sortable !== undefined ? sortable : false;
         this.filtered = filtered !== undefined ? filtered : false;
+        this.emptyValue = emptyValue !== undefined ? emptyValue : "";
 
         this.container = newElement('div', { class: ["tableContainer"] });
         this.table = newElement("table", tableInfo);
@@ -230,6 +232,7 @@ class PagedTable {
         const sortBy = event.target.innerText;
         const sortDirection = event.target.dataset.sortDirection;
         const headers = this.headers;
+        const emptyValue = this.emptyValue;
         // this header is the one currently sorted by
         if (event.target.dataset.currentSort !== "true") {
             for (let header of qsa("th span", this.headerRow)) {
@@ -270,8 +273,8 @@ class PagedTable {
             valueB = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(valueB) ? new Date(valueB) : valueB;
 
             if (sortDirection === "asc") {
-                if (valueA === "-") return 1;
-                if (valueB === "-") return -1;
+                if (valueA === emptyValue) return 1;
+                if (valueB === emptyValue) return -1;
                 if (valueA < valueB) {
                     return 1;
                 }
@@ -280,8 +283,8 @@ class PagedTable {
                 }
             }
             else {
-                if (valueA === "-") return 1;
-                if (valueB === "-") return -1;
+                if (valueA === emptyValue) return 1;
+                if (valueB === emptyValue) return -1;
                 if (valueA > valueB) {
                     return 1;
                 }

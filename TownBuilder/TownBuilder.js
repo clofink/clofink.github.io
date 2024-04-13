@@ -1027,7 +1027,7 @@ class LivingPopulationTab extends Tab {
             "Charisma",
         ]
     
-        return new PersonTable(headers, getPopulationData(newTown.getLivingPopulation()), 100, {"data-population": "dead"}, true, true);
+        return new PersonTable(headers, getPopulationData(newTown.getLivingPopulation()), 100, {"data-population": "dead"}, true, true, "-");
     }
 }
 
@@ -1057,7 +1057,7 @@ class FullPopulationTab extends Tab {
             "Charisma",
         ]
     
-        return new PersonTable(headers, getPopulationData(newTown.getPopulation()), 100, {"data-population": "dead"}, true, true);
+        return new PersonTable(headers, getPopulationData(newTown.getPopulation()), 100, {"data-population": "dead"}, true, true, "-");
     }
 }
 
@@ -1087,7 +1087,7 @@ class DeadPopulationTab extends Tab {
             "Charisma",
         ]
     
-        return new PersonTable(headers, getPopulationData(newTown.getDeadPopulation()), 100, {"data-population": "dead"}, true, true);
+        return new PersonTable(headers, getPopulationData(newTown.getDeadPopulation()), 100, {"data-population": "dead"}, true, true, "-");
     }
 }
 
@@ -1148,7 +1148,7 @@ class BuildingsTab extends Tab {
                 building.getResidents().length
             ]);
         }
-        return new PagedTable(headers, dataRows, 50, {}, true, true);
+        return new PagedTable(headers, dataRows, 50, {}, true, true, "-");
     }
 }
 
@@ -1172,7 +1172,7 @@ class JobsTab extends Tab {
                 job.getBuilding() ? job.getBuilding().getBuildingName() : "-"
             ])
         }
-        return new PagedTable(headers, dataRows, 50, {}, true, true);
+        return new PagedTable(headers, dataRows, 50, {}, true, true, "-");
     }
 }
 

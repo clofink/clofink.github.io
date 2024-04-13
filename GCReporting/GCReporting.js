@@ -445,7 +445,7 @@ function addIfProperty(object, path, orValue, mapping) {
             return currentPiece[part]
         }
     }
-    return orValue;
+    return orValue ? orValue : "";
 }
 
 function getAllConversationSegments(interaction, fieldsInfo, dataLevel) {
@@ -464,7 +464,7 @@ function getAllConversationSegments(interaction, fieldsInfo, dataLevel) {
         for (let field of fieldsInfo) {
             const fieldLevel = levels.indexOf(field.level);
             if (dataLevelIndex >= fieldLevel) {
-                dataRow.push(addIfProperty(currentItems[field.level], field.path, "-", field.mapping));
+                dataRow.push(addIfProperty(currentItems[field.level], field.path, "", field.mapping));
             }
         }
         dataRows.push(dataRow);
@@ -478,7 +478,7 @@ function getAllConversationSegments(interaction, fieldsInfo, dataLevel) {
                 for (let field of fieldsInfo) {
                     const fieldLevel = levels.indexOf(field.level);
                     if (dataLevelIndex >= fieldLevel) {
-                        dataRow.push(addIfProperty(currentItems[field.level], field.path, "-", field.mapping));
+                        dataRow.push(addIfProperty(currentItems[field.level], field.path, "", field.mapping));
                     }
                 }
                 dataRows.push(dataRow);
@@ -492,7 +492,7 @@ function getAllConversationSegments(interaction, fieldsInfo, dataLevel) {
                         for (let field of fieldsInfo) {
                             const fieldLevel = levels.indexOf(field.level);
                             if (dataLevelIndex >= fieldLevel) {
-                                dataRow.push(addIfProperty(currentItems[field.level], field.path, "-", field.mapping));
+                                dataRow.push(addIfProperty(currentItems[field.level], field.path, "", field.mapping));
                             }
                         }
                         dataRows.push(dataRow);
@@ -505,7 +505,7 @@ function getAllConversationSegments(interaction, fieldsInfo, dataLevel) {
                             for (let field of fieldsInfo) {
                                 const fieldLevel = levels.indexOf(field.level);
                                 if (dataLevelIndex >= fieldLevel) {
-                                    dataRow.push(addIfProperty(currentItems[field.level], field.path, "-", field.mapping));
+                                    dataRow.push(addIfProperty(currentItems[field.level], field.path, "", field.mapping));
                                 }    
                             }
                             dataRows.push(dataRow);
