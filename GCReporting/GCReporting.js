@@ -602,10 +602,10 @@ async function run() {
         getConversationTurns(conversation);
         dataRows = dataRows.concat(getAllConversationSegments(conversation, fields, dataLevel));
     }
-    const table = new PagedTable(headers, dataRows, 100, {}, true, true);
+    window.displayTable = new PagedTable(headers, dataRows, 100, {}, true, true);
     const results = eById("results");
     clearElement(results);
-    addElement(table, results);
+    addElement(window.displayTable.getContainer(), results);
 
     console.log(workflowStats);
     console.log(botStats);
@@ -732,11 +732,15 @@ function showMainMenu() {
 
     const startButton = newElement('button', { innerText: "Start" });
     registerElement(startButton, "click", run);
+    const downloadAllButton = newElement('button', {innerText: "Download All"});
+    registerElement(downloadAllButton, "click", () => {if (!window.displayTable) return; const headers = window.displayTable.getHeaders(); const data = window.displayTable.getFullData(); const download = createDownloadLink("Full Data Export.csv", Papa.unparse([headers, ...data]), "text/csv"); download.click();});
+    const downloadFilteredButton = newElement('button', {innerText: "Download Filtered"});
+    registerElement(downloadFilteredButton, "click", () => {if (!window.displayTable) return; const headers = window.displayTable.getHeaders(); const data = window.displayTable.getFilteredData(); const download = createDownloadLink("Filtered Data Export.csv", Papa.unparse([headers, ...data]), "text/csv"); download.click();});
     const logoutButton = newElement('button', { innerText: "Logout" });
     registerElement(logoutButton, "click", logout);
     const results = newElement('div', { id: "results" })
     addElements([startLabel, endLabel, levelLabel], inputs)
-    addElements([inputs, fieldContainer, startButton, logoutButton, results], page);
+    addElements([inputs, fieldContainer, startButton, downloadAllButton, downloadFilteredButton, logoutButton, results], page);
     getOrgDetails().then(function (result) {
         if (result.status !== 200) {
             log(result.message, "error");
@@ -849,4 +853,10 @@ function populateFieldSelector(selector, level) {
     }
     const option = newElement("option", {value: "custom", innerText: "Custom"});
     addElement(option, selector);
+}
+
+function createDownloadLink(fileName, fileContents, fileType) {
+    const fileData = new Blob([fileContents], {type: fileType});
+    const fileURL = window.URL.createObjectURL(fileData);
+    return newElement('a', {href: fileURL, download: fileName});
 }
