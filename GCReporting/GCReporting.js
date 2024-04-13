@@ -378,40 +378,78 @@ function getConversationTurns(conversation) {
     }
 }
 
-function getAllConversationSegments(interaction) {
-    const segments = [];
+function getAllConversationSegments(interaction, level) {
+    const dataRows = [];
 
     // TODO: maybe fully parse the conversation and use the segments to add a bunch of info about it (like Bold has)
 
-    for (let participant of interaction.participants) {
-        for (let session of participant.sessions) {
-            for (let segment of session.segments) {
-                segments.push([
+    if (level === "Conversation") {
+        dataRows.push([
+            interaction.conversationId,
+            interaction.divisionIds && interaction.divisionIds[0] ? divisionMapping[interaction.divisionIds[0]] ? divisionMapping[interaction.divisionIds[0]] : interaction.divisionIds[0] : "-",
+            interaction.knowledgeBaseIds && interaction.knowledgeBaseIds[0] ? knowledgeBaseMapping[interaction.knowledgeBaseIds[0]] ? knowledgeBaseMapping[interaction.knowledgeBaseIds[0]] : interaction.knowledgeBaseIds[0] : "-",
+        ])
+    }
+    else {
+        for (let participant of interaction.participants) {
+            if (level === "Participant") {
+                dataRows.push([
                     interaction.conversationId,
                     participant.purpose,
                     participant.attributes ? JSON.stringify(participant.attributes) : "-",
-                    segment.segmentStart,
-                    segment.segmentEnd ? segment.segmentEnd : "-",
-                    segment.segmentType,
-                    session.flow && session.flow.flowName ? session.flow.flowName : "-",
-                    session.flow && session.flow.flowVersion ? session.flow.flowVersion : "-",
-                    session.flow && session.flow.exitReason ? session.flow.exitReason : "-",
-                    session.flow && session.flow.recognitionFailureReason ?  session.flow.recognitionFailureReason : "-",
-                    segment.disconnectType ? segment.disconnectType : "-",
-                    session.mediaType ? session.mediaType : "-",
-                    segment.segmentType === "wrapup" && segment.wrapUpCode ? wrapupCodeMapping[segment.wrapUpCode] ? wrapupCodeMapping[segment.wrapUpCode] : segment.wrapUpCode : "-",
-                    segment.queueId ? queueMapping[segment.queueId] ? queueMapping[segment.queueId] : segment.queueId : "-",
-                    session.selectedAgentId ? usersMapping[session.selectedAgentId] ? usersMapping[session.selectedAgentId] : session.selectedAgentId : "-",
                     participant.userId ? usersMapping[participant.userId] ? usersMapping[participant.userId] : participant.userId : "-",
                     interaction.divisionIds && interaction.divisionIds[0] ? divisionMapping[interaction.divisionIds[0]] ? divisionMapping[interaction.divisionIds[0]] : interaction.divisionIds[0] : "-",
                     interaction.knowledgeBaseIds && interaction.knowledgeBaseIds[0] ? knowledgeBaseMapping[interaction.knowledgeBaseIds[0]] ? knowledgeBaseMapping[interaction.knowledgeBaseIds[0]] : interaction.knowledgeBaseIds[0] : "-",
-                    segment.errorCode ? segment.errorCode : "-",
                 ])
-                // console.log({...interaction, ...participant, ...session, ...segment})
+            }
+            else {
+                for (let session of participant.sessions) {
+                    if (level === "Session") {
+                        dataRows.push([
+                            interaction.conversationId,
+                            participant.purpose,
+                            participant.attributes ? JSON.stringify(participant.attributes) : "-",
+                            session.flow && session.flow.flowName ? session.flow.flowName : "-",
+                            session.flow && session.flow.flowVersion ? session.flow.flowVersion : "-",
+                            session.flow && session.flow.exitReason ? session.flow.exitReason : "-",
+                            session.flow && session.flow.recognitionFailureReason ?  session.flow.recognitionFailureReason : "-",
+                            session.mediaType ? session.mediaType : "-",
+                            session.selectedAgentId ? usersMapping[session.selectedAgentId] ? usersMapping[session.selectedAgentId] : session.selectedAgentId : "-",
+                            participant.userId ? usersMapping[participant.userId] ? usersMapping[participant.userId] : participant.userId : "-",
+                            interaction.divisionIds && interaction.divisionIds[0] ? divisionMapping[interaction.divisionIds[0]] ? divisionMapping[interaction.divisionIds[0]] : interaction.divisionIds[0] : "-",
+                            interaction.knowledgeBaseIds && interaction.knowledgeBaseIds[0] ? knowledgeBaseMapping[interaction.knowledgeBaseIds[0]] ? knowledgeBaseMapping[interaction.knowledgeBaseIds[0]] : interaction.knowledgeBaseIds[0] : "-",
+                        ])
+                    }
+                    else {
+                        for (let segment of session.segments) {
+                            dataRows.push([
+                                interaction.conversationId,
+                                participant.purpose,
+                                participant.attributes ? JSON.stringify(participant.attributes) : "-",
+                                segment.segmentStart,
+                                segment.segmentEnd ? segment.segmentEnd : "-",
+                                segment.segmentType,
+                                session.flow && session.flow.flowName ? session.flow.flowName : "-",
+                                session.flow && session.flow.flowVersion ? session.flow.flowVersion : "-",
+                                session.flow && session.flow.exitReason ? session.flow.exitReason : "-",
+                                session.flow && session.flow.recognitionFailureReason ?  session.flow.recognitionFailureReason : "-",
+                                segment.disconnectType ? segment.disconnectType : "-",
+                                session.mediaType ? session.mediaType : "-",
+                                segment.segmentType === "wrapup" && segment.wrapUpCode ? wrapupCodeMapping[segment.wrapUpCode] ? wrapupCodeMapping[segment.wrapUpCode] : segment.wrapUpCode : "-",
+                                segment.queueId ? queueMapping[segment.queueId] ? queueMapping[segment.queueId] : segment.queueId : "-",
+                                session.selectedAgentId ? usersMapping[session.selectedAgentId] ? usersMapping[session.selectedAgentId] : session.selectedAgentId : "-",
+                                participant.userId ? usersMapping[participant.userId] ? usersMapping[participant.userId] : participant.userId : "-",
+                                interaction.divisionIds && interaction.divisionIds[0] ? divisionMapping[interaction.divisionIds[0]] ? divisionMapping[interaction.divisionIds[0]] : interaction.divisionIds[0] : "-",
+                                interaction.knowledgeBaseIds && interaction.knowledgeBaseIds[0] ? knowledgeBaseMapping[interaction.knowledgeBaseIds[0]] ? knowledgeBaseMapping[interaction.knowledgeBaseIds[0]] : interaction.knowledgeBaseIds[0] : "-",
+                                segment.errorCode ? segment.errorCode : "-",
+                            ])
+                        }
+                    }
+                }
             }
         }
     }
-    return segments;
+    return dataRows;
 }
 async function run() {
     // reset globals 
@@ -454,6 +492,7 @@ async function run() {
 
     const start = eById("startDate").value;
     const end = eById("endDate").value;
+    const dataLevel = eById("level").value;
     if (!start || ! end) throw new Error("Need a start or end date");
 
     const startDate = start + "T00:00:00.000Z";
@@ -475,11 +514,17 @@ async function run() {
     for (let conversation of conversations) {
         window.allConversations[conversation.conversationId] = conversation;
         getConversationTurns(conversation);
-        dataRows = dataRows.concat(getAllConversationSegments(conversation));
+        dataRows = dataRows.concat(getAllConversationSegments(conversation, dataLevel));
     }
 
-    const headers = ["Conversation ID", "Purpose", "Participant Data", "Start", "End", "Type", "Flow Name", "Flow Version", "Exit Reason", "Recognition Failure Reason", "Disconnect Type", "Media Type", "Wrapup Code", "Queue", "Agent", "Participant Agent", "Division", "Knowledge Base", "Error Code"]
-    const table = new PagedTable(headers, dataRows, 100, {}, true, true);
+    
+    const headers = {
+        "Conversation": ["Conversation ID", "Division", "Knowledge Base"],
+        "Participant": ["Conversation ID", "Purpose", "Participant Data", "Participant Agent", "Division", "Knowledge Base"],
+        "Session": ["Conversation ID", "Purpose", "Participant Data", "Flow Name", "Flow Version", "Exit Reason", "Recognition Failure Reason", "Media Type", "Agent", "Participant Agent", "Division", "Knowledge Base"],
+        "Segment": ["Conversation ID", "Purpose", "Participant Data", "Start", "End", "Type", "Flow Name", "Flow Version", "Exit Reason", "Recognition Failure Reason", "Disconnect Type", "Media Type", "Wrapup Code", "Queue", "Agent", "Participant Agent", "Division", "Knowledge Base", "Error Code"]
+    }
+    const table = new PagedTable(headers[dataLevel], dataRows, 100, {}, true, true);
     const results = eById("results");
     clearElement(results);
     addElement(table, results);
@@ -591,18 +636,25 @@ function showMainMenu() {
     const page = eById('page');
     clearElement(page);
     const inputs = newElement("div", {id: "inputs"});
-    const startLabel = newElement('label', {innerText: "Start Date"});
+    const startLabel = newElement('label', {innerText: "Start Date: "});
     const startDate = newElement('input', {type: "date", id: "startDate", value: "2024-04-01"});
     addElement(startDate, startLabel);
-    const endLabel = newElement('label', {innerText: "End Date"});
+    const endLabel = newElement('label', {innerText: "End Date: "});
     const endDate = newElement('input', {type: "date", id: "endDate", value: "2024-04-30"});
     addElement(endDate, endLabel);
+    const levelLabel = newElement('label', {innerText: "Data Level: "});
+    const levelSelect = newElement('select', {id: "level"});
+    for (let item of ["Conversation", "Participant", "Session", "Segment"]) {
+        const levelOption = newElement("option", {value: item, innerText: item});
+        addElement(levelOption, levelSelect);
+    }
+    addElement(levelSelect, levelLabel)
     const startButton = newElement('button', { innerText: "Start" });
     registerElement(startButton, "click", run);
     const logoutButton = newElement('button', { innerText: "Logout" });
     registerElement(logoutButton, "click", logout);
     const results = newElement('div', {id: "results"})
-    addElements([startLabel, endLabel], inputs)
+    addElements([startLabel, endLabel, levelLabel], inputs)
     addElements([inputs, startButton, logoutButton, results], page);
     getOrgDetails().then(function (result) {
         if (result.status !== 200) {
