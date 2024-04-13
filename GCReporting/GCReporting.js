@@ -728,9 +728,7 @@ function showMainMenu() {
     }
     addElement(levelSelect, levelLabel)
     const fieldContainer = newElement('div', {id: "fieldContainer"});
-    const addFieldButton = newElement("button", {innerText: "+"});
-    registerElement(addFieldButton, "click", () => {addElement(createFieldOptions(), addFieldButton, "beforebegin")});
-    addElements([createFieldOptions(), addFieldButton], fieldContainer);
+    addElement(createFieldOptions(), fieldContainer);
 
     const startButton = newElement('button', { innerText: "Start" });
     registerElement(startButton, "click", run);
@@ -830,6 +828,8 @@ function createFieldOptions() {
         const levelOption = newElement("option", { value: level, innerText: level });
         addElement(levelOption, levelSelector);
     }
+    const addFieldButton = newElement("button", {innerText: "+"});
+    registerElement(addFieldButton, "click", () => {addElement(createFieldOptions(), fieldOptionContainer, "afterend")});
 
     const fieldSelector = newElement("select", {class: ["fieldType"]});
     populateFieldSelector(fieldSelector, "Conversation");
@@ -838,7 +838,7 @@ function createFieldOptions() {
     const customInput = newElement("input", {class: ["customPath"]});
     registerElement(fieldSelector, "change", () => { if (fieldSelector.value === "custom") { addElement(customInput, fieldSelector, "afterend") } else { customInput.remove(); }})
 
-    addElements([removeButton, levelSelector, fieldSelector], fieldOptionContainer);
+    addElements([levelSelector, fieldSelector, removeButton, addFieldButton], fieldOptionContainer);
     return fieldOptionContainer;
 }
 
