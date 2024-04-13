@@ -1027,7 +1027,8 @@ class LivingPopulationTab extends Tab {
             "Charisma",
         ]
     
-        return new PersonTable(headers, getPopulationData(newTown.getLivingPopulation()), 100, {"data-population": "dead"}, true, true, "-");
+        const table = new PersonTable(headers, getPopulationData(newTown.getLivingPopulation()), 100, {"data-population": "dead"}, true, true, "-");
+        return table.getContainer();
     }
 }
 
@@ -1057,7 +1058,8 @@ class FullPopulationTab extends Tab {
             "Charisma",
         ]
     
-        return new PersonTable(headers, getPopulationData(newTown.getPopulation()), 100, {"data-population": "dead"}, true, true, "-");
+        const table = new PersonTable(headers, getPopulationData(newTown.getPopulation()), 100, {"data-population": "dead"}, true, true, "-");
+        return table.getContainer();
     }
 }
 
@@ -1087,7 +1089,8 @@ class DeadPopulationTab extends Tab {
             "Charisma",
         ]
     
-        return new PersonTable(headers, getPopulationData(newTown.getDeadPopulation()), 100, {"data-population": "dead"}, true, true, "-");
+        const table = new PersonTable(headers, getPopulationData(newTown.getDeadPopulation()), 100, {"data-population": "dead"}, true, true, "-");
+        return table.getContainer();
     }
 }
 
@@ -1148,7 +1151,8 @@ class BuildingsTab extends Tab {
                 building.getResidents().length
             ]);
         }
-        return new PagedTable(headers, dataRows, 50, {}, true, true, "-");
+        const table = new PagedTable(headers, dataRows, 50, {}, true, true, "-");
+        return table.getContainer();
     }
 }
 
@@ -1172,7 +1176,8 @@ class JobsTab extends Tab {
                 job.getBuilding() ? job.getBuilding().getBuildingName() : "-"
             ])
         }
-        return new PagedTable(headers, dataRows, 50, {}, true, true, "-");
+        const table = new PagedTable(headers, dataRows, 50, {}, true, true, "-");
+        return table.getContainer();
     }
 }
 
