@@ -36,7 +36,17 @@ async function getConversations(startDate, endDate) {
                     ]
                 }
             ],
-            "conversationFilters": [],
+            "conversationFilters": [
+                {
+                    "type": "or",
+                    "predicates": [
+                        {
+                            "dimension": "conversationEnd",
+                            "operator": "exists"
+                        }
+                    ]
+                }
+            ],
             "evaluationFilters": [],
             "surveyFilters": [],
             "interval": `${startDate}/${endDate}`
@@ -54,6 +64,121 @@ async function getConversations(startDate, endDate) {
         totalPages = Math.ceil(resultJson.totalHits / pageSize)
     }
     return interactions;
+}
+
+async function conversationDetailsJob(startDate, endDate) {
+    // Submit a query to create a job. A jobId will be returned. Hang onto this jobId 
+    // (HTTP POST /api/v2/analytics/conversations/details/jobs).
+    const newJob = await createJob(startDate, endDate);
+    // Armed with your jobId, you should now periodically poll for the status of your job 
+    // (HTTP GET /api/v2/analytics/conversations/details/jobs/{jobId}).
+    await getStatus(newJob.jobId);
+
+    // Is your job still running? Did it fail? Has it successfully completed gathering all of your data? 
+    // Depending on load and the volume of data being queried, it might be on the order of seconds to minutes before you see your job complete.
+    // If and only if your job has successfully completed, is it time for you to retrieve the results. 
+    // At this point, you can ask for the first page of data back 
+    // (HTTP GET /api/v2/analytics/conversations/details/jobs/{jobId}/results). 
+    const results = await getJobResults(newJob.jobId);
+    
+    // Alongside the results of your query, you will find a cursor. 
+    // This is what you will use to advance to the next page of data (that is, this is an iterator and not random-access/numbered-page-style access). 
+    // Use that cursor as a query parameter on the URL to advance to the next page of results. 
+    // Each page will have a unique cursor to advance you forward. If there is no cursor in the page response, there is no data beyond this page.
+    return results;
+}
+
+async function createJob(startDate, endDate) {
+    const body = {
+        "order": "desc",
+        "orderBy": "conversationStart",
+        "segmentFilters": [
+            {
+                "type": "or",
+                "predicates": [
+                    {
+                        "dimension": "mediaType",
+                        "value": "message"
+                    }
+                ]
+            },
+            {
+                "type": "or",
+                "predicates": [
+                    {
+                        "dimension": "direction",
+                        "value": "inbound"
+                    }, {
+                        "dimension": "direction",
+                        "value": "outbound"
+                    }
+                ]
+            }
+        ],
+        "conversationFilters": [
+            {
+                "type": "or",
+                "predicates": [
+                    {
+                        "dimension": "conversationEnd",
+                        "operator": "exists"
+                    }
+                ]
+            }
+        ],
+        "evaluationFilters": [],
+        "surveyFilters": [],
+        "interval": `${startDate}/${endDate}`
+    }
+    const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/analytics/conversations/details/jobs`;
+    const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
+    const resultJson = await result.json();
+    if (!result.ok) {
+        throw resultJson.message;
+    }
+    return resultJson;
+}
+
+async function getStatus(jobId) {
+    // Armed with your jobId, you should now periodically poll for the status of your job 
+    // (HTTP GET /api/v2/analytics/conversations/details/jobs/{jobId}).
+    return new Promise((resolve, reject) => {
+        const repeater = setInterval(async () => {
+            const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/analytics/conversations/details/jobs/${jobId}`;
+            const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
+            const resultJson = await result.json();
+            if (!result.ok) {
+                reject();
+            }
+            if (resultJson.state === "FULFILLED") {
+                clearInterval(repeater);
+                resolve();
+            }
+        }, 2000);
+      })
+}
+
+async function getJobResults(jobId) {
+    let truncated = true;
+    let cursor = "";
+    const results = [];
+
+    while (truncated === true) {
+        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/analytics/conversations/details/jobs/${jobId}/results?pageSize=250&cursor=${cursor}`;
+        const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
+        const resultJson = await result.json();
+        if (!result.ok) {
+            throw resultJson.message;
+        }
+        results.push(...resultJson.conversations);
+        if (resultJson.cursor) {
+            cursor = resultJson.cursor
+        }
+        else {
+            truncated = false;
+        }
+    }
+    return results;
 }
 
 async function getItem(path) {
@@ -264,12 +389,14 @@ function getAllConversationSegments(interaction) {
                 segments.push([
                     interaction.conversationId,
                     participant.purpose,
+                    participant.attributes ? JSON.stringify(participant.attributes) : "-",
                     segment.segmentStart,
                     segment.segmentEnd ? segment.segmentEnd : "-",
                     segment.segmentType,
                     session.flow && session.flow.flowName ? session.flow.flowName : "-",
                     session.flow && session.flow.flowVersion ? session.flow.flowVersion : "-",
                     session.flow && session.flow.exitReason ? session.flow.exitReason : "-",
+                    session.flow && session.flow.recognitionFailureReason ?  session.flow.recognitionFailureReason : "-",
                     segment.disconnectType ? segment.disconnectType : "-",
                     session.mediaType ? session.mediaType : "-",
                     segment.segmentType === "wrapup" && segment.wrapUpCode ? wrapupCodeMapping[segment.wrapUpCode] ? wrapupCodeMapping[segment.wrapUpCode] : segment.wrapUpCode : "-",
@@ -280,6 +407,7 @@ function getAllConversationSegments(interaction) {
                     interaction.knowledgeBaseIds && interaction.knowledgeBaseIds[0] ? knowledgeBaseMapping[interaction.knowledgeBaseIds[0]] ? knowledgeBaseMapping[interaction.knowledgeBaseIds[0]] : interaction.knowledgeBaseIds[0] : "-",
                     segment.errorCode ? segment.errorCode : "-",
                 ])
+                // console.log({...interaction, ...participant, ...session, ...segment})
             }
         }
     }
@@ -342,7 +470,7 @@ async function run() {
     const knowledgeBases = await getAll("/api/v2/knowledge/knowledgeBases?sortOrder=ASC&sortBy=name", "entities", 25);
     window.knowledgeBaseMapping = mapProperty("id", "name", knowledgeBases);
 
-    const conversations = await getConversations(startDate, endDate);
+    const conversations = await conversationDetailsJob(startDate, endDate);
     let dataRows = [];
     for (let conversation of conversations) {
         window.allConversations[conversation.conversationId] = conversation;
@@ -350,8 +478,8 @@ async function run() {
         dataRows = dataRows.concat(getAllConversationSegments(conversation));
     }
 
-    const headers = ["Conversation ID", "Purpose", "Start", "End", "Type", "Flow Name", "Flow Version", "Exit Reason", "Disconnect Type", "Media Type", "Wrapup Code", "Queue", "Agent", "Participant Agent", "Division", "Knowledge Base", "Error Code"]
-    const table = new PagedTable(headers, dataRows, 25, {}, true, true);
+    const headers = ["Conversation ID", "Purpose", "Participant Data", "Start", "End", "Type", "Flow Name", "Flow Version", "Exit Reason", "Recognition Failure Reason", "Disconnect Type", "Media Type", "Wrapup Code", "Queue", "Agent", "Participant Agent", "Division", "Knowledge Base", "Error Code"]
+    const table = new PagedTable(headers, dataRows, 100, {}, true, true);
     const results = eById("results");
     clearElement(results);
     addElement(table, results);
