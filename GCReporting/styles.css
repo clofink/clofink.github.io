@@ -82,3 +82,13 @@ th span {
 table.sortable th span {
     cursor: pointer;
 }
+.fieldOption {
+    margin-top: .5em;
+    margin-bottom: .5em;
+}
+.fieldOption select, .fieldOption input, .fieldOption button {
+    margin-right: .5em;
+}
+#page>button {
+    margin-right: .5em;
+}
