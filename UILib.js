@@ -162,7 +162,7 @@ class PagedTable {
             const headerData = {};
             const headerLabel = newElement('span', { innerText: header });
             if (this.sortable) {
-                headerLabel.dataset.sortDirection = "asc";
+                headerLabel.dataset.sortDirection = "desc";
                 headerLabel.dataset.currentSort = "false";
             }
             const tableHeader = newElement('th', headerData);
