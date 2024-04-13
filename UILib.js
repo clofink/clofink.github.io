@@ -132,6 +132,18 @@ class PagedTable {
         this.updateButtons();
     }
 
+    getHeaders() {
+        return this.headers;
+    }
+    
+    getFullData() {
+        return this.fullData;
+    }
+
+    getFilteredData() {
+        return this.filteredData;
+    }
+
     updateTable() {
         clearElement(this.table, "tr:has(td)");
         const startIndex = this.pageSize * this.currentPage;
