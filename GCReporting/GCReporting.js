@@ -1,69 +1,144 @@
-async function getConversations(startDate, endDate) {
-    const interactions = [];
-    let pageNum = 0;
-    let totalPages = 1;
-    const pageSize = 100;
-
-    while (pageNum < totalPages) {
-        pageNum++;
-        const body = {
-            "order": "desc",
-            "orderBy": "conversationStart",
-            "paging": {
-                "pageSize": pageSize,
-                "pageNumber": pageNum
-            },
-            "segmentFilters": [
-                {
-                    "type": "or",
-                    "predicates": [
-                        {
-                            "dimension": "mediaType",
-                            "value": "message"
-                        }
-                    ]
-                },
-                {
-                    "type": "or",
-                    "predicates": [
-                        {
-                            "dimension": "direction",
-                            "value": "inbound"
-                        }, {
-                            "dimension": "direction",
-                            "value": "outbound"
-                        }
-                    ]
-                }
-            ],
-            "conversationFilters": [
-                {
-                    "type": "or",
-                    "predicates": [
-                        {
-                            "dimension": "conversationEnd",
-                            "operator": "exists"
-                        }
-                    ]
-                }
-            ],
-            "evaluationFilters": [],
-            "surveyFilters": [],
-            "interval": `${startDate}/${endDate}`
-        }
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/analytics/conversations/details/query`;
-        const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        const resultJson = await result.json();
-        if (result.ok) {
-            resultJson.status = 200;
-        }
-        else {
-            throw resultJson.message;
-        }
-        interactions.push(...resultJson.conversations);
-        totalPages = Math.ceil(resultJson.totalHits / pageSize)
-    }
-    return interactions;
+window.levels = ["conversation", "participant", "session", "segment"];
+window.fields = {
+    // usersMapping, queueMapping, wrapupCodeMapping, divisionMapping, knowledgeBaseMapping
+    "Conversation": [
+        {name: "Conference Start", path: "conferenceStart", level: "interaction" },
+        {name: "Conversation End", path: "conversationEnd", level: "interaction" },
+        {name: "Conversation ID", path: "conversationId", level: "interaction" },
+        {name: "Conversation Initiator", path: "conversationInitator", level: "interaction" },
+        {name: "Conversation Start", path: "conversationStart", level: "interaction" },
+        {name: "Customer Participation", path: "customerParticipation", level: "interaction" },
+        {name: "Division IDs", path: "divisionIds", level: "interaction" },
+        {name: "External Tag", path: "externalTag", level: "interaction" },
+        {name: "Knowledge Base IDs", path: "knowledgeBaseIds", level: "interaction" },
+        {name: "Min Conversation MOS", path: "mediaStatsMinConversationMos", level: "interaction" },
+        {name: "Min Conversation R Factor", path: "mediaStatsMinConversationRFactor", level: "interaction" },
+        {name: "Originating Direction", path: "originatingDirection", level: "interaction" },
+        {name: "Self Served", path: "selfServed", level: "interaction" },
+        {name: "Evaluations", path: "evaluations", level: "interaction" },
+        {name: "Suveys", path: "surveys", level: "interaction" },
+        {name: "Resolutions", path: "resolutions", level: "interaction" },
+    ],
+    "Participant": [
+        { name: "External Contact ID", path: "externalContactId", level: "participant" },
+        { name: "External Org ID", path: "externalOrganizationId", level: "participant" },
+        { name: "Flagged Reason", path: "flaggedReason", level: "participant" },
+        { name: "Participant ID", path: "participantId", level: "participant" },
+        { name: "Participant Name", path: "participantName", level: "participant" },
+        { name: "Purpose", path: "purpose", level: "participant" },
+        { name: "Team ID", path: "teamId", level: "participant" },
+        { name: "User ID", path: "userId", level: "participant", mapping: "usersMapping" },
+        { name: "Attributes", path: "attributes", level: "participant" },
+    ],
+    "Session": [
+        { name: "Active Skill IDs", path: "activeSkillIds", level: "session" },
+        { name: "ACW Skipped", path: "acwSkipped", level: "session" },
+        { name: "Address From", path: "addressFrom", level: "session" },
+        { name: "Address Other", path: "addressOther", level: "session" },
+        { name: "Address Self", path: "addressSelf", level: "session" },
+        { name: "Address To", path: "addressTo", level: "session" },
+        { name: "Agent Assistant ID", path: "agentAssistantId", level: "session" },
+        { name: "Agent Bullseye Ring", path: "agentBulleyeRing", level: "session" },
+        { name: "Agent Owned", path: "agentOwned", level: "session" },
+        { name: "ANI", path: "ani", level: "session" },
+        { name: "Assigner ID", path: "assignerId", level: "session" },
+        { name: "Authenticated", path: "authenticated", level: "session" },
+        { name: "Barged Participant ID", path: "bargedParticipantId", level: "session" },
+        { name: "BCC", path: "bcc", level: "session" },
+        { name: "Callback Numbers", path: "callbackNumbers", level: "session" },
+        { name: "Callback Scheduled Time", path: "callbackScheduledTime", level: "session" },
+        { name: "Callback User Name", path: "callbackUserName", level: "session" },
+        { name: "CC", path: "cc", level: "session" },
+        { name: "Cleared", path: "cleared", level: "session" },
+        { name: "Coached Participant ID", path: "coachedParticipantId", level: "session" },
+        { name: "Cobrowse Role", path: "cobrowseRole", level: "session" },
+        { name: "Cobrowse Room ID", path: "cobrowseRoomId", level: "session" },
+        { name: "Delivery Status", path: "deliveryStatus", level: "session" },
+        { name: "Delivery Status Changed Date", path: "deliveryStatusChangeDate", level: "session" },
+        { name: "Destination Addresses", path: "destinationAddresses", level: "session" },
+        { name: "Direction", path: "direction", level: "session" },
+        { name: "Dispostion Analyzer", path: "dispositionAnalyzer", level: "session" },
+        { name: "Disposition Name", path: "dispositionName", level: "session" },
+        { name: "DNIS", path: "dnis", level: "session" },
+        { name: "Edge ID", path: "edgeId", level: "session" },
+        { name: "Eligible Agent Counts", path: "eligibleAgentCounts", level: "session" },
+        { name: "Extended Delivery Status", path: "extendedDeliveryStatus", level: "session" },
+        { name: "Flow In Type", path: "flowInType", level: "session" },
+        { name: "Flow Out Type", path: "flowOutType", level: "session" },
+        { name: "Journey Action ID", path: "journeyActionId", level: "session" },
+        { name: "Journey Action Map ID", path: "journeyActionMapId", level: "session" },
+        { name: "Journey Action Map Version", path: "journeyActionMapVersion", level: "session" },
+        { name: "Journey Customer ID", path: "journeyCustomerId", level: "session" },
+        { name: "Journey Customer ID Type", path: "journeyCustomerIdType", level: "session" },
+        { name: "Journey Customer Session ID", path: "journeyCustomerSessionId", level: "session" },
+        { name: "Journey Customer Session ID Type", path: "journeyCustomerSessionIdType", level: "session" },
+        { name: "Media Bridge ID", path: "mediaBridgeId", level: "session" },
+        { name: "Media Count", path: "mediaCount", level: "session" },
+        { name: "Media Type", path: "mediaType", level: "session" },
+        { name: "Message Type", path: "messageType", level: "session" },
+        { name: "Monitored Participant ID", path: "monitoredParticipantId", level: "session" },
+        { name: "Outbount Campaign ID", path: "outboundCampaignId", level: "session" },
+        { name: "Outbount Contact ID", path: "outboundContactId", level: "session" },
+        { name: "Outbount Contact List ID", path: "outboundContactListId", level: "session" },
+        { name: "Peer ID", path: "peerId", level: "session" },
+        { name: "Protocol Call ID", path: "protocolCallId", level: "session" },
+        { name: "Provider", path: "provider", level: "session" },
+        { name: "Recording", path: "recording", level: "session" },
+        { name: "Remote", path: "remote", level: "session" },
+        { name: "Remote Name Displayable", path: "remoteNameDisplayable", level: "session" },
+        { name: "Removed Skill IDs", path: "removedSkillIds", level: "session" },
+        { name: "Requested Routings", path: "requestedRoutings", level: "session" },
+        { name: "Room ID", path: "roomId", level: "session" },
+        { name: "Routing Ring", path: "routingRing", level: "session" },
+        { name: "Routing Rule", path: "routingRule", level: "session" },
+        { name: "Routing Rule Type", path: "routingRuleType", level: "session" },
+        { name: "Screen Share Address Self", path: "screenShareAddressSelf", level: "session" },
+        { name: "Screen Share Room ID", path: "screenShareRoomId", level: "session" },
+        { name: "Script ID", path: "scriptId", level: "session" },
+        { name: "Selected Agent ID", path: "selectedAgentId", level: "session", mapping: "usersMapping" },
+        { name: "Selected Agent Rank", path: "selectedAgentRank", level: "session" },
+        { name: "Session DNIS", path: "sessionDnis", level: "session" },
+        { name: "Session ID", path: "sessionId", level: "session" },
+        { name: "Sharing Screen", path: "sharingScreen", level: "session" },
+        { name: "Skip Enabled", path: "skipEnabled", level: "session" },
+        { name: "Timeout Seconds", path: "timeoutSeconds", level: "session" },
+        { name: "Used Routing", path: "usedRouting", level: "session" },
+        { name: "Video Address Self", path: "videoAddressSelf", level: "session" },
+        { name: "Video Room ID", path: "videoRoomId", level: "session" },
+        { name: "Waiting Interaction Counts", path: "waitingInteractionCounts", level: "session" },
+        { name: "Agent Groups", path: "agentGroups", level: "session" },
+        { name: "Proposed Agents", path: "proposedAgents", level: "session" },
+        { name: "Media Endpoint Stats", path: "mediaEndpointStats", level: "session" },
+        { name: "Flow", path: "flow", level: "session" },
+        { name: "Metrics", path: "metrics", level: "session" },
+    ],
+    "Segment": [
+        { name: "Audio Muted", path: "audioMuted", level: "segment" },
+        { name: "Conference", path: "conference", level: "segment" },
+        { name: "Destination Conversation ID", path: "destinationConversationId", level: "segment" },
+        { name: "Destination Session ID", path: "destinationSessionId", level: "segment" },
+        { name: "Disconnect Type", path: "disconnectType", level: "segment" },
+        { name: "Error Code", path: "errorCode", level: "segment" },
+        { name: "Group ID", path: "groupId", level: "segment" },
+        { name: "Q.850 Response Codes", path: "q850ResponseCodes", level: "segment" },
+        { name: "Queue ID", path: "queueId", level: "segment" },
+        { name: "Requested Language ID", path: "requestedLanguageId", level: "segment" },
+        { name: "Requested Routing Skill IDs", path: "requestedRoutingSkillIds", level: "segment" },
+        { name: "Requested Routing User IDs", path: "requestedRoutingUserIds", level: "segment" },
+        { name: "Segment End", path: "segmentEnd", level: "segment" },
+        { name: "Segment Start", path: "segmentStart", level: "segment" },
+        { name: "Segment Type", path: "segmentType", level: "segment" },
+        { name: "SIP Response Codes", path: "sipResponseCodes", level: "segment" },
+        { name: "Source Conversation IDs", path: "sourceConversationId", level: "segment" },
+        { name: "Source Session ID", path: "sourceSessionId", level: "segment" },
+        { name: "Subject", path: "subject", level: "segment" },
+        { name: "Video Muted", path: "videoMuted", level: "segment" },
+        { name: "Wrap-Up Code", path: "wrapUpCode", level: "segment" },
+        { name: "Wrap-Up Notes", path: "wrapUpNote", level: "segment" },
+        { name: "Wrap-Up Tags", path: "wrapUpTags", level: "segment" },
+        { name: "Scored Agents", path: "scoredAgents", level: "segment" },
+        { name: "Properties", path: "properties", level: "segment" },
+    ]
 }
 
 async function conversationDetailsJob(startDate, endDate) {
@@ -80,7 +155,7 @@ async function conversationDetailsJob(startDate, endDate) {
     // At this point, you can ask for the first page of data back 
     // (HTTP GET /api/v2/analytics/conversations/details/jobs/{jobId}/results). 
     const results = await getJobResults(newJob.jobId);
-    
+
     // Alongside the results of your query, you will find a cursor. 
     // This is what you will use to advance to the next page of data (that is, this is an iterator and not random-access/numbered-page-style access). 
     // Use that cursor as a query parameter on the URL to advance to the next page of results. 
@@ -92,29 +167,7 @@ async function createJob(startDate, endDate) {
     const body = {
         "order": "desc",
         "orderBy": "conversationStart",
-        "segmentFilters": [
-            {
-                "type": "or",
-                "predicates": [
-                    {
-                        "dimension": "mediaType",
-                        "value": "message"
-                    }
-                ]
-            },
-            {
-                "type": "or",
-                "predicates": [
-                    {
-                        "dimension": "direction",
-                        "value": "inbound"
-                    }, {
-                        "dimension": "direction",
-                        "value": "outbound"
-                    }
-                ]
-            }
-        ],
+        "segmentFilters": [],
         "conversationFilters": [
             {
                 "type": "or",
@@ -155,7 +208,7 @@ async function getStatus(jobId) {
                 resolve();
             }
         }, 2000);
-      })
+    })
 }
 
 async function getJobResults(jobId) {
@@ -199,23 +252,6 @@ async function getBotTurns(botFlowId, start, end) {
     return resultJson;
 }
 
-async function getMessageConversation(conversationId) {
-    const resultJson = await getItem(`/api/v2/conversations/messages/${conversationId}`);
-    return resultJson;
-}
-
-async function getConversation(conversationId) {
-    // /api/v2/conversations/{conversationId}
-    const resultJson = await getItem(`/api/v2/conversations/${conversationId}`);
-    return resultJson;
-}
-
-async function getAnalyticsDetails(conversationId) {
-    // /api/v2/analytics/conversations/{conversationId}/details
-    const resultJson = await getItem(`/api/v2/analytics/conversations/${conversationId}/details`);
-    return resultJson;
-}
-
 async function getRecording(conversationId) {
     const resultJson = await getItem(`/api/v2/conversations/${conversationId}/recordings`);
     return resultJson;
@@ -224,11 +260,11 @@ async function getRecording(conversationId) {
 function botParticipant(participant, conversationId) {
     for (let session of participant.sessions) {
         const botName = session.flow.flowName;
-    
+
         if (!botStats.exitReasons.hasOwnProperty(session.flow.exitReason)) botStats.exitReasons[session.flow.exitReason] = [];
-        botStats.exitReasons[session.flow.exitReason].push({botName: botName, conversationId: conversationId});
+        botStats.exitReasons[session.flow.exitReason].push({ botName: botName, conversationId: conversationId });
         for (let segment of session.segments) {
-            addFlowTimes(botStats, "timeInFlow", "maxTimeInFlow", "averageTimeInFlow", segment, {botName: botName, conversationId: conversationId});
+            addFlowTimes(botStats, "timeInFlow", "maxTimeInFlow", "averageTimeInFlow", segment, { botName: botName, conversationId: conversationId });
         }
     }
 }
@@ -237,24 +273,24 @@ function acdParticipant(participant, conversationId) {
     for (let session of participant.sessions) {
         for (let segment of session.segments) {
             if (!queueStats.disconnectTypes.hasOwnProperty(segment.disconnectType)) queueStats.disconnectTypes[segment.disconnectType] = [];
-            switch(segment.disconnectType) {
+            switch (segment.disconnectType) {
                 case "peer":
                     // customer disconnect
-                    queueStats.disconnectTypes[segment.disconnectType].push({conversationId: conversationId});
+                    queueStats.disconnectTypes[segment.disconnectType].push({ conversationId: conversationId });
                     break;
                 case "transfer":
                     // went to agent? or another queue?
-                    queueStats.disconnectTypes[segment.disconnectType].push({conversationId: conversationId, agent: usersMapping.hasOwnProperty(session.selectedAgentId) ? usersMapping[session.selectedAgentId] : session.selectedAgentId });
+                    queueStats.disconnectTypes[segment.disconnectType].push({ conversationId: conversationId, agent: usersMapping.hasOwnProperty(session.selectedAgentId) ? usersMapping[session.selectedAgentId] : session.selectedAgentId });
                     break;
                 case "client":
-                    queueStats.disconnectTypes[segment.disconnectType].push({conversationId: conversationId, flowName: session.flow.flowName});
+                    queueStats.disconnectTypes[segment.disconnectType].push({ conversationId: conversationId, flowName: session.flow.flowName });
                     break;
                 default:
                     console.log(conversationId, segment.disconnectType);
                     break;
             }
 
-            addFlowTimes(queueStats, "queueTime", "maxQueueTime", "averageQueueTime", segment, {queue: queueMapping.hasOwnProperty(segment.queueId) ? queueMapping[segment.queueId] : segment.queueId, conversationId: conversationId});
+            addFlowTimes(queueStats, "queueTime", "maxQueueTime", "averageQueueTime", segment, { queue: queueMapping.hasOwnProperty(segment.queueId) ? queueMapping[segment.queueId] : segment.queueId, conversationId: conversationId });
         }
     }
 }
@@ -264,18 +300,18 @@ function agentParticipant(participant, conversationId) {
         switch (session.mediaType) {
             case "message": {
                 for (let segment of session.segments) {
-                    switch(segment.segmentType) {
+                    switch (segment.segmentType) {
                         case "alert":
-                            addFlowTimes(agentStats, "alertTimes", "maxAlertTime", "averageAlertTime", segment, {conversationId: conversationId, agent: usersMapping.hasOwnProperty(session.selectedAgentId) ? usersMapping[session.selectedAgentId] : session.selectedAgentId});
+                            addFlowTimes(agentStats, "alertTimes", "maxAlertTime", "averageAlertTime", segment, { conversationId: conversationId, agent: usersMapping.hasOwnProperty(session.selectedAgentId) ? usersMapping[session.selectedAgentId] : session.selectedAgentId });
                             break;
                         case "interact":
-                            addFlowTimes(agentStats, "interactTimes", "maxInteractTime", "averageInteractTime", segment, {conversationId: conversationId, agent: usersMapping.hasOwnProperty(session.selectedAgentId) ? usersMapping[session.selectedAgentId] : session.selectedAgentId});
+                            addFlowTimes(agentStats, "interactTimes", "maxInteractTime", "averageInteractTime", segment, { conversationId: conversationId, agent: usersMapping.hasOwnProperty(session.selectedAgentId) ? usersMapping[session.selectedAgentId] : session.selectedAgentId });
                             break;
                         case "wrapup":
-                            addFlowTimes(agentStats, "wrapupTimes", "maxWrapupTime", "averageWrapupTime", segment, {conversationId: conversationId, agent: usersMapping.hasOwnProperty(session.selectedAgentId) ? usersMapping[session.selectedAgentId] : session.selectedAgentId});
+                            addFlowTimes(agentStats, "wrapupTimes", "maxWrapupTime", "averageWrapupTime", segment, { conversationId: conversationId, agent: usersMapping.hasOwnProperty(session.selectedAgentId) ? usersMapping[session.selectedAgentId] : session.selectedAgentId });
                             break;
                         case "hold":
-                            addFlowTimes(agentStats, "holdTimes", "maxHoldTime", "averageHoldTime", segment, {conversationId: conversationId, agent: usersMapping.hasOwnProperty(session.selectedAgentId) ? usersMapping[session.selectedAgentId] : session.selectedAgentId});
+                            addFlowTimes(agentStats, "holdTimes", "maxHoldTime", "averageHoldTime", segment, { conversationId: conversationId, agent: usersMapping.hasOwnProperty(session.selectedAgentId) ? usersMapping[session.selectedAgentId] : session.selectedAgentId });
                             break;
                         default:
                             console.log(conversationId, segment.segmentType);
@@ -286,7 +322,7 @@ function agentParticipant(participant, conversationId) {
             }
             case "cobrowse": {
                 for (let segment of session.segments) {
-                    addFlowTimes(agentStats, "cobrowseTimes", "maxCobrowseTime", "averageCobrowseTime", segment, {conversationId: conversationId, agent: usersMapping.hasOwnProperty(session.selectedAgentId) ? usersMapping[session.selectedAgentId] : session.selectedAgentId, cobrowseRole: session.cobrowseRole});
+                    addFlowTimes(agentStats, "cobrowseTimes", "maxCobrowseTime", "averageCobrowseTime", segment, { conversationId: conversationId, agent: usersMapping.hasOwnProperty(session.selectedAgentId) ? usersMapping[session.selectedAgentId] : session.selectedAgentId, cobrowseRole: session.cobrowseRole });
                 }
                 break;
             }
@@ -301,10 +337,10 @@ function workflowParticipant(participant, conversationId) {
     for (let session of participant.sessions) {
         const flowExitReason = session.flow.exitReason ? session.flow.exitReason : "Unknown"
         if (!workflowStats.disconnectTypes.hasOwnProperty(flowExitReason)) workflowStats.disconnectTypes[flowExitReason] = [];
-        workflowStats.disconnectTypes[flowExitReason].push({conversationId: conversationId, flowName: session.flow.flowName});
+        workflowStats.disconnectTypes[flowExitReason].push({ conversationId: conversationId, flowName: session.flow.flowName });
 
         for (let segment of session.segments) {
-            addFlowTimes(workflowStats, "flowTimes", "maxFlowTime", "averageFlowTime", segment, {conversationId: conversationId, flowName: session.flow.flowName});
+            addFlowTimes(workflowStats, "flowTimes", "maxFlowTime", "averageFlowTime", segment, { conversationId: conversationId, flowName: session.flow.flowName });
         }
     }
 }
@@ -333,15 +369,15 @@ function addFlowTimes(object, key, maxKey, averageKey, segment, fields) {
         if (duration > currentMax) {
             object[maxKey].duration = duration;
             object[maxKey].prettyDuration = prettyDuration;
-            object[maxKey] = {...object[maxKey], ...fields};
+            object[maxKey] = { ...object[maxKey], ...fields };
         }
-    } 
-    object[key].push({...fields, duration: duration, prettyDuration: prettyDuration})
+    }
+    object[key].push({ ...fields, duration: duration, prettyDuration: prettyDuration })
 }
 
 function getConversationTurns(conversation) {
     for (let participant of conversation.participants) {
-        switch(participant.purpose) {
+        switch (participant.purpose) {
             case "botflow":
                 botParticipant(participant, conversation.conversationId);
                 break;
@@ -360,89 +396,104 @@ function getConversationTurns(conversation) {
                 console.log(conversation.conversationId, participant.purpose);
                 break;
         }
-        // if (participant.purpose === "botflow") {
-        //     for (let session of participant.sessions) {
-        //         console.log(session.flow.flowName);
-        //         console.log(`${session.segments[0].segmentStart} - ${session.segments[0].segmentEnd}`);
-        //         const sessionTurns = [];
-        //         const flowTurns = await getBotTurns(session.flow.flowId, session.segments[0].segmentStart, session.segments[0].segmentEnd);
-        //         for (let turn of flowTurns.entities) {
-        //             if (turn.sessionId === session.sessionId) {
-        //                 if (turn.askActionResult) console.log(turn.askActionResult);
-        //                 sessionTurns.push(turn)
-        //             }
-        //         }
-        //         console.log(sessionTurns);
-        //     }
-        // }
     }
 }
 
-function getAllConversationSegments(interaction, level) {
+window.conversationKeys = new Set();
+window.participantKeys = new Set();
+window.sessionKeys = new Set();
+window.segmentKeys = new Set();
+
+function addMissingKeys(list, keys) {
+    for (let key of keys) {
+        list.add(key);
+    }
+}
+
+function addIfProperty(object, path, orValue, mapping) {
+    const pathParts = path.split(".");
+    let currentPiece = object;
+    for (let i = 0; i < pathParts.length; i++) {
+        const part = pathParts[i];
+        const hasPart = currentPiece.hasOwnProperty(part);
+        if (hasPart && i + 1 < pathParts.length) {
+            currentPiece = currentPiece[part];
+            continue;
+        }
+        if (hasPart) {
+            if (typeof currentPiece[part] === "object") {
+                return JSON.stringify(object[part])
+            }
+            if (window[mapping]) {
+                return window[mapping].hasOwnProperty(currentPiece[part]) ? window[mapping][currentPiece[part]] : currentPiece[part];
+            }
+            return currentPiece[part]
+        }
+    }
+    return orValue;
+}
+
+function getAllConversationSegments(interaction, fieldsInfo, dataLevel) {
     const dataRows = [];
-
-    // TODO: maybe fully parse the conversation and use the segments to add a bunch of info about it (like Bold has)
-
-    if (level === "Conversation") {
-        dataRows.push([
-            interaction.conversationId,
-            interaction.divisionIds && interaction.divisionIds[0] ? divisionMapping[interaction.divisionIds[0]] ? divisionMapping[interaction.divisionIds[0]] : interaction.divisionIds[0] : "-",
-            interaction.knowledgeBaseIds && interaction.knowledgeBaseIds[0] ? knowledgeBaseMapping[interaction.knowledgeBaseIds[0]] ? knowledgeBaseMapping[interaction.knowledgeBaseIds[0]] : interaction.knowledgeBaseIds[0] : "-",
-        ])
+    const level = dataLevel.toLowerCase();
+    const dataLevelIndex = levels.indexOf(level);
+    const currentItems = {
+        conversation: interaction,
+        participant: undefined,
+        session: undefined,
+        segment: undefined
+    }
+    addMissingKeys(window.conversationKeys, Object.keys(interaction));
+    if (dataLevel === "Conversation") {
+        const dataRow = [];
+        for (let field of fieldsInfo) {
+            const fieldLevel = levels.indexOf(field.level);
+            if (dataLevelIndex >= fieldLevel) {
+                dataRow.push(addIfProperty(currentItems[field.level], field.path, "-", field.mapping));
+            }
+        }
+        dataRows.push(dataRow);
     }
     else {
         for (let participant of interaction.participants) {
-            if (level === "Participant") {
-                dataRows.push([
-                    interaction.conversationId,
-                    participant.purpose,
-                    participant.attributes ? JSON.stringify(participant.attributes) : "-",
-                    participant.userId ? usersMapping[participant.userId] ? usersMapping[participant.userId] : participant.userId : "-",
-                    interaction.divisionIds && interaction.divisionIds[0] ? divisionMapping[interaction.divisionIds[0]] ? divisionMapping[interaction.divisionIds[0]] : interaction.divisionIds[0] : "-",
-                    interaction.knowledgeBaseIds && interaction.knowledgeBaseIds[0] ? knowledgeBaseMapping[interaction.knowledgeBaseIds[0]] ? knowledgeBaseMapping[interaction.knowledgeBaseIds[0]] : interaction.knowledgeBaseIds[0] : "-",
-                ])
+            currentItems.participant = participant;
+            addMissingKeys(window.participantKeys, Object.keys(participant));
+            if (dataLevel === "Participant") {
+                const dataRow = [];
+                for (let field of fieldsInfo) {
+                    const fieldLevel = levels.indexOf(field.level);
+                    if (dataLevelIndex >= fieldLevel) {
+                        dataRow.push(addIfProperty(currentItems[field.level], field.path, "-", field.mapping));
+                    }
+                }
+                dataRows.push(dataRow);
             }
             else {
                 for (let session of participant.sessions) {
-                    if (level === "Session") {
-                        dataRows.push([
-                            interaction.conversationId,
-                            participant.purpose,
-                            participant.attributes ? JSON.stringify(participant.attributes) : "-",
-                            session.flow && session.flow.flowName ? session.flow.flowName : "-",
-                            session.flow && session.flow.flowVersion ? session.flow.flowVersion : "-",
-                            session.flow && session.flow.exitReason ? session.flow.exitReason : "-",
-                            session.flow && session.flow.recognitionFailureReason ?  session.flow.recognitionFailureReason : "-",
-                            session.mediaType ? session.mediaType : "-",
-                            session.selectedAgentId ? usersMapping[session.selectedAgentId] ? usersMapping[session.selectedAgentId] : session.selectedAgentId : "-",
-                            participant.userId ? usersMapping[participant.userId] ? usersMapping[participant.userId] : participant.userId : "-",
-                            interaction.divisionIds && interaction.divisionIds[0] ? divisionMapping[interaction.divisionIds[0]] ? divisionMapping[interaction.divisionIds[0]] : interaction.divisionIds[0] : "-",
-                            interaction.knowledgeBaseIds && interaction.knowledgeBaseIds[0] ? knowledgeBaseMapping[interaction.knowledgeBaseIds[0]] ? knowledgeBaseMapping[interaction.knowledgeBaseIds[0]] : interaction.knowledgeBaseIds[0] : "-",
-                        ])
+                    currentItems.session = session;
+                    addMissingKeys(window.sessionKeys, Object.keys(session));
+                    if (dataLevel === "Session") {
+                        const dataRow = [];
+                        for (let field of fieldsInfo) {
+                            const fieldLevel = levels.indexOf(field.level);
+                            if (dataLevelIndex >= fieldLevel) {
+                                dataRow.push(addIfProperty(currentItems[field.level], field.path, "-", field.mapping));
+                            }
+                        }
+                        dataRows.push(dataRow);
                     }
                     else {
                         for (let segment of session.segments) {
-                            dataRows.push([
-                                interaction.conversationId,
-                                participant.purpose,
-                                participant.attributes ? JSON.stringify(participant.attributes) : "-",
-                                segment.segmentStart,
-                                segment.segmentEnd ? segment.segmentEnd : "-",
-                                segment.segmentType,
-                                session.flow && session.flow.flowName ? session.flow.flowName : "-",
-                                session.flow && session.flow.flowVersion ? session.flow.flowVersion : "-",
-                                session.flow && session.flow.exitReason ? session.flow.exitReason : "-",
-                                session.flow && session.flow.recognitionFailureReason ?  session.flow.recognitionFailureReason : "-",
-                                segment.disconnectType ? segment.disconnectType : "-",
-                                session.mediaType ? session.mediaType : "-",
-                                segment.segmentType === "wrapup" && segment.wrapUpCode ? wrapupCodeMapping[segment.wrapUpCode] ? wrapupCodeMapping[segment.wrapUpCode] : segment.wrapUpCode : "-",
-                                segment.queueId ? queueMapping[segment.queueId] ? queueMapping[segment.queueId] : segment.queueId : "-",
-                                session.selectedAgentId ? usersMapping[session.selectedAgentId] ? usersMapping[session.selectedAgentId] : session.selectedAgentId : "-",
-                                participant.userId ? usersMapping[participant.userId] ? usersMapping[participant.userId] : participant.userId : "-",
-                                interaction.divisionIds && interaction.divisionIds[0] ? divisionMapping[interaction.divisionIds[0]] ? divisionMapping[interaction.divisionIds[0]] : interaction.divisionIds[0] : "-",
-                                interaction.knowledgeBaseIds && interaction.knowledgeBaseIds[0] ? knowledgeBaseMapping[interaction.knowledgeBaseIds[0]] ? knowledgeBaseMapping[interaction.knowledgeBaseIds[0]] : interaction.knowledgeBaseIds[0] : "-",
-                                segment.errorCode ? segment.errorCode : "-",
-                            ])
+                            currentItems.segment = segment;
+                            addMissingKeys(window.segmentKeys, Object.keys(segment));
+                            const dataRow = [];
+                            for (let field of fieldsInfo) {
+                                const fieldLevel = levels.indexOf(field.level);
+                                if (dataLevelIndex >= fieldLevel) {
+                                    dataRow.push(addIfProperty(currentItems[field.level], field.path, "-", field.mapping));
+                                }    
+                            }
+                            dataRows.push(dataRow);
                         }
                     }
                 }
@@ -469,7 +520,7 @@ async function run() {
         holdTimes: [],
         averageCobrowseTime: {},
         maxCobrowseTime: {},
-        cobrowseTimes: [] 
+        cobrowseTimes: []
     };
     window.botStats = {
         exitReasons: {},
@@ -493,7 +544,7 @@ async function run() {
     const start = eById("startDate").value;
     const end = eById("endDate").value;
     const dataLevel = eById("level").value;
-    if (!start || ! end) throw new Error("Need a start or end date");
+    if (!start || !end) throw new Error("Need a start or end date");
 
     const startDate = start + "T00:00:00.000Z";
     const endDate = end + "T23:59:59.999Z";
@@ -510,21 +561,36 @@ async function run() {
     window.knowledgeBaseMapping = mapProperty("id", "name", knowledgeBases);
 
     const conversations = await conversationDetailsJob(startDate, endDate);
+    const selectedFields = qsa(".fieldOption", eById('fieldContainer'));
+
+    const headers = [];
+    const fields = [];
+    // fieldLevel, fieldType, customPath
+    for (let field of selectedFields) {
+        const level = qs(".fieldLevel", field).value.toLowerCase();
+        let fieldPath = qs(".fieldType", field).value;
+        let fieldName = qs(".fieldType", field).selectedOptions[0].innerText;
+        if (fieldPath === "custom") {
+            fieldPath = qs(".customPath", field).value;
+            fieldName = qs(".customPath", field).value;
+        }
+        const dataLevelIndex = window.levels.indexOf(dataLevel.toLowerCase());
+        const fieldLevel = window.levels.indexOf(level);
+        console.log(`Data Level "${dataLevel}" is at index ${dataLevelIndex}. Field Level "${level}" is at index ${fieldLevel}`);
+        if (dataLevelIndex >= fieldLevel) {
+            headers.push(fieldName);
+            fields.push({name: fieldName, path: fieldPath, level: level})
+        }
+    }
+    log(headers);
+    log(fields);
     let dataRows = [];
     for (let conversation of conversations) {
         window.allConversations[conversation.conversationId] = conversation;
         getConversationTurns(conversation);
-        dataRows = dataRows.concat(getAllConversationSegments(conversation, dataLevel));
+        dataRows = dataRows.concat(getAllConversationSegments(conversation, fields, dataLevel));
     }
-
-    
-    const headers = {
-        "Conversation": ["Conversation ID", "Division", "Knowledge Base"],
-        "Participant": ["Conversation ID", "Purpose", "Participant Data", "Participant Agent", "Division", "Knowledge Base"],
-        "Session": ["Conversation ID", "Purpose", "Participant Data", "Flow Name", "Flow Version", "Exit Reason", "Recognition Failure Reason", "Media Type", "Agent", "Participant Agent", "Division", "Knowledge Base"],
-        "Segment": ["Conversation ID", "Purpose", "Participant Data", "Start", "End", "Type", "Flow Name", "Flow Version", "Exit Reason", "Recognition Failure Reason", "Disconnect Type", "Media Type", "Wrapup Code", "Queue", "Agent", "Participant Agent", "Division", "Knowledge Base", "Error Code"]
-    }
-    const table = new PagedTable(headers[dataLevel], dataRows, 100, {}, true, true);
+    const table = new PagedTable(headers, dataRows, 100, {}, true, true);
     const results = eById("results");
     clearElement(results);
     addElement(table, results);
@@ -545,7 +611,7 @@ function mapProperty(propA, propB, objects) {
 }
 
 async function getAllUsers() {
-    const users= [];
+    const users = [];
     let pageNum = 0;
     let totalPages = 1;
 
@@ -556,18 +622,18 @@ async function getAllUsers() {
             "pageNumber": pageNum,
             "query": [
                 {
-                    "type":"EXACT",
-                    "fields":["state"],
-                    "values":["active"]
+                    "type": "EXACT",
+                    "fields": ["state"],
+                    "values": ["active"]
                 }
             ],
-            "sortOrder":"ASC",
-            "sortBy":"name",
-            "expand":[],
-            "enforcePermissions":false
+            "sortOrder": "ASC",
+            "sortBy": "name",
+            "expand": [],
+            "enforcePermissions": false
         }
         const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/users/search`;
-        const result = await fetch(url, {method: "POST", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
+        const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
         const resultJson = await result.json();
         if (result.ok) {
             resultJson.status = 200;
@@ -589,7 +655,7 @@ async function getAll(path, resultsKey, pageSize) {
     while (pageNum < totalPages) {
         pageNum++;
         const url = `https://api.${window.localStorage.getItem('environment')}${path}&pageNumber=${pageNum}&pageSize=${pageSize}`;
-        const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
+        const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
         const resultJson = await result.json();
         if (result.ok) {
             resultJson.status = 200;
@@ -604,7 +670,7 @@ async function getAll(path, resultsKey, pageSize) {
 }
 
 function sortByKey(key) {
-    return function(a,b) {
+    return function (a, b) {
         if (a[key] > b[key]) return 1;
         if (a[key] < b[key]) return -1;
         return 0;
@@ -635,27 +701,32 @@ function showLoginPage() {
 function showMainMenu() {
     const page = eById('page');
     clearElement(page);
-    const inputs = newElement("div", {id: "inputs"});
-    const startLabel = newElement('label', {innerText: "Start Date: "});
-    const startDate = newElement('input', {type: "date", id: "startDate", value: "2024-04-01"});
+    const inputs = newElement("div", { id: "inputs" });
+    const startLabel = newElement('label', { innerText: "Start Date: " });
+    const startDate = newElement('input', { type: "date", id: "startDate", value: "2024-04-01" });
     addElement(startDate, startLabel);
-    const endLabel = newElement('label', {innerText: "End Date: "});
-    const endDate = newElement('input', {type: "date", id: "endDate", value: "2024-04-30"});
+    const endLabel = newElement('label', { innerText: "End Date: " });
+    const endDate = newElement('input', { type: "date", id: "endDate", value: "2024-04-30" });
     addElement(endDate, endLabel);
-    const levelLabel = newElement('label', {innerText: "Data Level: "});
-    const levelSelect = newElement('select', {id: "level"});
+    const levelLabel = newElement('label', { innerText: "Data Level: " });
+    const levelSelect = newElement('select', { id: "level" });
     for (let item of ["Conversation", "Participant", "Session", "Segment"]) {
-        const levelOption = newElement("option", {value: item, innerText: item});
+        const levelOption = newElement("option", { value: item, innerText: item });
         addElement(levelOption, levelSelect);
     }
     addElement(levelSelect, levelLabel)
+    const fieldContainer = newElement('div', {id: "fieldContainer"});
+    const addFieldButton = newElement("button", {innerText: "+"});
+    registerElement(addFieldButton, "click", () => {addElement(createFieldOptions(), addFieldButton, "beforebegin")});
+    addElements([createFieldOptions(), addFieldButton], fieldContainer);
+
     const startButton = newElement('button', { innerText: "Start" });
     registerElement(startButton, "click", run);
     const logoutButton = newElement('button', { innerText: "Logout" });
     registerElement(logoutButton, "click", logout);
-    const results = newElement('div', {id: "results"})
+    const results = newElement('div', { id: "results" })
     addElements([startLabel, endLabel, levelLabel], inputs)
-    addElements([inputs, startButton, logoutButton, results], page);
+    addElements([inputs, fieldContainer, startButton, logoutButton, results], page);
     getOrgDetails().then(function (result) {
         if (result.status !== 200) {
             log(result.message, "error");
@@ -728,12 +799,42 @@ function timeDiff(firstTime, secondTime) {
 }
 function formattedForDisplay(seconds) {
     var sec_num = parseInt(seconds, 10)
-    var hours   = Math.floor(sec_num / 3600)
+    var hours = Math.floor(sec_num / 3600)
     var minutes = Math.floor(sec_num / 60) % 60
     var seconds = sec_num % 60
 
-    return [hours,minutes,seconds]
+    return [hours, minutes, seconds]
         .map(v => v < 10 ? "0" + v : v)
-        .filter((v,i) => v !== "00" || i > 0)
+        .filter((v, i) => v !== "00" || i > 0)
         .join(":")
+}
+
+function createFieldOptions() {
+    const fieldOptionContainer = newElement('div', {class: ["fieldOption"]});
+    const removeButton = newElement("button", { innerText: "x" });
+    registerElement(removeButton, "click", () => { fieldOptionContainer.remove() });
+    const levelSelector = newElement("select", {class: ["fieldLevel"]});
+    for (let level of ["Conversation", "Participant", "Session", "Segment"]) {
+        const levelOption = newElement("option", { value: level, innerText: level });
+        addElement(levelOption, levelSelector);
+    }
+
+    const fieldSelector = newElement("select", {class: ["fieldType"]});
+    populateFieldSelector(fieldSelector, "Conversation");
+
+    registerElement(levelSelector, "change", () => { clearElement(fieldSelector); populateFieldSelector(fieldSelector, levelSelector.value) });
+    const customInput = newElement("input", {class: ["customPath"]});
+    registerElement(fieldSelector, "change", () => { if (fieldSelector.value === "custom") { addElement(customInput, fieldSelector, "afterend") } else { customInput.remove(); }})
+
+    addElements([removeButton, levelSelector, fieldSelector], fieldOptionContainer);
+    return fieldOptionContainer;
+}
+
+function populateFieldSelector(selector, level) {
+    for (let field of fields[level]) {
+        const option = newElement("option", {value: field.path, innerText: field.name});
+        addElement(option, selector)
+    }
+    const option = newElement("option", {value: "custom", innerText: "Custom"});
+    addElement(option, selector);
 }
