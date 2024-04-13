@@ -2,22 +2,22 @@ window.levels = ["conversation", "participant", "session", "segment"];
 window.fields = {
     // usersMapping, queueMapping, wrapupCodeMapping, divisionMapping, knowledgeBaseMapping
     "Conversation": [
-        {name: "Conference Start", path: "conferenceStart", level: "interaction" },
-        {name: "Conversation End", path: "conversationEnd", level: "interaction" },
-        {name: "Conversation ID", path: "conversationId", level: "interaction" },
-        {name: "Conversation Initiator", path: "conversationInitator", level: "interaction" },
-        {name: "Conversation Start", path: "conversationStart", level: "interaction" },
-        {name: "Customer Participation", path: "customerParticipation", level: "interaction" },
-        {name: "Division IDs", path: "divisionIds", level: "interaction" },
-        {name: "External Tag", path: "externalTag", level: "interaction" },
-        {name: "Knowledge Base IDs", path: "knowledgeBaseIds", level: "interaction" },
-        {name: "Min Conversation MOS", path: "mediaStatsMinConversationMos", level: "interaction" },
-        {name: "Min Conversation R Factor", path: "mediaStatsMinConversationRFactor", level: "interaction" },
-        {name: "Originating Direction", path: "originatingDirection", level: "interaction" },
-        {name: "Self Served", path: "selfServed", level: "interaction" },
-        {name: "Evaluations", path: "evaluations", level: "interaction" },
-        {name: "Suveys", path: "surveys", level: "interaction" },
-        {name: "Resolutions", path: "resolutions", level: "interaction" },
+        { name: "Conference Start", path: "conferenceStart", level: "interaction" },
+        { name: "Conversation End", path: "conversationEnd", level: "interaction" },
+        { name: "Conversation ID", path: "conversationId", level: "interaction" },
+        { name: "Conversation Initiator", path: "conversationInitator", level: "interaction" },
+        { name: "Conversation Start", path: "conversationStart", level: "interaction" },
+        { name: "Customer Participation", path: "customerParticipation", level: "interaction" },
+        { name: "Division IDs", path: "divisionIds", level: "interaction" },
+        { name: "External Tag", path: "externalTag", level: "interaction" },
+        { name: "Knowledge Base IDs", path: "knowledgeBaseIds", level: "interaction" },
+        { name: "Min Conversation MOS", path: "mediaStatsMinConversationMos", level: "interaction" },
+        { name: "Min Conversation R Factor", path: "mediaStatsMinConversationRFactor", level: "interaction" },
+        { name: "Originating Direction", path: "originatingDirection", level: "interaction" },
+        { name: "Self Served", path: "selfServed", level: "interaction" },
+        { name: "Evaluations", path: "evaluations", level: "interaction" },
+        { name: "Suveys", path: "surveys", level: "interaction" },
+        { name: "Resolutions", path: "resolutions", level: "interaction" },
     ],
     "Participant": [
         { name: "External Contact ID", path: "externalContactId", level: "participant" },
@@ -506,7 +506,7 @@ function getAllConversationSegments(interaction, fieldsInfo, dataLevel) {
                                 const fieldLevel = levels.indexOf(field.level);
                                 if (dataLevelIndex >= fieldLevel) {
                                     dataRow.push(addIfProperty(currentItems[field.level], field.path, "", field.mapping));
-                                }    
+                                }
                             }
                             dataRows.push(dataRow);
                         }
@@ -602,7 +602,7 @@ async function run() {
         const fieldLevel = window.levels.indexOf(level);
         if (dataLevelIndex >= fieldLevel) {
             headers.push(fieldName);
-            fields.push({name: fieldName, path: fieldPath, level: level})
+            fields.push({ name: fieldName, path: fieldPath, level: level })
         }
     }
     let dataRows = [];
@@ -736,15 +736,15 @@ function showMainMenu() {
         addElement(levelOption, levelSelect);
     }
     addElement(levelSelect, levelLabel)
-    const fieldContainer = newElement('div', {id: "fieldContainer"});
+    const fieldContainer = newElement('div', { id: "fieldContainer" });
     addElement(createFieldOptions(), fieldContainer);
 
     const startButton = newElement('button', { innerText: "Start" });
     registerElement(startButton, "click", run);
-    const downloadAllButton = newElement('button', {innerText: "Download All"});
-    registerElement(downloadAllButton, "click", () => {if (!window.displayTable) return; const headers = window.displayTable.getHeaders(); const data = window.displayTable.getFullData(); const download = createDownloadLink("Full Data Export.csv", Papa.unparse([headers, ...data]), "text/csv"); download.click();});
-    const downloadFilteredButton = newElement('button', {innerText: "Download Filtered"});
-    registerElement(downloadFilteredButton, "click", () => {if (!window.displayTable) return; const headers = window.displayTable.getHeaders(); const data = window.displayTable.getFilteredData(); const download = createDownloadLink("Filtered Data Export.csv", Papa.unparse([headers, ...data]), "text/csv"); download.click();});
+    const downloadAllButton = newElement('button', { innerText: "Download All" });
+    registerElement(downloadAllButton, "click", () => { if (!window.displayTable) return; const headers = window.displayTable.getHeaders(); const data = window.displayTable.getFullData(); const download = createDownloadLink("Full Data Export.csv", Papa.unparse([headers, ...data]), "text/csv"); download.click(); });
+    const downloadFilteredButton = newElement('button', { innerText: "Download Filtered" });
+    registerElement(downloadFilteredButton, "click", () => { if (!window.displayTable) return; const headers = window.displayTable.getHeaders(); const data = window.displayTable.getFilteredData(); const download = createDownloadLink("Filtered Data Export.csv", Papa.unparse([headers, ...data]), "text/csv"); download.click(); });
     const logoutButton = newElement('button', { innerText: "Logout" });
     registerElement(logoutButton, "click", logout);
     const results = newElement('div', { id: "results" })
@@ -835,23 +835,23 @@ function formattedForDisplay(seconds) {
 }
 
 function createFieldOptions() {
-    const fieldOptionContainer = newElement('div', {class: ["fieldOption"]});
-    const removeButton = newElement("button", { innerText: "x" });
+    const fieldOptionContainer = newElement('div', { class: ["fieldOption"] });
+    const removeButton = newElement("button", { innerText: "x", title: "Remove Field" });
     registerElement(removeButton, "click", () => { fieldOptionContainer.remove() });
-    const levelSelector = newElement("select", {class: ["fieldLevel"]});
+    const levelSelector = newElement("select", { class: ["fieldLevel"] });
     for (let level of ["Conversation", "Participant", "Session", "Segment"]) {
         const levelOption = newElement("option", { value: level, innerText: level });
         addElement(levelOption, levelSelector);
     }
-    const addFieldButton = newElement("button", {innerText: "+"});
-    registerElement(addFieldButton, "click", () => {addElement(createFieldOptions(), fieldOptionContainer, "afterend")});
+    const addFieldButton = newElement("button", { innerText: "+", title: "Add Field Below" });
+    registerElement(addFieldButton, "click", () => { addElement(createFieldOptions(), fieldOptionContainer, "afterend") });
 
-    const fieldSelector = newElement("select", {class: ["fieldType"]});
+    const fieldSelector = newElement("select", { class: ["fieldType"] });
     populateFieldSelector(fieldSelector, "Conversation");
 
     registerElement(levelSelector, "change", () => { clearElement(fieldSelector); populateFieldSelector(fieldSelector, levelSelector.value) });
-    const customInput = newElement("input", {class: ["customPath"]});
-    registerElement(fieldSelector, "change", () => { if (fieldSelector.value === "custom") { addElement(customInput, fieldSelector, "afterend") } else { customInput.remove(); }})
+    const customInput = newElement("input", { class: ["customPath"] });
+    registerElement(fieldSelector, "change", () => { if (fieldSelector.value === "custom") { addElement(customInput, fieldSelector, "afterend") } else { customInput.remove(); } })
 
     addElements([levelSelector, fieldSelector, removeButton, addFieldButton], fieldOptionContainer);
     return fieldOptionContainer;
@@ -859,15 +859,15 @@ function createFieldOptions() {
 
 function populateFieldSelector(selector, level) {
     for (let field of fields[level]) {
-        const option = newElement("option", {value: field.path, innerText: field.name});
+        const option = newElement("option", { value: field.path, innerText: field.name });
         addElement(option, selector)
     }
-    const option = newElement("option", {value: "custom", innerText: "Custom"});
+    const option = newElement("option", { value: "custom", innerText: "Custom" });
     addElement(option, selector);
 }
 
 function createDownloadLink(fileName, fileContents, fileType) {
-    const fileData = new Blob([fileContents], {type: fileType});
+    const fileData = new Blob([fileContents], { type: fileType });
     const fileURL = window.URL.createObjectURL(fileData);
-    return newElement('a', {href: fileURL, download: fileName});
+    return newElement('a', { href: fileURL, download: fileName });
 }
