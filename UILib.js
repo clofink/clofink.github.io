@@ -285,8 +285,8 @@ class PagedTable {
             valueA = /^[\d\.]+$/.test(valueA) && !isNaN(parseInt(valueA)) ? parseInt(valueA) : valueA;
             valueB = /^[\d\.]+$/.test(valueA) && !isNaN(parseInt(valueB)) ? parseInt(valueB) : valueB;
 
-            valueA = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(valueA) ? new Date(valueA) : valueA;
-            valueB = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(valueB) ? new Date(valueB) : valueB;
+            valueA = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3}){0,1}Z$/.test(valueA) ? new Date(valueA) : valueA;
+            valueB = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3}){0,1}Z$/.test(valueB) ? new Date(valueB) : valueB;
 
             if (sortDirection === "asc") {
                 if (valueA === emptyValue) return 1;
