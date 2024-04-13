@@ -65,6 +65,21 @@ window.fields = {
         { name: "Extended Delivery Status", path: "extendedDeliveryStatus", level: "session" },
         { name: "Flow In Type", path: "flowInType", level: "session" },
         { name: "Flow Out Type", path: "flowOutType", level: "session" },
+        { name: "Flow Ending Language", path: "flow.endingLanguage", level: "session" },
+        { name: "Flow Entry Reason", path: "flow.entryReason", level: "session" },
+        { name: "Flow Entry Type", path: "flow.entryType", level: "session" },
+        { name: "Flow Exit Reason", path: "flow.exitReason", level: "session" },
+        { name: "Flow ID", path: "flow.flowId", level: "session" },
+        { name: "Flow Name", path: "flow.flowName", level: "session" },
+        { name: "Flow Type", path: "flow.flowType", level: "session" },
+        { name: "Flow Version", path: "flow.flowVersion", level: "session" },
+        { name: "Flow Issued Callback", path: "flow.issuedCallback", level: "session" },
+        { name: "Flow Recognition Failure Reason", path: "flow.recognitionFailureReason", level: "session" },
+        { name: "Flow Starting Language", path: "flow.startingLanguage", level: "session" },
+        { name: "Flow Transfer Target Address", path: "flow.transferTargetAddress", level: "session" },
+        { name: "Flow Transfer Target Name", path: "flow.transferTargetName", level: "session" },
+        { name: "Flow Transfer Type", path: "flow.transferType", level: "session" },
+        { name: "Flow Outcomes", path: "flow.outcomes", level: "session" },
         { name: "Journey Action ID", path: "journeyActionId", level: "session" },
         { name: "Journey Action Map ID", path: "journeyActionMapId", level: "session" },
         { name: "Journey Action Map Version", path: "journeyActionMapVersion", level: "session" },
@@ -576,14 +591,11 @@ async function run() {
         }
         const dataLevelIndex = window.levels.indexOf(dataLevel.toLowerCase());
         const fieldLevel = window.levels.indexOf(level);
-        console.log(`Data Level "${dataLevel}" is at index ${dataLevelIndex}. Field Level "${level}" is at index ${fieldLevel}`);
         if (dataLevelIndex >= fieldLevel) {
             headers.push(fieldName);
             fields.push({name: fieldName, path: fieldPath, level: level})
         }
     }
-    log(headers);
-    log(fields);
     let dataRows = [];
     for (let conversation of conversations) {
         window.allConversations[conversation.conversationId] = conversation;
