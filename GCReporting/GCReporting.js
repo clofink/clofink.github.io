@@ -744,7 +744,7 @@ function showMainMenu() {
     addElement(createFieldOptions(), fieldContainer);
 
     const startButton = newElement('button', { innerText: "Start" });
-    registerElement(startButton, "click", run);
+    registerElement(startButton, "click", () => {showLoading(run)});
     const downloadAllButton = newElement('button', { innerText: "Download All" });
     registerElement(downloadAllButton, "click", () => { if (!window.displayTable) return; const headers = window.displayTable.getHeaders(); const data = window.displayTable.getFullData(); const download = createDownloadLink("Full Data Export.csv", Papa.unparse([headers, ...data]), "text/csv"); download.click(); });
     const downloadFilteredButton = newElement('button', { innerText: "Download Filtered" });
@@ -874,4 +874,15 @@ function createDownloadLink(fileName, fileContents, fileType) {
     const fileData = new Blob([fileContents], { type: fileType });
     const fileURL = window.URL.createObjectURL(fileData);
     return newElement('a', { href: fileURL, download: fileName });
+}
+
+async function showLoading(loadingFunc) {
+    eById("loadIcon").classList.add("shown");
+    try {
+        await loadingFunc();
+    }
+    catch(error) {
+        console.error(error);
+    }
+    eById("loadIcon").classList.remove("shown");
 }
