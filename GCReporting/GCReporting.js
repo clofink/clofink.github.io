@@ -15,9 +15,46 @@ window.fields = {
         { name: "Min Conversation R Factor", path: "mediaStatsMinConversationRFactor", level: "interaction" },
         { name: "Originating Direction", path: "originatingDirection", level: "interaction" },
         { name: "Self Served", path: "selfServed", level: "interaction" },
+
         { name: "Evaluations", path: "evaluations", level: "interaction" },
+        { name: "Evaluation Assignees Applicable", path: "evaluations.assigneeApplicable", level: "interaction" },
+        { name: "Evaluation Assignee IDs", path: "evaluations.assigneeId", level: "interaction" },
+        { name: "Evaluation Calibration IDs", path: "evaluations.calibrationId", level: "interaction" },
+        { name: "Evaluation Context IDs", path: "evaluations.contextId", level: "interaction" },
+        { name: "Evaluation Deleted", path: "evaluations.deleted", level: "interaction" },
+        { name: "Evaluation IDs", path: "evaluations.evaluationId", level: "interaction" },
+        { name: "Evaluation Statuses", path: "evaluations.evaluationStatus", level: "interaction" },
+        { name: "Evaluation Evaluator IDs", path: "evaluations.evaluatorId", level: "interaction" },
+        { name: "Evaluation Event Times", path: "evaluations.eventTime", level: "interaction" },
+        { name: "Evaluation Form IDs", path: "evaluations.formId", level: "interaction" },
+        { name: "Evaluation Form Names", path: "evaluations.formName", level: "interaction" },
+        { name: "Evaluation Queue IDs", path: "evaluations.queueId", level: "interaction" },
+        { name: "Evaluation Released", path: "evaluations.released", level: "interaction" },
+        { name: "Evaluation Rescored", path: "evaluations.rescored", level: "interaction" },
+        { name: "Evaluation User IDs", path: "evaluations.userId", level: "interaction" },
+        { name: "Evaluation Total Critical Scores", path: "evaluations.oTotalCriticalScore", level: "interaction" },
+        { name: "Evaluation Total Scores", path: "evaluations.oTotalScore", level: "interaction" },
+
         { name: "Surveys", path: "surveys", level: "interaction" },
+        { name: "Survey Event Times", path: "surveys.eventTime", level: "interaction" },
+        { name: "Survey Queue IDs", path: "surveys.queueId", level: "interaction" },
+        { name: "Survey Completed Dates", path: "surveys.surveyCompletedDate", level: "interaction" },
+        { name: "Survey Form Context IDs", path: "surveys.surveyFormContextId", level: "interaction" },
+        { name: "Survey Form IDs", path: "surveys.surveyFormId", level: "interaction" },
+        { name: "Survey Form Names", path: "surveys.surveyFormName", level: "interaction" },
+        { name: "Survey IDs", path: "surveys.surveyId", level: "interaction" },
+        { name: "Survey Partial Responses", path: "surveys.surveyPartialResponse", level: "interaction" },
+        { name: "Survey Promoter Scores", path: "surveys.surveyPromoterScore", level: "interaction" },
+        { name: "Survey Statuses", path: "surveys.surveyStatus", level: "interaction" },
+        { name: "Survey Types", path: "surveys.surveyType", level: "interaction" },
+        { name: "Survey User IDs", path: "surveys.userId", level: "interaction" },
+        { name: "Survey Total Scores", path: "surveys.oSurveyTotalScore", level: "interaction" },
+
         { name: "Resolutions", path: "resolutions", level: "interaction" },
+        { name: "Resolution Event Times", path: "resolutions.eventTime", level: "interaction" },
+        { name: "Resolution Queue IDs", path: "resolutions.queueId", level: "interaction" },
+        { name: "Resolutions User IDs", path: "resolutions.userId", level: "interaction" },
+        { name: "Resolutions Next Contact Avoided", path: "resolutions.nNextContactAvoided", level: "interaction" },
     ],
     "Participant": [
         { name: "External Contact ID", path: "externalContactId", level: "participant" },
@@ -65,21 +102,6 @@ window.fields = {
         { name: "Extended Delivery Status", path: "extendedDeliveryStatus", level: "session" },
         { name: "Flow In Type", path: "flowInType", level: "session" },
         { name: "Flow Out Type", path: "flowOutType", level: "session" },
-        { name: "Flow Ending Language", path: "flow.endingLanguage", level: "session" },
-        { name: "Flow Entry Reason", path: "flow.entryReason", level: "session" },
-        { name: "Flow Entry Type", path: "flow.entryType", level: "session" },
-        { name: "Flow Exit Reason", path: "flow.exitReason", level: "session" },
-        { name: "Flow ID", path: "flow.flowId", level: "session" },
-        { name: "Flow Name", path: "flow.flowName", level: "session" },
-        { name: "Flow Type", path: "flow.flowType", level: "session" },
-        { name: "Flow Version", path: "flow.flowVersion", level: "session" },
-        { name: "Flow Issued Callback", path: "flow.issuedCallback", level: "session" },
-        { name: "Flow Recognition Failure Reason", path: "flow.recognitionFailureReason", level: "session" },
-        { name: "Flow Starting Language", path: "flow.startingLanguage", level: "session" },
-        { name: "Flow Transfer Target Address", path: "flow.transferTargetAddress", level: "session" },
-        { name: "Flow Transfer Target Name", path: "flow.transferTargetName", level: "session" },
-        { name: "Flow Transfer Type", path: "flow.transferType", level: "session" },
-        { name: "Flow Outcomes", path: "flow.outcomes", level: "session" },
         { name: "Journey Action ID", path: "journeyActionId", level: "session" },
         { name: "Journey Action Map ID", path: "journeyActionMapId", level: "session" },
         { name: "Journey Action Map Version", path: "journeyActionMapVersion", level: "session" },
@@ -121,11 +143,54 @@ window.fields = {
         { name: "Video Address Self", path: "videoAddressSelf", level: "session" },
         { name: "Video Room ID", path: "videoRoomId", level: "session" },
         { name: "Waiting Interaction Counts", path: "waitingInteractionCounts", level: "session" },
+
         { name: "Agent Groups", path: "agentGroups", level: "session" },
+        { name: "Agent Group IDs", path: "agentGroups.agentGroupId", level: "session" },
+        { name: "Agent Group Types", path: "agentGroups.agentGroupType", level: "session" },
+        
         { name: "Proposed Agents", path: "proposedAgents", level: "session" },
+        { name: "Proposed Agent Ranks", path: "proposedAgents.agentRank", level: "session" },
+        { name: "Proposed Agent IDs", path: "proposedAgents.proposedAgentId", level: "session" },
+
         { name: "Media Endpoint Stats", path: "mediaEndpointStats", level: "session" },
+        { name: "Media Endpoint Stat Codecs", path: "mediaEndpointStats.codecs", level: "session" },
+        { name: "Media Endpoint Stat Discarded Packets", path: "mediaEndpointStats.discardedPackets", level: "session" },
+        { name: "Media Endpoint Stat Duplicate Packets", path: "mediaEndpointStats.duplicatePackets", level: "session" },
+        { name: "Media Endpoint Stat Event Times", path: "mediaEndpointStats.eventTime", level: "session" },
+        { name: "Media Endpoint Stat Invalid Packets", path: "mediaEndpointStats.invalidPackets", level: "session" },
+        { name: "Media Endpoint Stat Max Latencies MS", path: "mediaEndpointStats.maxLatencyMs", level: "session" },
+        { name: "Media Endpoint Stat Min MOS", path: "mediaEndpointStats.minMos", level: "session" },
+        { name: "Media Endpoint Stat Min R Factors", path: "mediaEndpointStats.minRFactor", level: "session" },
+        { name: "Media Endpoint Stat Overrun Packets", path: "mediaEndpointStats.overrunPackets", level: "session" },
+        { name: "Media Endpoint Stat Received Packets", path: "mediaEndpointStats.receivedPackets", level: "session" },
+        { name: "Media Endpoint Stat Underrun Packets", path: "mediaEndpointStats.underrunPackets", level: "session" },
+
         { name: "Flow", path: "flow", level: "session" },
+        { name: "Flow Ending Language", path: "flow.endingLanguage", level: "session" },
+        { name: "Flow Entry Reason", path: "flow.entryReason", level: "session" },
+        { name: "Flow Entry Type", path: "flow.entryType", level: "session" },
+        { name: "Flow Exit Reason", path: "flow.exitReason", level: "session" },
+        { name: "Flow ID", path: "flow.flowId", level: "session" },
+        { name: "Flow Name", path: "flow.flowName", level: "session" },
+        { name: "Flow Type", path: "flow.flowType", level: "session" },
+        { name: "Flow Version", path: "flow.flowVersion", level: "session" },
+        { name: "Flow Issued Callback", path: "flow.issuedCallback", level: "session" },
+        { name: "Flow Recognition Failure Reason", path: "flow.recognitionFailureReason", level: "session" },
+        { name: "Flow Starting Language", path: "flow.startingLanguage", level: "session" },
+        { name: "Flow Transfer Target Address", path: "flow.transferTargetAddress", level: "session" },
+        { name: "Flow Transfer Target Name", path: "flow.transferTargetName", level: "session" },
+        { name: "Flow Transfer Type", path: "flow.transferType", level: "session" },
+        { name: "Flow Outcomes", path: "flow.outcomes", level: "session" },
+        { name: "Flow Outcome Names", path: "flow.outcomes.flowOutcome", level: "session" },
+        { name: "Flow Outcome End Timestamps", path: "flow.outcomes.flowOutcomeEndTimestamp", level: "session" },
+        { name: "Flow Outcome IDs", path: "flow.outcomes.flowOutcomeId", level: "session" },
+        { name: "Flow Outcome Start Timestamps", path: "flow.outcomes.flowOutcomeStartTimestamp", level: "session" },
+        { name: "Flow Outcome Values", path: "flow.outcomes.flowOutcomeValue", level: "session" },
+
         { name: "Metrics", path: "metrics", level: "session" },
+        { name: "Metric Emit Dates", path: "metrics.emitDate", level: "session" },
+        { name: "Metric Names", path: "metrics.name", level: "session" },
+        { name: "Metric Values", path: "metrics.value", level: "session" },
     ],
     "Segment": [
         { name: "Audio Muted", path: "audioMuted", level: "segment" },
@@ -151,8 +216,15 @@ window.fields = {
         { name: "Wrap-Up Code", path: "wrapUpCode", level: "segment" },
         { name: "Wrap-Up Notes", path: "wrapUpNote", level: "segment" },
         { name: "Wrap-Up Tags", path: "wrapUpTags", level: "segment" },
+
         { name: "Scored Agents", path: "scoredAgents", level: "segment" },
+        { name: "Scored Agent Scores", path: "scoredAgents.agentScore", level: "segment" },
+        { name: "Scored Agent IDs", path: "scoredAgents.scoredAgentId", level: "segment" },
+
         { name: "Properties", path: "properties", level: "segment" },
+        { name: "Property Properties", path: "properties.property", level: "segment" },
+        { name: "Property Types", path: "properties.propertyType", level: "segment" },
+        { name: "Property Values", path: "properties.value", level: "segment" },
     ]
 }
 
@@ -435,7 +507,6 @@ function addIfProperty(object, path, orValue, mapping) {
     for (let i = 0; i < pathParts.length; i++) {
         const part = pathParts[i];
         if (Array.isArray(currentPiece)) {
-            console.log(currentPiece);
             const displayList = [];
             for (let item of currentPiece) {
                 const hasPart = item.hasOwnProperty(part);
@@ -460,7 +531,6 @@ function addIfProperty(object, path, orValue, mapping) {
         }
         if (hasPart) {
             if (Array.isArray(currentPiece[part])) {
-                console.log(currentPiece[part])
                 const displayList = [];
                 for (let item of currentPiece[part]) {
                     if (typeof item === "object") {
