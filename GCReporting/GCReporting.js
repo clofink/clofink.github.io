@@ -434,14 +434,49 @@ function addIfProperty(object, path, orValue, mapping) {
     let currentPiece = object;
     for (let i = 0; i < pathParts.length; i++) {
         const part = pathParts[i];
+        if (Array.isArray(currentPiece)) {
+            console.log(currentPiece);
+            const displayList = [];
+            for (let item of currentPiece) {
+                const hasPart = item.hasOwnProperty(part);
+                if (hasPart) {
+                    if (typeof item[part] === "object") {
+                        displayList.push(JSON.stringify(item[part]));
+                        continue;
+                    }
+                    if (window[mapping]) {
+                        displayList.push(window[mapping].hasOwnProperty(item[part]) ? window[mapping][item[part]] : item[part]);
+                        continue;
+                    }
+                    displayList.push(item[part])
+                }
+            }
+            return displayList.join("\n")
+        }
         const hasPart = currentPiece.hasOwnProperty(part);
         if (hasPart && i + 1 < pathParts.length) {
             currentPiece = currentPiece[part];
             continue;
         }
         if (hasPart) {
+            if (Array.isArray(currentPiece[part])) {
+                console.log(currentPiece[part])
+                const displayList = [];
+                for (let item of currentPiece[part]) {
+                    if (typeof item === "object") {
+                        displayList.push(JSON.stringify(item));
+                        continue;
+                    }
+                    if (window[mapping]) {
+                        displayList.push(window[mapping].hasOwnProperty(item) ? window[mapping][item] : item);
+                        continue;
+                    }
+                    displayList.push(item)
+                }
+                return displayList.join("\n")
+            }    
             if (typeof currentPiece[part] === "object") {
-                return JSON.stringify(object[part])
+                return JSON.stringify(currentPiece[part])
             }
             if (window[mapping]) {
                 return window[mapping].hasOwnProperty(currentPiece[part]) ? window[mapping][currentPiece[part]] : currentPiece[part];
