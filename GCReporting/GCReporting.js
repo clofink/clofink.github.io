@@ -222,6 +222,10 @@ async function getStatus(jobId) {
                 clearInterval(repeater);
                 resolve();
             }
+            else if (resultJson.state === "FAILED") {
+                clearInterval(repeater);
+                reject();
+            }
         }, 2000);
     })
 }
@@ -608,7 +612,7 @@ async function run() {
     let dataRows = [];
     for (let conversation of window.conversationsData) {
         window.allConversations[conversation.conversationId] = conversation;
-        getConversationTurns(conversation);
+        // getConversationTurns(conversation);
         dataRows = dataRows.concat(getAllConversationSegments(conversation, fields, dataLevel));
     }
     window.displayTable = new PagedTable(headers, dataRows, 100, {}, true, true);
@@ -616,10 +620,10 @@ async function run() {
     clearElement(results);
     addElement(window.displayTable.getContainer(), results);
 
-    console.log(workflowStats);
-    console.log(botStats);
-    console.log(queueStats);
-    console.log(agentStats);
+    // console.log(workflowStats);
+    // console.log(botStats);
+    // console.log(queueStats);
+    // console.log(agentStats);
     return;
 }
 
