@@ -120,3 +120,11 @@ table.sortable th span {
         transform:rotate(360deg);
     }
 }
+#header {
+    text-align: center;
+    padding: .5em;
+    background-color: lightgray;
+    margin: .5em;
+    border-radius: 5px;
+    border: 1px solid black;
+}
