@@ -841,7 +841,7 @@ function formattedForDisplay(seconds) {
 function createFieldOptions() {
     const fieldOptionContainer = newElement('div', { class: ["fieldOption"] });
     const removeButton = newElement("button", { innerText: "x", title: "Remove Field" });
-    registerElement(removeButton, "click", () => { fieldOptionContainer.remove() });
+    registerElement(removeButton, "click", () => { if (qsa(".fieldOption", fieldOptionContainer.parent).length === 1) return; fieldOptionContainer.remove() });
     const levelSelector = newElement("select", { class: ["fieldLevel"] });
     for (let level of ["Conversation", "Participant", "Session", "Segment"]) {
         const levelOption = newElement("option", { value: level, innerText: level });
