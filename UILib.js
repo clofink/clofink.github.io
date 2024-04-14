@@ -129,11 +129,17 @@ class PagedTable {
         return this.container;
     }
 
+    setPageSize(newSize) {
+        if (newSize === this.pageSize) return;
+        this.pageSize = newSize;
+        this.setPage(0);
+    }
+
     changePage(pageChange) {
         this.currentPage += pageChange;
 
-        this.updateTable();
         this.updateButtons();
+        this.updateTable();
     }
 
     getHeaders() {
@@ -241,6 +247,16 @@ class PagedTable {
         if (this.currentPage >= this.pageCount - 2) {
             nextAll.setAttribute("disabled", true);
         }
+        const pageSizeToggle = newElement("select");
+        for (let size of [25, 50, 100, 250]) {
+            const pageSizeOption = newElement("option", {value: size, innerText: size});
+            if (size === this.pageSize) {
+                pageSizeOption.setAttribute("selected", true);
+            }
+            addElement(pageSizeOption, pageSizeToggle);
+        }
+        registerElement(pageSizeToggle, "change", () => { this.setPageSize(parseInt(pageSizeToggle.value, 10)) });
+        addElements([previousAll, previousButton, nextButton, nextAll, pageSizeToggle], this.buttonContainer);
         return this.buttonContainer;
     }
 
