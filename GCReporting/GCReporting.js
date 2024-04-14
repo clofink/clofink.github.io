@@ -8,9 +8,9 @@ window.fields = {
         { name: "Conversation Initiator", path: "conversationInitator", level: "interaction" },
         { name: "Conversation Start", path: "conversationStart", level: "interaction" },
         { name: "Customer Participation", path: "customerParticipation", level: "interaction" },
-        { name: "Division IDs", path: "divisionIds", level: "interaction" },
+        { name: "Division IDs", path: "divisionIds", level: "interaction", mapping: "divisionMapping" },
         { name: "External Tag", path: "externalTag", level: "interaction" },
-        { name: "Knowledge Base IDs", path: "knowledgeBaseIds", level: "interaction" },
+        { name: "Knowledge Base IDs", path: "knowledgeBaseIds", level: "interaction", mapping: "knowledgeBaseMapping" },
         { name: "Min Conversation MOS", path: "mediaStatsMinConversationMos", level: "interaction" },
         { name: "Min Conversation R Factor", path: "mediaStatsMinConversationRFactor", level: "interaction" },
         { name: "Originating Direction", path: "originatingDirection", level: "interaction" },
@@ -18,26 +18,26 @@ window.fields = {
 
         { name: "Evaluations", path: "evaluations", level: "interaction" },
         { name: "Evaluation Assignees Applicable", path: "evaluations.assigneeApplicable", level: "interaction" },
-        { name: "Evaluation Assignee IDs", path: "evaluations.assigneeId", level: "interaction" },
+        { name: "Evaluation Assignee IDs", path: "evaluations.assigneeId", level: "interaction", mapping: "usersMapping" },
         { name: "Evaluation Calibration IDs", path: "evaluations.calibrationId", level: "interaction" },
         { name: "Evaluation Context IDs", path: "evaluations.contextId", level: "interaction" },
         { name: "Evaluation Deleted", path: "evaluations.deleted", level: "interaction" },
         { name: "Evaluation IDs", path: "evaluations.evaluationId", level: "interaction" },
         { name: "Evaluation Statuses", path: "evaluations.evaluationStatus", level: "interaction" },
-        { name: "Evaluation Evaluator IDs", path: "evaluations.evaluatorId", level: "interaction" },
+        { name: "Evaluation Evaluator IDs", path: "evaluations.evaluatorId", level: "interaction", mapping: "usersMapping" },
         { name: "Evaluation Event Times", path: "evaluations.eventTime", level: "interaction" },
         { name: "Evaluation Form IDs", path: "evaluations.formId", level: "interaction" },
         { name: "Evaluation Form Names", path: "evaluations.formName", level: "interaction" },
-        { name: "Evaluation Queue IDs", path: "evaluations.queueId", level: "interaction" },
+        { name: "Evaluation Queue IDs", path: "evaluations.queueId", level: "interaction", mapping: "queueMapping" },
         { name: "Evaluation Released", path: "evaluations.released", level: "interaction" },
         { name: "Evaluation Rescored", path: "evaluations.rescored", level: "interaction" },
-        { name: "Evaluation User IDs", path: "evaluations.userId", level: "interaction" },
+        { name: "Evaluation User IDs", path: "evaluations.userId", level: "interaction", mapping: "usersMapping" },
         { name: "Evaluation Total Critical Scores", path: "evaluations.oTotalCriticalScore", level: "interaction" },
         { name: "Evaluation Total Scores", path: "evaluations.oTotalScore", level: "interaction" },
 
         { name: "Surveys", path: "surveys", level: "interaction" },
         { name: "Survey Event Times", path: "surveys.eventTime", level: "interaction" },
-        { name: "Survey Queue IDs", path: "surveys.queueId", level: "interaction" },
+        { name: "Survey Queue IDs", path: "surveys.queueId", level: "interaction", mapping: "queueMapping" },
         { name: "Survey Completed Dates", path: "surveys.surveyCompletedDate", level: "interaction" },
         { name: "Survey Form Context IDs", path: "surveys.surveyFormContextId", level: "interaction" },
         { name: "Survey Form IDs", path: "surveys.surveyFormId", level: "interaction" },
@@ -47,13 +47,13 @@ window.fields = {
         { name: "Survey Promoter Scores", path: "surveys.surveyPromoterScore", level: "interaction" },
         { name: "Survey Statuses", path: "surveys.surveyStatus", level: "interaction" },
         { name: "Survey Types", path: "surveys.surveyType", level: "interaction" },
-        { name: "Survey User IDs", path: "surveys.userId", level: "interaction" },
+        { name: "Survey User IDs", path: "surveys.userId", level: "interaction", mapping: "usersMapping" },
         { name: "Survey Total Scores", path: "surveys.oSurveyTotalScore", level: "interaction" },
 
         { name: "Resolutions", path: "resolutions", level: "interaction" },
         { name: "Resolution Event Times", path: "resolutions.eventTime", level: "interaction" },
-        { name: "Resolution Queue IDs", path: "resolutions.queueId", level: "interaction" },
-        { name: "Resolutions User IDs", path: "resolutions.userId", level: "interaction" },
+        { name: "Resolution Queue IDs", path: "resolutions.queueId", level: "interaction", mapping: "queueMapping" },
+        { name: "Resolutions User IDs", path: "resolutions.userId", level: "interaction", mapping: "usersMapping" },
         { name: "Resolutions Next Contact Avoided", path: "resolutions.nNextContactAvoided", level: "interaction" },
     ],
     "Participant": [
@@ -150,7 +150,7 @@ window.fields = {
         
         { name: "Proposed Agents", path: "proposedAgents", level: "session" },
         { name: "Proposed Agent Ranks", path: "proposedAgents.agentRank", level: "session" },
-        { name: "Proposed Agent IDs", path: "proposedAgents.proposedAgentId", level: "session" },
+        { name: "Proposed Agent IDs", path: "proposedAgents.proposedAgentId", level: "session", mapping: "usersMapping" },
 
         { name: "Media Endpoint Stats", path: "mediaEndpointStats", level: "session" },
         { name: "Media Endpoint Stat Codecs", path: "mediaEndpointStats.codecs", level: "session" },
@@ -201,7 +201,7 @@ window.fields = {
         { name: "Error Code", path: "errorCode", level: "segment" },
         { name: "Group ID", path: "groupId", level: "segment" },
         { name: "Q.850 Response Codes", path: "q850ResponseCodes", level: "segment" },
-        { name: "Queue ID", path: "queueId", level: "segment" },
+        { name: "Queue ID", path: "queueId", level: "segment", mapping: "queueMapping" },
         { name: "Requested Language ID", path: "requestedLanguageId", level: "segment" },
         { name: "Requested Routing Skill IDs", path: "requestedRoutingSkillIds", level: "segment" },
         { name: "Requested Routing User IDs", path: "requestedRoutingUserIds", level: "segment" },
@@ -213,13 +213,13 @@ window.fields = {
         { name: "Source Session ID", path: "sourceSessionId", level: "segment" },
         { name: "Subject", path: "subject", level: "segment" },
         { name: "Video Muted", path: "videoMuted", level: "segment" },
-        { name: "Wrap-Up Code", path: "wrapUpCode", level: "segment" },
+        { name: "Wrap-Up Code", path: "wrapUpCode", level: "segment", mapping: "wrapupCodeMapping" },
         { name: "Wrap-Up Notes", path: "wrapUpNote", level: "segment" },
         { name: "Wrap-Up Tags", path: "wrapUpTags", level: "segment" },
 
         { name: "Scored Agents", path: "scoredAgents", level: "segment" },
         { name: "Scored Agent Scores", path: "scoredAgents.agentScore", level: "segment" },
-        { name: "Scored Agent IDs", path: "scoredAgents.scoredAgentId", level: "segment" },
+        { name: "Scored Agent IDs", path: "scoredAgents.scoredAgentId", level: "segment", mapping: "usersMapping" },
 
         { name: "Properties", path: "properties", level: "segment" },
         { name: "Property Properties", path: "properties.property", level: "segment" },
@@ -703,6 +703,7 @@ async function run() {
         const level = qs(".fieldLevel", field).value.toLowerCase();
         let fieldPath = qs(".fieldType", field).value;
         let fieldName = qs(".fieldType", field).selectedOptions[0].innerText;
+        let mapping = qs(".fieldType", field).selectedOptions[0].dataset.mappingName
         if (fieldPath === "custom") {
             fieldPath = qs(".customPath", field).value;
             fieldName = qs(".customPath", field).value;
@@ -711,7 +712,7 @@ async function run() {
         const fieldLevel = window.levels.indexOf(level);
         if (dataLevelIndex >= fieldLevel) {
             headers.push(fieldName);
-            fields.push({ name: fieldName, path: fieldPath, level: level })
+            fields.push({ name: fieldName, path: fieldPath, level: level, mapping: mapping })
         }
     }
     let dataRows = [];
@@ -969,6 +970,7 @@ function createFieldOptions() {
 function populateFieldSelector(selector, level) {
     for (let field of fields[level]) {
         const option = newElement("option", { value: field.path, innerText: field.name });
+        if (field.hasOwnProperty("mapping")) option.setAttribute("data-mapping-name", field.mapping);
         addElement(option, selector)
     }
     const option = newElement("option", { value: "custom", innerText: "Custom" });
