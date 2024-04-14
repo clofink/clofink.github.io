@@ -853,8 +853,8 @@ function createFieldOptions() {
     const fieldSelector = newElement("select", { class: ["fieldType"] });
     populateFieldSelector(fieldSelector, "Conversation");
 
-    registerElement(levelSelector, "change", () => { clearElement(fieldSelector); populateFieldSelector(fieldSelector, levelSelector.value) });
     const customInput = newElement("input", { class: ["customPath"] });
+    registerElement(levelSelector, "change", () => { customInput.remove(); clearElement(fieldSelector); populateFieldSelector(fieldSelector, levelSelector.value) });
     registerElement(fieldSelector, "change", () => { if (fieldSelector.value === "custom") { addElement(customInput, fieldSelector, "afterend") } else { customInput.remove(); } })
 
     addElements([levelSelector, fieldSelector, removeButton, addFieldButton], fieldOptionContainer);
