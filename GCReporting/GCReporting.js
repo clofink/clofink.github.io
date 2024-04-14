@@ -16,7 +16,7 @@ window.fields = {
         { name: "Originating Direction", path: "originatingDirection", level: "interaction" },
         { name: "Self Served", path: "selfServed", level: "interaction" },
         { name: "Evaluations", path: "evaluations", level: "interaction" },
-        { name: "Suveys", path: "surveys", level: "interaction" },
+        { name: "Surveys", path: "surveys", level: "interaction" },
         { name: "Resolutions", path: "resolutions", level: "interaction" },
     ],
     "Participant": [
