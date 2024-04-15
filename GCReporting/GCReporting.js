@@ -837,7 +837,7 @@ function showMainMenu() {
         }
         window.orgName = result.name;
         window.orgId = result.id;
-        eById("header").innerText = `Current Org Name: ${result.name} (${result.thirdPartyOrgName}) Current Org ID: ${result.id}`
+        eById("header").innerText = `Current Org Name: ${result.name} (${result.thirdPartyOrgName})\nCurrent Org ID: ${result.id}`
     }).catch(function (error) { log(error, "error"); logout(); });
 }
 
@@ -849,7 +849,7 @@ function login() {
 function logout() {
     window.localStorage.removeItem('auth');
     window.localStorage.removeItem('environment');
-    eById('header').innerText = "Current Org Name: Current Org ID:";
+    eById('header').innerText = `Current Org Name: \nCurrent Org ID:`;
     showLoginPage();
 }
 
