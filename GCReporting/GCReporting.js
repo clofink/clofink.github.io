@@ -308,7 +308,7 @@ async function getJobResults(jobId) {
     const results = [];
 
     while (truncated === true) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/analytics/conversations/details/jobs/${jobId}/results?pageSize=250&cursor=${cursor}`;
+        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/analytics/conversations/details/jobs/${jobId}/results?cursor=${cursor}`;
         const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
         const resultJson = await result.json();
         if (!result.ok) {
