@@ -490,17 +490,6 @@ function getConversationTurns(conversation) {
     }
 }
 
-window.conversationKeys = new Set();
-window.participantKeys = new Set();
-window.sessionKeys = new Set();
-window.segmentKeys = new Set();
-
-function addMissingKeys(list, keys) {
-    for (let key of keys) {
-        list.add(key);
-    }
-}
-
 function addIfProperty(object, path, orValue, mapping) {
     const pathParts = path.split(".");
     let currentPiece = object;
@@ -567,57 +556,25 @@ function getAllConversationSegments(interaction, fieldsInfo, dataLevel) {
         session: undefined,
         segment: undefined
     }
-    addMissingKeys(window.conversationKeys, Object.keys(interaction));
     if (dataLevel === "Conversation") {
-        const dataRow = [];
-        for (let field of fieldsInfo) {
-            const fieldLevel = levels.indexOf(field.level);
-            if (dataLevelIndex >= fieldLevel) {
-                dataRow.push(addIfProperty(currentItems[field.level], field.path, "", field.mapping));
-            }
-        }
-        dataRows.push(dataRow);
+        dataRows.push(createDataRow(fieldsInfo, dataLevelIndex, currentItems));
     }
     else {
         for (let participant of interaction.participants) {
             currentItems.participant = participant;
-            addMissingKeys(window.participantKeys, Object.keys(participant));
             if (dataLevel === "Participant") {
-                const dataRow = [];
-                for (let field of fieldsInfo) {
-                    const fieldLevel = levels.indexOf(field.level);
-                    if (dataLevelIndex >= fieldLevel) {
-                        dataRow.push(addIfProperty(currentItems[field.level], field.path, "", field.mapping));
-                    }
-                }
-                dataRows.push(dataRow);
+                dataRows.push(createDataRow(fieldsInfo, dataLevelIndex, currentItems));
             }
             else {
                 for (let session of participant.sessions) {
                     currentItems.session = session;
-                    addMissingKeys(window.sessionKeys, Object.keys(session));
                     if (dataLevel === "Session") {
-                        const dataRow = [];
-                        for (let field of fieldsInfo) {
-                            const fieldLevel = levels.indexOf(field.level);
-                            if (dataLevelIndex >= fieldLevel) {
-                                dataRow.push(addIfProperty(currentItems[field.level], field.path, "", field.mapping));
-                            }
-                        }
-                        dataRows.push(dataRow);
+                        dataRows.push(createDataRow(fieldsInfo, dataLevelIndex, currentItems));
                     }
                     else {
                         for (let segment of session.segments) {
                             currentItems.segment = segment;
-                            addMissingKeys(window.segmentKeys, Object.keys(segment));
-                            const dataRow = [];
-                            for (let field of fieldsInfo) {
-                                const fieldLevel = levels.indexOf(field.level);
-                                if (dataLevelIndex >= fieldLevel) {
-                                    dataRow.push(addIfProperty(currentItems[field.level], field.path, "", field.mapping));
-                                }
-                            }
-                            dataRows.push(dataRow);
+                            dataRows.push(createDataRow(fieldsInfo, dataLevelIndex, currentItems));
                         }
                     }
                 }
@@ -626,6 +583,18 @@ function getAllConversationSegments(interaction, fieldsInfo, dataLevel) {
     }
     return dataRows;
 }
+
+function createDataRow(fieldsInfo, dataLevelIndex, currentItems) {
+    const dataRow = [];
+    for (let field of fieldsInfo) {
+        const fieldLevel = levels.indexOf(field.level);
+        if (dataLevelIndex >= fieldLevel) {
+            dataRow.push(addIfProperty(currentItems[field.level], field.path, "", field.mapping));
+        }
+    }
+    return dataRow;
+}
+
 async function run() {
     // reset globals 
     window.allConversations = {};
