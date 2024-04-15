@@ -779,7 +779,7 @@ function sortByKey(key) {
 
 function showLoginPage() {
     const urls = ["usw2.pure.cloud", "mypurecloud.com", "use2.us-gov-pure.cloud", "cac1.pure.cloud", "mypurecloud.ie", "euw2.pure.cloud", "mypurecloud.de", "aps1.pure.cloud", "mypurecloud.jp", "apne2.pure.cloud", "mypurecloud.com.au", "sae1.pure.cloud"]
-    const inputsWrapper = newElement('div', { id: "userInputs" });
+    const inputsWrapper = newElement('div', { id: "inputs" });
     const clientIdLabel = newElement('label', { innerText: "Client ID: " });
     const clientInput = newElement('input', { name: "clientId" });
     addElement(clientInput, clientIdLabel);
