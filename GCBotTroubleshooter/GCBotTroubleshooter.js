@@ -1,3 +1,62 @@
+class BotSession {
+    sessionId;
+    previousTurnId;
+
+    constructor(botFlowId) {
+        this.botFlowId = botFlowId;
+    }
+
+    async createSession() {
+        // /api/v2/textbots/botflows/sessions POST
+        const body = {
+            "channel": {
+                "inputModes": ["Text"],
+                "outputModes": ["Text"],
+                "name": "Messaging",
+                "userAgent": { "name": "GenesysWebWidget" }
+            },
+            "externalSessionId": "",
+            "flow": {
+                "id": this.botFlowId
+            },
+            "inputData": {
+                "variables": {}
+            },
+            "language": ""
+        }
+    
+        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/textbots/botflows/sessions`;
+        const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
+        const resultJson = await result.json();
+        this.sessionId = resultJson.id;
+        return resultJson;
+    }
+
+    async sendTurnEvent(message, inputEventType) {
+        // /api/v2/textbots/botflows/sessions/{sessionId}/turns POST
+        if (!this.sessionId) throw `Session not created`;
+        const body = {
+            "inputEventUserInput": {
+                "mode": "Text",
+                "alternatives": [
+                    {
+                        "transcript": {
+                            "text": message
+                        }
+                    }
+                ]
+            },
+            "previousTurn": this.previousTurnId ? {"id": this.previousTurnId} : null,
+            "inputEventType": inputEventType
+        }
+        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/textbots/botflows/sessions/${this.sessionId}/turns`;
+        const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
+        const resultJson = await result.json();
+        this.previousTurnId = resultJson.id;
+        return resultJson;
+    }
+}
+
 function parseTestCase(testCase) {
     // how to structure them
     // with commands
@@ -26,43 +85,13 @@ function runTest(test) {
 
 }
 
-// migrate everything to a class?
-// exposes a send method
-// that handles knowing the session and last turn id so you dont have to worry about it
-
-
-async function createSession(botFlowId) {
-    // /api/v2/textbots/botflows/sessions POST
-    botFlowId = botFlowId || "86274b7f-dde8-47be-87b1-9a1fe5a17894"; // just for testing
-    const body = {
-        "channel": {
-            "inputModes": ["Text"],
-            "outputModes": ["Text"],
-            "name": "Messaging",
-            "userAgent": { "name": "GenesysWebWidget" }
-        },
-        "externalSessionId": "",
-        "flow": {
-            "id": botFlowId
-        },
-        "inputData": {
-            "variables": {}
-        },
-        "language": ""
-    }
-
-    const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/textbots/botflows/sessions`;
-    const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-    const resultJson = await result.json();
-    return resultJson;
-}
-
 async function run() {
     const selectedFlow = eById('botFlow').value;
-    const newSession = await createSession(selectedFlow);
-    let previousTurnId;
+    const botSession = new BotSession(selectedFlow);
+    await botSession.createSession();
+
     const messageContainer = eById('messageContainer');
-    const messagesContainer = newElement("div");
+    const messagesContainer = newElement("div", {class: ["messages-container"]});
     addElement(messagesContainer, messageContainer);
 
     const inputField = newElement('input');
@@ -72,57 +101,66 @@ async function run() {
 
     sendTurnEvent("", "NoOp"); // to start the session
 
-    function handleResponse(message) {
-        let messageElems = [];
+    function createMessageRow(message, sender) {
+        const messageRow = newElement('div', {class: ["message-row"]});
+        const messageBubble = newElement('div', {class: ["message-bubble", sender]});
+        const messageContent = createMessageContent(message, sender);
+        addElement(messageContent, messageBubble);
+        addElement(messageBubble, messageRow);
+        addElement(messageRow, messagesContainer);
+        messageRow.scrollIntoView({behavior: "smooth"});
+        return messageRow
+    }
+
+    function createMessageContent(message, sender) {
+        const messageContent = newElement('div', {class: ["message-content", sender]});
         if (message?.prompts?.textPrompts?.segments) {
-            const messageElem = newElement("div");
             for (let prompt of message.prompts.textPrompts.segments) {
                 switch (prompt.type) {
                     case "Text":
-                        addElement(createMessage(prompt, 'bot'), messageElem);
+                        addElement(createMessage(prompt), messageContent);
                         break;
                     case "RichMedia":
-                        addElement(createQuickButtons(prompt), messageElem);
+                        addElement(createQuickButtons(prompt), messageContent);
                         break;
                     default:
                         log(`Unknown message prompt type [${prompt.type}]`, "warn");
                 }
             }
-            messageElems.push(messageElem);
         }
-        else {
-            log(message);
+        else if (message?.text) {
+            addElement(createMessage(message), messageContent);
         }
-        if (message.nextActionType === "NoOp") {
-            sendTurnEvent("", "NoOp");
-        }
-        if (message.nextActionDisconnect) {
-            const messageElem = newElement("div");
-            addElement(createMessage({text: `Bot disconnected [${message.nextActionDisconnect.reason}] in [${message.nextActionDisconnect.flowLocation.sequenceName}] from block [${message.nextActionDisconnect.flowLocation.actionNumber} ${message.nextActionDisconnect.flowLocation.actionName}]${message.nextActionDisconnect.reasonExtendedInfo ? ` with reason: [${message.nextActionDisconnect.reasonExtendedInfo}]`: ""}`}, 'event'), messageElem);
-            messageElems.push(messageElem);
-        }
-        if (message.nextActionExit) {
-            const messageElem = newElement("div");
-            addElement(createMessage({text: `Bot disconnected [${message.nextActionExit.reason}] in [${message.nextActionExit.flowLocation.sequenceName}] from block [${message.nextActionExit.flowLocation.actionNumber} ${message.nextActionExit.flowLocation.actionName}]${message.nextActionExit.reasonExtendedInfo ? ` with reason: [${message.nextActionExit.reasonExtendedInfo}]`: ""}`}, 'event'), messageElem);
-            messageElems.push(messageElem);
-        }
-        return messageElems;
-    }
-    
-    function createMessage(prompt, sender) {
-        const message = newElement('div', {innerText: prompt.text, class: [sender]});
-        return message;
+        return messageContent;
     }
 
+    function handleResponse(message) {
+        createMessageRow(message, "bot");
+        if (message.nextActionDisconnect) {
+            createMessageRow({text: `Bot disconnected [${message.nextActionDisconnect.reason}] in [${message.nextActionDisconnect.flowLocation.sequenceName}] from block [${message.nextActionDisconnect.flowLocation.actionNumber} ${message.nextActionDisconnect.flowLocation.actionName}]${message.nextActionDisconnect.reasonExtendedInfo ? ` with reason: [${message.nextActionDisconnect.reasonExtendedInfo}]`: ""}`}, "system");
+        }
+        if (message.nextActionExit) {
+            createMessageRow({text: `Bot disconnected [${message.nextActionExit.reason}] in [${message.nextActionExit.flowLocation.sequenceName}] from block [${message.nextActionExit.flowLocation.actionNumber} ${message.nextActionExit.flowLocation.actionName}]${message.nextActionExit.reasonExtendedInfo ? ` with reason: [${message.nextActionExit.reasonExtendedInfo}]`: ""}`}, "system");
+        }
+        if (message.nextActionType === "NoOp") {
+            botSession.sendTurnEvent("", "NoOp");
+        }
+    }
+
+    function createMessage(prompt) {
+        const message = newElement('div', {innerText: prompt.text});
+        return message;
+    }
+    
     function createQuickButtons(prompt) {
-        const buttonContainer = newElement('div');
+        const buttonContainer = newElement('div', {class: ['button-container']});
         for (let option of prompt.content) {
             if (option.contentType !== "QuickReply") {
                 log(`Unhandled option type [${option.contentType}]`, "warn");
                 continue;
             }
-            const quickButton = newElement("button", {innerText: option.quickReply.text});
-            registerElement(quickButton, "click", () => {buttonContainer.remove(); sendTurnEvent(option.quickReply.payload, "UserInput")});
+            const quickButton = newElement("button", {innerText: option.quickReply.text, class: ["quickReply"]});
+            registerElement(quickButton, "click", () => {sendTurnEvent(option.quickReply.payload, "UserInput")});
             addElement(quickButton, buttonContainer);
         }
         return buttonContainer;
@@ -130,29 +168,11 @@ async function run() {
 
     async function sendTurnEvent(message, inputEventType) {
         if (message) {
-            addElement(createMessage({text: message}, 'visitor'), messagesContainer);
+            qs(".button-container")?.remove();
+            createMessageRow({text: message}, "visitor");
         }
-        // /api/v2/textbots/botflows/sessions/{sessionId}/turns POST
-        const body = {
-            "inputEventUserInput": {
-                "mode": "Text",
-                "alternatives": [
-                    {
-                        "transcript": {
-                            "text": message
-                        }
-                    }
-                ]
-            },
-            "previousTurn": previousTurnId ? {"id": previousTurnId} : null,
-            "inputEventType": inputEventType
-        }
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/textbots/botflows/sessions/${newSession.id}/turns`;
-        const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        const resultJson = await result.json();
-        previousTurnId = resultJson.id;
-        const elems = handleResponse(resultJson);
-        if (elems.length > 0) addElements(elems, messagesContainer);
+        const resultJson = await botSession.sendTurnEvent(message, inputEventType);
+        handleResponse(resultJson);
         return resultJson;
     }
 }

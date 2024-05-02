@@ -128,9 +128,65 @@ table.sortable th span {
     border-radius: 5px;
     border: 1px solid black;
 }
-.visitor {
-    background-color: lightblue;
+.message {
+    width: fit-content;
+    padding: .5em;
+    border-radius: .5em;
 }
-.bot {
-    background-color: lightpink;
+.quickReply {
+    border: 1px solid black;
+    background-color: white;
+    padding: .5em;
+    border-radius: .5em;
+    color: black;
+}
+.quickReply:hover {
+    background-color: blue;
+    color: white;
+}
+#messageContainer {
+    margin-top: .5em;
+    width: 50%;
+}
+.messages-container {
+    height: 30em;
+    overflow-y: scroll;
+}
+.message-row {
+    display: flex;
+    flex-direction: column-reverse;
+    margin-bottom: .5em;
+}
+.message-bubble {
+    display: flex;
+}
+.message-bubble.bot {
+    justify-content: flex-start;
+}
+.message-bubble.system {
+    justify-content: center;
+}
+.message-bubble.visitor {
+    justify-content: flex-end;
+}
+.message-content {
+    width: auto;
+    max-width: 75%;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    padding: .5em;
+}
+.message-content.bot {
+    background-color: rgb(236, 236, 236);
+    border-radius: 0px 8px 8px;
+}
+.message-content.visitor {
+    color: white;
+    background-color: rgb(13, 110, 253);
+    border-radius: 8px 0px 8px 8px;
+}
+.message-content.system {
+    background-color: rgb(236, 236, 236);
+    border-radius: 8px 0px 8px 8px;
 }
