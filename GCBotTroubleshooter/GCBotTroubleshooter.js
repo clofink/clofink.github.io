@@ -96,6 +96,12 @@ async function run() {
 
     const inputField = newElement('input');
     const button = newElement('button', {innerText: "Send"});
+    inputField.addEventListener("keyup", function(event) {
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            button.click();
+        }
+    });
     registerElement(button, 'click', () => {sendTurnEvent(inputField.value, "UserInput"); inputField.value = ""});
     addElements([messagesContainer, inputField, button], messageContainer);
 
@@ -138,13 +144,20 @@ async function run() {
         createMessageRow(message, "bot");
         if (message.nextActionDisconnect) {
             createMessageRow({text: `Bot disconnected [${message.nextActionDisconnect.reason}] in [${message.nextActionDisconnect.flowLocation.sequenceName}] from block [${message.nextActionDisconnect.flowLocation.actionNumber} ${message.nextActionDisconnect.flowLocation.actionName}]${message.nextActionDisconnect.reasonExtendedInfo ? ` with reason: [${message.nextActionDisconnect.reasonExtendedInfo}]`: ""}`}, "system");
+            disableInputs();
         }
         if (message.nextActionExit) {
             createMessageRow({text: `Bot disconnected [${message.nextActionExit.reason}] in [${message.nextActionExit.flowLocation.sequenceName}] from block [${message.nextActionExit.flowLocation.actionNumber} ${message.nextActionExit.flowLocation.actionName}]${message.nextActionExit.reasonExtendedInfo ? ` with reason: [${message.nextActionExit.reasonExtendedInfo}]`: ""}`}, "system");
+            disableInputs();
         }
         if (message.nextActionType === "NoOp") {
             botSession.sendTurnEvent("", "NoOp");
         }
+    }
+
+    function disableInputs() {
+        inputField.setAttribute("disabled", true);
+        button.setAttribute("disabled", true);
     }
 
     function createMessage(prompt) {
