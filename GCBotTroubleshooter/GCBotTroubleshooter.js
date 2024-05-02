@@ -57,7 +57,7 @@ class BotSession {
     }
 }
 
-function parseTestCase(testCase) {
+async function runTests() {
     // how to structure them
     // with commands
     // startInteraction, sendMessage
@@ -69,20 +69,138 @@ function parseTestCase(testCase) {
                 {
                     "action": "start",
                     "expects": [
-                        {}
+                        {
+                            "type": "message",
+                            "content": "Welcome message 1"
+                        },
+                        {
+                            "type": "message",
+                            "content": "What would you like to do?"
+                        },
+                        {
+                            "type": "quickReplies",
+                            "content": [
+                                "Entity Article",
+                                "Schedule Callback",
+                                "Test Invalid JSON",
+                                "Test Quick Options",
+                                "Transcript Test",
+                                "Timezone Test"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "action": "sendMessage",
+                    "message": "Test Quick Options",
+                    "expects": [
+                        {
+                            "type": "message",
+                            "content": "Here"
+                        },
+                        {
+                            "type": "message",
+                            "content": "Value is:"
+                        },
+                        {
+                            "type": "message",
+                            "content": "What is the value?"
+                        },
                     ]
                 }
             ]
         }
     ]
+    for (let test of tests) {
+        try {
+            await runTest(test);
+            log(`Test [${test.name}] succeeded`);
+        }
+        catch(error) {
+            log(`Test [${test.name}] failed with error [${error}]`,'warn');
+        }
+    }
 }
 
 function recordAsTestCase() {
     // creates a test case based on the inputs/results
 }
 
-function runTest(test) {
+async function runTest(testCase) {
+    const selectedFlow = eById('botFlow').value;
+    const botSession = new BotSession(selectedFlow);
+    await botSession.createSession();
 
+    for (let command of testCase.commands) {
+        switch (command.action) {
+            case "start": {
+                let result = await repeatUntilInput("", "NoOp");
+                compareResultToExpected(result, command.expects);
+                break;
+            }
+            case "sendMessage": {
+                let result = await repeatUntilInput(command.message, "UserInput");
+                compareResultToExpected(result, command.expects);
+                break;
+            }
+            default:
+                log(`Unsupported command action [${command.action}]`, "warn");
+                break;
+        }
+    }
+    return "Success"
+
+    async function repeatUntilInput(firstMessage, messageType) {
+        let result = await botSession.sendTurnEvent(firstMessage, messageType);
+        while (result.nextActionType === "NoOp") {
+            const previousSegments = result?.prompts?.textPrompts?.segments || [];
+            result = await botSession.sendTurnEvent("", "NoOp");
+            const newSegments = result?.prompts?.textPrompts?.segments || [];
+            result.prompts.textPrompts.segments = previousSegments.concat(newSegments);
+        }
+        return result;
+    }
+}
+
+
+function compareResultToExpected(result, expected) {
+    log(result);
+    const messages = result?.prompts?.textPrompts?.segments
+    if (!messages || messages.length < 1) throw `Expected [${expected.length}] but got no response`;
+    for (let i = 0; i < expected.length; i++) {
+        const expectation = expected[i];
+        const currentMessage = messages[i];
+        if (!currentMessage) throw `Expected ["${expectation.content}"] but got no message`;
+        switch (expectation.type) {
+            case "message": {
+                if (currentMessage.type === "Text" && currentMessage.text === expectation.content) continue;
+                throw `Expected ["${expectation.content}"] but got ["${currentMessage.text}"]`;
+            }
+            case "quickReplies": {
+                if (currentMessage.type === "RichMedia") {
+                    if (!Array.isArray(expectation.content)) throw `Bad expectation: [content] for quickReplies must be a list`;
+                    for (let t = 0; t < expectation.content.length; t++) {
+                        const expectedButtonText = expectation.content[t];
+
+                        if (!currentMessage.content[t]) throw `Expected QuickReply but got none`;
+                        if (currentMessage.content[t].contentType !== "QuickReply") throw `Expected QuickReply [${expectedButtonText}] but got [${currentMessage.content[t].contentType}]`
+                        if (expectedButtonText === currentMessage.content[t].quickReply.text) continue;
+                        throw `Expected ["${expectedButtonText}"] but got ["${currentMessage.content[t].quickReply.text}"]`;
+                    }
+                    if (currentMessage.content.length > expectation.content.length) throw `Received more [${currentMessage.content.length}] QuickReplies than expected [${expectation.content.length}]`
+                }
+                else {
+                    throw `Expected [RichMedia] but got [${currentMessage.type}]`;
+                }
+                break;
+            }
+            default:
+                log(`Unsuported expectation type [${expectation.type}]`, "warn");
+                break;
+        }
+    }
+    if (messages.length > expected.length) throw `Received more [${messages.length}] messages than expected [${expected.length}]`;
+    return true;
 }
 
 async function run() {
