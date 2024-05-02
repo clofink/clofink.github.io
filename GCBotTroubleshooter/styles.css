@@ -196,3 +196,7 @@ table.sortable th span {
 #messageContainer button {
     width: 18%;
 }
+.button-container {
+    word-break: normal;
+    overflow-wrap: normal;
+}
