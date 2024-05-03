@@ -57,60 +57,252 @@ class BotSession {
     }
 }
 
-async function runTests(tests) {
-    // how to structure them
-    // with commands
-    // startInteraction, sendMessage
-    // and an expectation (what gets returned) (a list, in order);
-    const tests = [
-        {
-            "name": "First Test",
-            "commands": [
-                {
-                    "action": "start",
-                    "expects": [
-                        {
-                            "type": "message",
-                            "content": "Welcome message 1"
-                        },
-                        {
-                            "type": "message",
-                            "content": "What would you like to do?"
-                        },
-                        {
-                            "type": "quickReplies",
-                            "content": [
-                                "Entity Article",
-                                "Schedule Callback",
-                                "Test Invalid JSON",
-                                "Test Quick Options",
-                                "Transcript Test",
-                                "Timezone Test"
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "action": "sendMessage",
-                    "message": "Test Quick Options",
-                    "expects": [
-                        {
-                            "type": "message",
-                            "content": "Here"
-                        },
-                        {
-                            "type": "message",
-                            "content": "Value is:"
-                        },
-                        {
-                            "type": "message",
-                            "content": "What is the value?"
-                        },
-                    ]
-                }
-            ]
+class TestBotTab extends Tab {
+    tabName = "Test Bot";
+    currentTest = [];
+    currentItem = {};
+
+    render() {
+        this.container = newElement('div');
+        const inputs = newElement("div", { id: "inputs" });
+        const botSelectLabel = newElement('label', { innerText: "Bot Flow: "});
+        const botSelect = newElement('select', {id: "botFlow"});
+        addElement(botSelect, botSelectLabel);
+        addElement(botSelectLabel, inputs);
+    
+        const messageContainer = newElement('div', {id: "messageContainer"});
+    
+        const startButton = newElement('button', {innerText: "Start"});
+        const startFunc = function() {
+            clearElement(messageContainer);
+            this.run();
         }
-    ]
+        registerElement(startButton, "click", startFunc.bind(this));
+        showLoading(async () => {await populateBotList(botSelect)});
+    
+        const logoutButton = newElement('button', { innerText: "Logout" });
+        registerElement(logoutButton, "click", logout);
+        addElements([inputs, startButton, logoutButton, messageContainer], this.container);
+    
+        return this.container;
+    }
+
+    async runTest(testCase) {
+        const selectedFlow = eById('botFlow').value;
+        const botSession = new BotSession(selectedFlow);
+        await botSession.createSession();
+    
+        for (let command of testCase.commands) {
+            switch (command.action) {
+                case "start": {
+                    let result = await repeatUntilInput("", "NoOp");
+                    compareResultToExpected(result, command.expects);
+                    break;
+                }
+                case "sendMessage": {
+                    let result = await repeatUntilInput(command.message, "UserInput");
+                    compareResultToExpected(result, command.expects);
+                    break;
+                }
+                default:
+                    log(`Unsupported command action [${command.action}]`, "warn");
+                    break;
+            }
+        }
+        return "Success"
+    
+        async function repeatUntilInput(firstMessage, messageType) {
+            let result = await botSession.sendTurnEvent(firstMessage, messageType);
+            while (result.nextActionType === "NoOp") {
+                const previousSegments = result?.prompts?.textPrompts?.segments || [];
+                result = await botSession.sendTurnEvent("", "NoOp");
+                const newSegments = result?.prompts?.textPrompts?.segments || [];
+                result.prompts.textPrompts.segments = previousSegments.concat(newSegments);
+            }
+            return result;
+        }
+    }
+    
+    compareResultToExpected(result, expected) {
+        const messages = result?.prompts?.textPrompts?.segments
+        if (!messages || messages.length < 1) throw `Expected [${expected.length}] but got no response`;
+        for (let i = 0; i < expected.length; i++) {
+            const expectation = expected[i];
+            const currentMessage = messages[i];
+            if (!currentMessage) throw `Expected ["${expectation.content}"] but got no message`;
+            switch (expectation.type) {
+                case "message": {
+                    if (currentMessage.type === "Text" && currentMessage.text === expectation.content) continue;
+                    throw `Expected ["${expectation.content}"] but got ["${currentMessage.text}"]`;
+                }
+                case "quickReplies": {
+                    if (currentMessage.type === "RichMedia") {
+                        if (!Array.isArray(expectation.content)) throw `Bad expectation: [content] for quickReplies must be a list`;
+                        for (let t = 0; t < expectation.content.length; t++) {
+                            const expectedButtonText = expectation.content[t];
+    
+                            if (!currentMessage.content[t]) throw `Expected QuickReply but got none`;
+                            if (currentMessage.content[t].contentType !== "QuickReply") throw `Expected QuickReply [${expectedButtonText}] but got [${currentMessage.content[t].contentType}]`
+                            if (expectedButtonText === currentMessage.content[t].quickReply.text) continue;
+                            throw `Expected ["${expectedButtonText}"] but got ["${currentMessage.content[t].quickReply.text}"]`;
+                        }
+                        if (currentMessage.content.length > expectation.content.length) throw `Received more [${currentMessage.content.length}] QuickReplies than expected [${expectation.content.length}]`
+                    }
+                    else {
+                        throw `Expected [RichMedia] but got [${currentMessage.type}]`;
+                    }
+                    break;
+                }
+                default:
+                    log(`Unsuported expectation type [${expectation.type}]`, "warn");
+                    break;
+            }
+        }
+        if (messages.length > expected.length) throw `Received more [${messages.length}] messages than expected [${expected.length}]`;
+        return true;
+    }
+    
+    createMessageRow(message, sender) {
+        const messageRow = newElement('div', {class: ["message-row"]});
+        const messageBubble = newElement('div', {class: ["message-bubble", sender]});
+        const messageContent = this.createMessageContent(message, sender);
+        addElement(messageContent, messageBubble);
+        addElement(messageBubble, messageRow);
+        addElement(messageRow, this.messagesContainer);
+        messageRow.scrollIntoView({behavior: "smooth"});
+        return messageRow
+    }
+
+    createMessageContent(message, sender) {
+        const messageContent = newElement('div', {class: ["message-content", sender]});
+        if (message?.prompts?.textPrompts?.segments) {
+            for (let prompt of message.prompts.textPrompts.segments) {
+                switch (prompt.type) {
+                    case "Text":
+                        this.currentItem.expects.push({"type": "message", "content": prompt.text})
+                        addElement(this.createMessage(prompt), messageContent);
+                        break;
+                    case "RichMedia":
+                        addElement(this.createQuickButtons(prompt), messageContent);
+                        break;
+                    default:
+                        log(`Unknown message prompt type [${prompt.type}]`, "warn");
+                }
+            }
+        }
+        else if (message?.text) {
+            addElement(this.createMessage(message), messageContent);
+        }
+        return messageContent;
+    }
+
+    handleResponse(message) {
+        this.createMessageRow(message, "bot");
+        if (message.nextActionDisconnect) {
+            this.createMessageRow({text: `Bot disconnected [${message.nextActionDisconnect.reason}] in [${message.nextActionDisconnect.flowLocation.sequenceName}] from block [${message.nextActionDisconnect.flowLocation.actionNumber} ${message.nextActionDisconnect.flowLocation.actionName}]${message.nextActionDisconnect.reasonExtendedInfo ? ` with reason: [${message.nextActionDisconnect.reasonExtendedInfo}]`: ""}`}, "system");
+            this.disableInputs();
+        }
+        if (message.nextActionExit) {
+            this.createMessageRow({text: `Bot disconnected [${message.nextActionExit.reason}] in [${message.nextActionExit.flowLocation.sequenceName}] from block [${message.nextActionExit.flowLocation.actionNumber} ${message.nextActionExit.flowLocation.actionName}]${message.nextActionExit.reasonExtendedInfo ? ` with reason: [${message.nextActionExit.reasonExtendedInfo}]`: ""}`}, "system");
+            this.disableInputs();
+        }
+        if (message.nextActionType === "NoOp") {
+            this.sendTurnEvent("", "NoOp");
+        }
+    }
+
+    disableInputs() {
+        this.inputField.setAttribute("disabled", true);
+        this.button.setAttribute("disabled", true);
+    }
+
+    createMessage(prompt) {
+        const message = newElement('div', {innerText: prompt.text});
+        return message;
+    }
+
+    async run() {
+        this.currentItem = {"expects": []};
+        const selectedFlow = eById('botFlow').value;
+        this.botSession = new BotSession(selectedFlow);
+        await this.botSession.createSession();
+    
+        const messageContainer = eById('messageContainer');
+        this.messagesContainer = newElement("div", {class: ["messages-container"]});
+        addElement(this.messagesContainer, messageContainer);
+    
+        this.inputField = newElement('input');
+        this.button = newElement('button', {innerText: "Send"});
+        function keyPressFunc(event) {
+            if (event.keyCode === 13) {
+                event.preventDefault();
+                this.button.click();
+            }
+        } 
+        this.inputField.addEventListener("keyup", keyPressFunc.bind(this));
+        function sendFunc() {
+            this.currentTest.push(this.currentItem);
+            this.currentItem = {"action": "sendMessage", "message": this.inputField.value, "expects": []};
+            this.sendTurnEvent(this.inputField.value, "UserInput");
+            this.inputField.value = "";
+        }
+        registerElement(this.button, 'click', sendFunc.bind(this));
+        addElements([this.messagesContainer, this.inputField, this.button], messageContainer);
+    
+        this.sendTurnEvent("", "NoOp"); // to start the session
+        this.currentItem.action = "start";
+    }
+
+    createQuickButtons(prompt) {
+        const buttonContainer = newElement('div', {class: ['button-container']});
+        const buttonTexts = [];
+        for (let option of prompt.content) {
+            if (option.contentType === "Attachment") {
+                this.currentItem.expects.push({"type": "image", "content": option.attachment.url});
+                return newElement('img', {src: option.attachment.url});
+            }
+            if (option.contentType !== "QuickReply") {
+                log(`Unhandled option type [${option.contentType}]`, "warn");
+                continue;
+            }
+            const quickButton = newElement("button", {innerText: option.quickReply.text, class: ["quickReply"]});
+            buttonTexts.push(option.quickReply.text);
+            function buttonFunc() {
+                this.currentTest.push(this.currentItem);
+                this.currentItem = {"action": "sendMessage", "message": option.quickReply.payload, "expects": []};
+                this.sendTurnEvent(option.quickReply.payload, "UserInput");
+            }
+            registerElement(quickButton, "click", buttonFunc.bind(this));
+            addElement(quickButton, buttonContainer);
+        }
+        if (buttonTexts.length > 0) this.currentItem.expects.push({"type": "quickReplies", "content": buttonTexts})
+        return buttonContainer;
+    }
+
+    async sendTurnEvent(message, inputEventType) {
+        if (message) {
+            qs(".button-container")?.remove();
+            this.createMessageRow({text: message}, "visitor");
+        }
+        const resultJson = await this.botSession.sendTurnEvent(message, inputEventType);
+        this.handleResponse(resultJson);
+        return resultJson;
+    }
+}
+
+class TestCreationTab extends Tab {
+    tabName = "Create Tests";
+
+    render() {
+        this.container = newElement('div');
+        const logoutButton = newElement('button', { innerText: "Logout" });
+        registerElement(logoutButton, "click", logout);
+        addElements([logoutButton], this.container);
+        return this.container;
+    }
+}
+
+async function runTests(tests) {
     for (let test of tests) {
         try {
             await runTest(test);
@@ -122,204 +314,7 @@ async function runTests(tests) {
     }
 }
 
-function recordAsTestCase() {
-    // creates a test case based on the inputs/results
-}
 
-async function runTest(testCase) {
-    const selectedFlow = eById('botFlow').value;
-    const botSession = new BotSession(selectedFlow);
-    await botSession.createSession();
-
-    for (let command of testCase.commands) {
-        switch (command.action) {
-            case "start": {
-                let result = await repeatUntilInput("", "NoOp");
-                compareResultToExpected(result, command.expects);
-                break;
-            }
-            case "sendMessage": {
-                let result = await repeatUntilInput(command.message, "UserInput");
-                compareResultToExpected(result, command.expects);
-                break;
-            }
-            default:
-                log(`Unsupported command action [${command.action}]`, "warn");
-                break;
-        }
-    }
-    return "Success"
-
-    async function repeatUntilInput(firstMessage, messageType) {
-        let result = await botSession.sendTurnEvent(firstMessage, messageType);
-        while (result.nextActionType === "NoOp") {
-            const previousSegments = result?.prompts?.textPrompts?.segments || [];
-            result = await botSession.sendTurnEvent("", "NoOp");
-            const newSegments = result?.prompts?.textPrompts?.segments || [];
-            result.prompts.textPrompts.segments = previousSegments.concat(newSegments);
-        }
-        return result;
-    }
-}
-
-
-function compareResultToExpected(result, expected) {
-    log(result);
-    const messages = result?.prompts?.textPrompts?.segments
-    if (!messages || messages.length < 1) throw `Expected [${expected.length}] but got no response`;
-    for (let i = 0; i < expected.length; i++) {
-        const expectation = expected[i];
-        const currentMessage = messages[i];
-        if (!currentMessage) throw `Expected ["${expectation.content}"] but got no message`;
-        switch (expectation.type) {
-            case "message": {
-                if (currentMessage.type === "Text" && currentMessage.text === expectation.content) continue;
-                throw `Expected ["${expectation.content}"] but got ["${currentMessage.text}"]`;
-            }
-            case "quickReplies": {
-                if (currentMessage.type === "RichMedia") {
-                    if (!Array.isArray(expectation.content)) throw `Bad expectation: [content] for quickReplies must be a list`;
-                    for (let t = 0; t < expectation.content.length; t++) {
-                        const expectedButtonText = expectation.content[t];
-
-                        if (!currentMessage.content[t]) throw `Expected QuickReply but got none`;
-                        if (currentMessage.content[t].contentType !== "QuickReply") throw `Expected QuickReply [${expectedButtonText}] but got [${currentMessage.content[t].contentType}]`
-                        if (expectedButtonText === currentMessage.content[t].quickReply.text) continue;
-                        throw `Expected ["${expectedButtonText}"] but got ["${currentMessage.content[t].quickReply.text}"]`;
-                    }
-                    if (currentMessage.content.length > expectation.content.length) throw `Received more [${currentMessage.content.length}] QuickReplies than expected [${expectation.content.length}]`
-                }
-                else {
-                    throw `Expected [RichMedia] but got [${currentMessage.type}]`;
-                }
-                break;
-            }
-            default:
-                log(`Unsuported expectation type [${expectation.type}]`, "warn");
-                break;
-        }
-    }
-    if (messages.length > expected.length) throw `Received more [${messages.length}] messages than expected [${expected.length}]`;
-    return true;
-}
-
-window.test = [];
-
-async function run() {
-    let currentItem = {"expects": []};
-    const selectedFlow = eById('botFlow').value;
-    const botSession = new BotSession(selectedFlow);
-    await botSession.createSession();
-
-    const messageContainer = eById('messageContainer');
-    const messagesContainer = newElement("div", {class: ["messages-container"]});
-    addElement(messagesContainer, messageContainer);
-
-    const inputField = newElement('input');
-    const button = newElement('button', {innerText: "Send"});
-    inputField.addEventListener("keyup", function(event) {
-        if (event.keyCode === 13) {
-            event.preventDefault();
-            button.click();
-        }
-    });
-    registerElement(button, 'click', () => {window.test.push(currentItem); currentItem = {"action": "sendMessage", "message": inputField.value, "expects": []}; sendTurnEvent(inputField.value, "UserInput"); inputField.value = ""});
-    addElements([messagesContainer, inputField, button], messageContainer);
-
-    sendTurnEvent("", "NoOp"); // to start the session
-    currentItem.action = "start";
-
-
-    function createMessageRow(message, sender) {
-        const messageRow = newElement('div', {class: ["message-row"]});
-        const messageBubble = newElement('div', {class: ["message-bubble", sender]});
-        const messageContent = createMessageContent(message, sender);
-        addElement(messageContent, messageBubble);
-        addElement(messageBubble, messageRow);
-        addElement(messageRow, messagesContainer);
-        messageRow.scrollIntoView({behavior: "smooth"});
-        return messageRow
-    }
-
-    function createMessageContent(message, sender) {
-        const messageContent = newElement('div', {class: ["message-content", sender]});
-        if (message?.prompts?.textPrompts?.segments) {
-            for (let prompt of message.prompts.textPrompts.segments) {
-                switch (prompt.type) {
-                    case "Text":
-                        currentItem.expects.push({"type": "message", "content": prompt.text})
-                        addElement(createMessage(prompt), messageContent);
-                        break;
-                    case "RichMedia":
-                        addElement(createQuickButtons(prompt), messageContent);
-                        break;
-                    default:
-                        log(`Unknown message prompt type [${prompt.type}]`, "warn");
-                }
-            }
-        }
-        else if (message?.text) {
-            addElement(createMessage(message), messageContent);
-        }
-        return messageContent;
-    }
-
-    function handleResponse(message) {
-        createMessageRow(message, "bot");
-        if (message.nextActionDisconnect) {
-            createMessageRow({text: `Bot disconnected [${message.nextActionDisconnect.reason}] in [${message.nextActionDisconnect.flowLocation.sequenceName}] from block [${message.nextActionDisconnect.flowLocation.actionNumber} ${message.nextActionDisconnect.flowLocation.actionName}]${message.nextActionDisconnect.reasonExtendedInfo ? ` with reason: [${message.nextActionDisconnect.reasonExtendedInfo}]`: ""}`}, "system");
-            disableInputs();
-        }
-        if (message.nextActionExit) {
-            createMessageRow({text: `Bot disconnected [${message.nextActionExit.reason}] in [${message.nextActionExit.flowLocation.sequenceName}] from block [${message.nextActionExit.flowLocation.actionNumber} ${message.nextActionExit.flowLocation.actionName}]${message.nextActionExit.reasonExtendedInfo ? ` with reason: [${message.nextActionExit.reasonExtendedInfo}]`: ""}`}, "system");
-            disableInputs();
-        }
-        if (message.nextActionType === "NoOp") {
-            sendTurnEvent("", "NoOp");
-        }
-    }
-
-    function disableInputs() {
-        inputField.setAttribute("disabled", true);
-        button.setAttribute("disabled", true);
-    }
-
-    function createMessage(prompt) {
-        const message = newElement('div', {innerText: prompt.text});
-        return message;
-    }
-    
-    function createQuickButtons(prompt) {
-        const buttonContainer = newElement('div', {class: ['button-container']});
-        const buttonTexts = [];
-        for (let option of prompt.content) {
-            if (option.contentType === "Attachment") {
-                currentItem.expects.push({"type": "image", "content": option.attachment.url});
-                return newElement('img', {src: option.attachment.url});
-            }
-            if (option.contentType !== "QuickReply") {
-                log(`Unhandled option type [${option.contentType}]`, "warn");
-                continue;
-            }
-            const quickButton = newElement("button", {innerText: option.quickReply.text, class: ["quickReply"]});
-            buttonTexts.push(option.quickReply.text);
-            registerElement(quickButton, "click", () => {window.test.push(currentItem); currentItem = {"action": "sendMessage", "message": option.quickReply.payload, "expects": []}; sendTurnEvent(option.quickReply.payload, "UserInput")});
-            addElement(quickButton, buttonContainer);
-        }
-        if (buttonTexts.length > 0) currentItem.expects.push({"type": "quickReplies", "content": buttonTexts})
-        return buttonContainer;
-    }
-
-    async function sendTurnEvent(message, inputEventType) {
-        if (message) {
-            qs(".button-container")?.remove();
-            createMessageRow({text: message}, "visitor");
-        }
-        const resultJson = await botSession.sendTurnEvent(message, inputEventType);
-        handleResponse(resultJson);
-        return resultJson;
-    }
-}
 
 async function getBots() {
     // https://api.usw2.pure.cloud/api/v2/flows?includeSchemas=true&nameOrDescription=&sortBy=name&sortOrder=asc&pageNumber=1&pageSize=50&type=digitalbot
@@ -351,21 +346,12 @@ function showLoginPage() {
 function showMainMenu() {
     const page = eById('page');
     clearElement(page);
-    const inputs = newElement("div", { id: "inputs" });
-    const botSelectLabel = newElement('label', { innerText: "Bot Flow: "});
-    const botSelect = newElement('select', {id: "botFlow"});
-    addElement(botSelect, botSelectLabel);
-    addElement(botSelectLabel, inputs);
+    const tabContainer = new TabContainer([
+        new TestBotTab(),
+        new TestCreationTab(),
+    ]);
+    addElement(tabContainer.getTabContainer(), page);
 
-    const messageContainer = newElement('div', {id: "messageContainer"});
-
-    const startButton = newElement('button', {innerText: "Start"});
-    registerElement(startButton, "click", () => {clearElement(messageContainer); run();});
-    showLoading(async () => {await populateBotList(botSelect)});
-
-    const logoutButton = newElement('button', { innerText: "Logout" });
-    registerElement(logoutButton, "click", logout);
-    addElements([inputs, startButton, logoutButton, messageContainer], page);
     getOrgDetails().then(function (result) {
         if (result.status !== 200) {
             log(result.message, "error");
@@ -470,3 +456,4 @@ async function getAll(path, resultsKey, pageSize) {
     }
     return items;
 }
+
