@@ -147,6 +147,7 @@ table.sortable th span {
 #messageContainer {
     margin-top: .5em;
     width: 50%;
+    min-width: 400px;
 }
 .messages-container {
     height: 30em;
@@ -199,4 +200,7 @@ table.sortable th span {
 .button-container {
     word-break: normal;
     overflow-wrap: normal;
+}
+.message-content img {
+    width: 100%;
 }
