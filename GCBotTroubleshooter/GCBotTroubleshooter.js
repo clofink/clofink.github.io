@@ -57,7 +57,7 @@ class BotSession {
     }
 }
 
-async function runTests() {
+async function runTests(tests) {
     // how to structure them
     // with commands
     // startInteraction, sendMessage
@@ -203,7 +203,10 @@ function compareResultToExpected(result, expected) {
     return true;
 }
 
+window.test = [];
+
 async function run() {
+    let currentItem = {"expects": []};
     const selectedFlow = eById('botFlow').value;
     const botSession = new BotSession(selectedFlow);
     await botSession.createSession();
@@ -220,10 +223,12 @@ async function run() {
             button.click();
         }
     });
-    registerElement(button, 'click', () => {sendTurnEvent(inputField.value, "UserInput"); inputField.value = ""});
+    registerElement(button, 'click', () => {window.test.push(currentItem); currentItem = {"action": "sendMessage", "message": inputField.value, "expects": []}; sendTurnEvent(inputField.value, "UserInput"); inputField.value = ""});
     addElements([messagesContainer, inputField, button], messageContainer);
 
     sendTurnEvent("", "NoOp"); // to start the session
+    currentItem.action = "start";
+
 
     function createMessageRow(message, sender) {
         const messageRow = newElement('div', {class: ["message-row"]});
@@ -242,6 +247,7 @@ async function run() {
             for (let prompt of message.prompts.textPrompts.segments) {
                 switch (prompt.type) {
                     case "Text":
+                        currentItem.expects.push({"type": "message", "content": prompt.text})
                         addElement(createMessage(prompt), messageContent);
                         break;
                     case "RichMedia":
@@ -269,7 +275,7 @@ async function run() {
             disableInputs();
         }
         if (message.nextActionType === "NoOp") {
-            botSession.sendTurnEvent("", "NoOp");
+            sendTurnEvent("", "NoOp");
         }
     }
 
@@ -285,15 +291,22 @@ async function run() {
     
     function createQuickButtons(prompt) {
         const buttonContainer = newElement('div', {class: ['button-container']});
+        const buttonTexts = [];
         for (let option of prompt.content) {
+            if (option.contentType === "Attachment") {
+                currentItem.expects.push({"type": "image", "content": option.attachment.url});
+                return newElement('img', {src: option.attachment.url});
+            }
             if (option.contentType !== "QuickReply") {
                 log(`Unhandled option type [${option.contentType}]`, "warn");
                 continue;
             }
             const quickButton = newElement("button", {innerText: option.quickReply.text, class: ["quickReply"]});
-            registerElement(quickButton, "click", () => {sendTurnEvent(option.quickReply.payload, "UserInput")});
+            buttonTexts.push(option.quickReply.text);
+            registerElement(quickButton, "click", () => {window.test.push(currentItem); currentItem = {"action": "sendMessage", "message": option.quickReply.payload, "expects": []}; sendTurnEvent(option.quickReply.payload, "UserInput")});
             addElement(quickButton, buttonContainer);
         }
+        if (buttonTexts.length > 0) currentItem.expects.push({"type": "quickReplies", "content": buttonTexts})
         return buttonContainer;
     }
 
@@ -310,7 +323,7 @@ async function run() {
 
 async function getBots() {
     // https://api.usw2.pure.cloud/api/v2/flows?includeSchemas=true&nameOrDescription=&sortBy=name&sortOrder=asc&pageNumber=1&pageSize=50&type=digitalbot
-    const bots = await getAll("/api/v2/flows?sortBy=name&sortOrder=asc&type=digitalbot", "entities", 50);
+    const bots = await getAll("/api/v2/flows?sortBy=name&sortOrder=asc&type=digitalbot&includeSchemas=true", "entities", 50);
     return bots;
 }
 
