@@ -221,7 +221,7 @@ table.sortable th span {
 }
 .message-content.system {
     background-color: rgb(236, 236, 236);
-    border-radius: 8px 0px 8px 8px;
+    border-radius: 8px;
 }
 #messageContainer input {
     width: 80%;
