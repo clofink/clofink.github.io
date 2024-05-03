@@ -87,6 +87,18 @@ class TestBotTab extends Tab {
         return this.container;
     }
 
+    async runTests(tests) {
+        for (let test of tests) {
+            try {
+                await runTest(test);
+                log(`Test [${test.name}] succeeded`);
+            }
+            catch(error) {
+                log(`Test [${test.name}] failed with error [${error}]`,'warn');
+            }
+        }
+    }
+
     async runTest(testCase) {
         const selectedFlow = eById('botFlow').value;
         const botSession = new BotSession(selectedFlow);
@@ -169,7 +181,7 @@ class TestBotTab extends Tab {
         addElement(messageContent, messageBubble);
         addElement(messageBubble, messageRow);
         addElement(messageRow, this.messagesContainer);
-        messageRow.scrollIntoView({behavior: "smooth"});
+        messageRow.scrollIntoView();
         return messageRow
     }
 
@@ -301,20 +313,6 @@ class TestCreationTab extends Tab {
         return this.container;
     }
 }
-
-async function runTests(tests) {
-    for (let test of tests) {
-        try {
-            await runTest(test);
-            log(`Test [${test.name}] succeeded`);
-        }
-        catch(error) {
-            log(`Test [${test.name}] failed with error [${error}]`,'warn');
-        }
-    }
-}
-
-
 
 async function getBots() {
     // https://api.usw2.pure.cloud/api/v2/flows?includeSchemas=true&nameOrDescription=&sortBy=name&sortOrder=asc&pageNumber=1&pageSize=50&type=digitalbot
