@@ -73,7 +73,7 @@ class TestBotTab extends Tab {
         const messageContainer = newElement('div', {id: "messageContainer"});
     
         const startButton = newElement('button', {innerText: "Start"});
-        const startFunc = function() {
+        function startFunc() {
             clearElement(messageContainer);
             this.run();
         }
@@ -82,7 +82,15 @@ class TestBotTab extends Tab {
     
         const logoutButton = newElement('button', { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
-        addElements([inputs, startButton, logoutButton, messageContainer], this.container);
+
+        const showTestButton = newElement('button', {innerText: "Test"});
+        function showTestFunc() {
+            if (this.currentItem) this.currentTest.push(this.currentItem);
+            log(this.currentTest);
+        }
+        registerElement(showTestButton, "click", showTestFunc.bind(this));
+
+        addElements([inputs, startButton, logoutButton, showTestButton, messageContainer], this.container);
     
         return this.container;
     }
@@ -305,12 +313,105 @@ class TestBotTab extends Tab {
 class TestCreationTab extends Tab {
     tabName = "Create Tests";
 
+    // maybe make this paged, so each test is its own page?
+    // use a lot of the same logic as PagedTable
+    // need to capture the current test in json before page change
+    // then recreate from the json in a stored list based on the current index
     render() {
         this.container = newElement('div');
         const logoutButton = newElement('button', { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
-        addElements([logoutButton], this.container);
+        const testsContainer = newElement("div", {class: ['tests-container']});
+        addElement(this.addTest(), testsContainer);
+        addElements([logoutButton, testsContainer], this.container);
         return this.container;
+    }
+    addTest() {
+        const testContainer = newElement('div', {class: ["test-container"]});
+        const nameLabel = newElement('label', {innerText: "Test Name: "});
+        const nameInput = newElement('input');
+        addElement(nameInput, nameLabel);
+        const actionsContainer = newElement('div', {class: ["actions-container"]});
+        addElement(this.addAction(), actionsContainer);
+        const removeButton = this.createRemoveButton(testContainer, ".tests-container");
+        const addTestBelowButton = this.createAddBelowButton(testContainer, this.addTest);
+
+        addElements([nameLabel, removeButton, addTestBelowButton, actionsContainer], testContainer);
+        return testContainer;
+    }
+    addAction() {
+        const actionContainer = newElement('div', {class: ['action-container']});
+        const actionList = ["start", "sendMessage"];
+        const actionSelect = newElement('select');
+        for (let action of actionList) {
+            const actionOption = newElement('option', {innerText: action, value: action});
+            addElement(actionOption, actionSelect);
+        }
+        function selectChange() {
+            const existingInput = qs(".action-message-input", actionContainer);
+            existingInput?.remove();
+            if (actionSelect.value === "sendMessage") {
+                const newLabel = newElement('label', {innerText: "Message Text: ", class: ["action-message-input"]});
+                const newInput = newElement('input');
+                addElement(newInput, newLabel);
+                addElement(newLabel, actionSelect, "afterend")
+            }
+        }
+        registerElement(actionSelect, 'change', selectChange);
+        const removeButton = this.createRemoveButton(actionContainer, ".actions-container");
+        const addActionBelowButton = this.createAddBelowButton(actionContainer, this.addAction);
+        
+        const expectationsContainer = newElement('div', {class: ['expectations-container']});
+        addElement(this.addExpectation(), expectationsContainer);
+        addElements([actionSelect, removeButton, addActionBelowButton, expectationsContainer], actionContainer);
+        return actionContainer;
+    }
+    addExpectation() {
+        const expectationContainer = newElement('div', {class: ['expectation-container']})
+        const expectationTypeList = ["message", "image", "quickReplies"];
+        const expectationSelect = newElement('select');
+        for (let expectation of expectationTypeList) {
+            const expectationOption = newElement('option', {innerText: expectation, value: expectation});
+            addElement(expectationOption, expectationSelect);
+        }
+        function selectChange() {
+            const existingInput = qs(".expectation-message-input", expectationContainer);
+            existingInput?.remove();
+            if (expectationSelect.value === "message") {
+                const newLabel = newElement('label', {innerText: "Message Text: ", class: ["expectation-message-input"]});
+                const newInput = newElement('input');
+                addElement(newInput, newLabel);
+                addElement(newLabel, expectationSelect, "afterend");
+            }
+            else if (expectationSelect.value === "image") {
+                const newLabel = newElement('label', {innerText: "Image URL: ", class: ["expectation-message-input"]});
+                const newInput = newElement('input');
+                addElement(newInput, newLabel);
+                addElement(newLabel, expectationSelect, "afterend");
+            }
+        }
+        registerElement(expectationSelect, 'change', selectChange);
+
+        const removeButton = this.createRemoveButton(expectationContainer, ".expectations-container");
+        const addExpectationBelowButton = this.createAddBelowButton(expectationContainer, this.addExpectation);
+ 
+        addElements([expectationSelect, removeButton, addExpectationBelowButton], expectationContainer);
+        return expectationContainer;
+    }
+
+    createRemoveButton(container, containerSelector) {
+        const removeButton = newElement('button', {innerText: "x"});
+        registerElement(removeButton, "click", () => {if (container.closest(containerSelector).children.length === 1) return; container.remove()});
+        return removeButton;
+    }
+    createAddBelowButton(container, addFunc) {
+        const addBelowButton = newElement('button', {innerText: "+"});
+        function addBelowFunc() {
+            log(this);
+            addElement(addFunc.bind(this)(), container, "afterend")
+        }
+        registerElement(addBelowButton, "click", addBelowFunc.bind(this));
+        return addBelowButton;
     }
 }
 
