@@ -328,3 +328,108 @@ class PagedTable {
         }
     }
 }
+
+class PagedView {
+    fullData;
+    pageSize;
+    pageCount;
+    currentPage;
+    currentPageData;
+
+    constructor(pagesData, pageRenderFunc, leavePageFunc) {
+        this.pageSize = 1;
+        this.fullData = pagesData;
+        this.currentPage = 0;
+        this.currentPageData = pagesData[this.currentPage];
+        this.render = pageRenderFunc || this.renderPage;
+        this.leave = leavePageFunc || this.leavePage;
+
+        this.container = newElement('div', { class: ["pagesContainer"] });
+        this.pageContainer = newElement('div', { class: ["pageContainer"] });
+
+        this.buttonContainer = newElement("div", { class: ["pageButtons"] });
+        this.updatePage();
+        this.updateButtons();
+
+        addElements([this.pageContainer, this.buttonContainer], this.container);
+
+        return this;
+    }
+
+    renderPage(pageData) {
+        this.pageContainer.innerText = JSON.stringify(pageData, null, 4);
+    }
+
+    leavePage() {
+        log("leaving page");
+    }
+
+    getContainer() {
+        return this.container;
+    }
+
+    getCurrentPageData() {
+        return this.currentPageData;
+    }
+
+    setPageSize(newSize) {
+        if (newSize === this.pageSize) return;
+        this.pageSize = newSize;
+        this.setPage(0);
+    }
+
+    changePage(pageChange) {
+        this.currentPage += pageChange;
+        this.currentPageData = this.fullData[this.currentPage];
+
+        this.updateButtons();
+        this.updatePage();
+    }
+
+    updatePage() {
+        this.leave();
+        clearElement(this.pageContainer);
+        this.render(this.currentPageData);
+    }
+
+    setPage(pageNum) {
+        this.currentPage = pageNum;
+        this.currentPageData = this.fullData[pageNum];
+        this.updateButtons();
+        this.updatePage();
+    }
+
+    updateButtons() {
+        this.pageCount = Math.ceil(this.fullData.length / this.pageSize);
+
+        clearElement(this.buttonContainer);
+        const previousAll = newElement("button", { innerText: "<<" });
+        registerElement(previousAll, "click", () => { this.setPage(0) });
+        addElement(previousAll, this.buttonContainer);
+        if (this.currentPage <= 1) {
+            previousAll.setAttribute("disabled", true);
+        }
+        const previousButton = newElement("button", { innerText: "<" });
+        registerElement(previousButton, "click", () => { this.changePage(-1) });
+        addElement(previousButton, this.buttonContainer);
+        if (this.currentPage === 0) {
+            previousButton.setAttribute("disabled", true);
+        }
+        const pageCount = newElement("span", { innerText: `${this.currentPage + 1}/${this.pageCount}` })
+        const nextButton = newElement("button", { innerText: ">" });
+        registerElement(nextButton, "click", () => { this.changePage(1) });
+        addElement(nextButton, this.buttonContainer);
+        if (this.currentPage >= this.pageCount - 1) {
+            nextButton.setAttribute("disabled", true);
+        }
+        const nextAll = newElement("button", { innerText: ">>" });
+        registerElement(nextAll, "click", () => { this.setPage(this.pageCount - 1) });
+        addElement(nextAll, this.buttonContainer);
+        if (this.currentPage >= this.pageCount - 2) {
+            nextAll.setAttribute("disabled", true);
+        }
+        addElements([previousAll, previousButton, pageCount, nextButton, nextAll], this.buttonContainer);
+        return this.buttonContainer;
+    }
+
+}
