@@ -180,6 +180,8 @@ table.sortable th span {
     margin-top: .5em;
     width: 50%;
     min-width: 400px;
+    border: 1px solid black;
+    padding: .5em;
 }
 .messages-container {
     height: 30em;
@@ -235,4 +237,19 @@ table.sortable th span {
 }
 .message-content img {
     width: 100%;
+}
+.actions-container {
+    text-indent: 1.5em;
+}
+.action-container {
+    margin-top: .5em;
+}
+.expectations-container {
+    text-indent: 3em;
+}
+.expectation-container {
+    margin-top: .5em;
+}
+.test-container {
+    margin-top: .5em;
 }
