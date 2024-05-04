@@ -357,11 +357,21 @@ class PagedView {
     }
 
     renderPage(pageData) {
-        this.pageContainer.innerText = JSON.stringify(pageData, null, 4);
+        return newElement("div", {innerText: JSON.stringify(pageData, null, 4)});
     }
 
-    leavePage() {
+    leavePage(pageData) {
         log("leaving page");
+    }
+
+    addPage(newPageData) {
+        this.fullData.push(newPageData);
+        this.updateButtons();
+    }
+
+    updatePageData(newPageData) {
+        this.fullData[this.currentPage] = newPageData;
+        this.updatePage();
     }
 
     getContainer() {
@@ -379,17 +389,16 @@ class PagedView {
     }
 
     changePage(pageChange) {
+        this.leave(this.currentPageData);
         this.currentPage += pageChange;
         this.currentPageData = this.fullData[this.currentPage];
-
         this.updateButtons();
         this.updatePage();
     }
 
     updatePage() {
-        this.leave();
         clearElement(this.pageContainer);
-        this.render(this.currentPageData);
+        addElement(this.render(this.currentPageData), this.pageContainer);
     }
 
     setPage(pageNum) {
