@@ -442,3 +442,161 @@ class PagedView {
     }
 
 }
+
+class DependentForm {
+    // fields can only depend on other fields in the same form
+    // forms can only depend on fields in parent form?
+    container;
+    fieldsContainer;
+    childFormsContainer;
+    formInfo;
+    constructor(structure) {
+        this.formInfo = structure;
+        this.container = newElement('div', { class: ["formContainer"] });
+        this.fieldsContainer = newElement('div', { class: ["fieldsContainer"] });
+        this.childFormsContainer = newElement('div', { class: ["childFormContainer"] });
+        addElements([this.fieldsContainer, this.childFormsContainer], this.container);
+        this.createForm(structure);
+        return this;
+    }
+    getContainer() {
+        return this.container;
+    }
+    createForm(form) {
+        for (let field of form.fields) {
+            addElement(this.createField(field), this.fieldsContainer);
+        }
+        if (form.hasOwnProperty('children') && form.children.length > 0) {
+            for (let child of form.children) {
+                const childForm = new DependantForm(child);
+                addElement(childForm.getContainer(), this.childFormsContainer);
+            }
+        }
+        if (form.hasOwnProperty('isMultiple') && form.isMultiple) {
+            const addNewButton = newElement("button", { innerText: "+", title: "Add New" });
+            registerElement(addNewButton, "click")
+            const removeButton = newElement("button", { innerText: "x", title: "Remove" });
+            registerElement(removeButton, "click");
+            addElements([addNewButton, removeButton], this.container)
+        }
+    }
+    createField(fieldItem) {
+        const fieldContainer = newElement('div', { class: ["fieldContainer"], "data-field-name": fieldItem.name });
+        switch(fieldItem.type) {
+            case "select":
+                addElement(this.createSelect(fieldItem), fieldContainer, "afterbegin");
+                break;
+            case "input":
+                addElement(this.createInput(fieldItem), fieldContainer, "afterbegin");
+                break;
+            case "button":
+                addElement(this.createButton(fieldItem), fieldContainer, "afterbegin");
+                break;
+            default:
+                log(`Unknown field type [${fieldItem.type}]`, "warn");
+                break;
+        }
+        return fieldContainer;
+    }
+    createSelect(selectItem) {
+        const selectElem = newElement('select', selectItem.properties || {});
+        const boundChange = function() {
+            this.updateChildForms(selectItem.name, selectElem.value);
+            this.updateFields(selectItem.name, selectElem.value);
+        }.bind(this);
+        registerElement(selectElem, "change", boundChange);
+        for (let option of selectItem.options) {
+            const optionElem = newElement('option', { innerText: option.name, value: option.value });
+            addElement(optionElem, selectElem);
+        }
+        if (selectItem.hasOwnProperty("initialValue") && selectItem.initialValue) {
+            selectElem.value = selectItem.initialValue;
+        }
+        return this.labelField(selectElem, selectItem.label);
+    }
+    createButton(buttonItem) {}
+    createInput(inputItem) {
+        const inputElem = newElement('input', inputItem.properties || {});
+        return this.labelField(inputElem, inputItem.label);
+    }
+    removeForm() {
+    }
+    addNewForm() {
+    }
+    labelField(fieldElem, label) {
+        if (!label) return fieldElem;
+        const labelElem = newElement('label', { innerText: label });
+        addElement(fieldElem, labelElem);
+        return labelElem;
+    }
+    updateChildForms(fieldName, fieldValue) {
+        // if a child form depends on the value of this field, update it
+        // this includes adding any child form that does not currently exist
+        // check every child form (even if it doesn't exist) to see if it relies on this fieldname
+        const existingChildren = this.childFormsContainer.children;
+    }
+    updateFields(fieldName, fieldValue) {
+        // if a field on this form depends on a value of this field, update it
+        // this includes adding any field that does not currently exist
+        // check every form field to see if it relies on this fieldname
+        const existingFields = this.fieldsContainer.children;
+        let lastExistingField;
+        for (let field of this.formInfo.fields) {
+            let fieldExists = false;
+            let currentField;
+            for (let existingField of existingFields) {
+                if (existingField.dataset.fieldName === field.name) {
+                    fieldExists = true;
+                    currentField = existingField;
+                    break;
+                }
+            }
+            if (field.hasOwnProperty("dependsOn") && field.dependsOn.fieldName === fieldName) {
+                const shouldExist = field.dependsOn.fieldValues.indexOf(fieldValue) >= 0;
+                if (fieldExists && !shouldExist) {
+                    if (field.type === "select") this.updateFields(field.name, "");
+                    currentField.remove();
+                    continue;
+                }
+                if (!fieldExists && shouldExist) {
+                    const newField = this.createField(field);
+                    if (lastExistingField) addElement(newField, lastExistingField, "afterend");
+                    else addElement(newField, this.fieldsContainer, "afterbegin");
+                    if (field.type === "select") this.updateFields(field.name, field.initalValue || field.options[0]);
+                    lastExistingField = newField;
+                    continue;
+                }
+            }
+            if (fieldExists) {
+                lastExistingField = currentField;
+            }
+        }
+    }
+}
+
+const formStructure = {
+    isMultiple: false,
+    children: [],
+    dependsOn: {
+        fieldName: "",
+        fieldValues: [
+            ""
+        ]
+    },
+    fields: [
+        {
+            name: "",
+            label: "",
+            initalValue: "",
+            type: "", // "select", "input", "button", "checkbox"
+            options: [], // only valid for type "select"
+            properties: {},
+            dependsOn: {
+                fieldName: "",
+                fieldValues: [
+                    ""
+                ]
+            },
+        }
+    ]
+}
