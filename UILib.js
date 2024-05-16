@@ -463,20 +463,28 @@ class DependentForm {
         return this.container;
     }
     createForm(form) {
+        const existingSelectsAndValues = {};
         for (let field of form.fields) {
+            if (field.type === "select") existingSelectsAndValues[field.name] = field.initialValue || field.options[0].name;
+            if (field.hasOwnProperty('dependsOn') && existingSelectsAndValues.hasOwnProperty(field.dependsOn.fieldName)) {
+                if (field.dependsOn.fieldValues.indexOf(existingSelectsAndValues[field.dependsOn.fieldName]) < 0) continue;
+            }
             addElement(this.createField(field), this.fieldsContainer);
         }
         if (form.hasOwnProperty('children') && form.children.length > 0) {
             for (let child of form.children) {
-                const childForm = new DependantForm(child);
+                if (child.hasOwnProperty('dependsOn') && existingSelectsAndValues.hasOwnProperty(child.dependsOn.fieldName)) {
+                    if (child.dependsOn.fieldValues.indexOf(existingSelectsAndValues[child.dependsOn.fieldName]) < 0) continue;
+                }
+                const childForm = new DependentForm(child);
                 addElement(childForm.getContainer(), this.childFormsContainer);
             }
         }
         if (form.hasOwnProperty('isMultiple') && form.isMultiple) {
-            const addNewButton = newElement("button", { innerText: "+", title: "Add New" });
-            registerElement(addNewButton, "click")
             const removeButton = newElement("button", { innerText: "x", title: "Remove" });
-            registerElement(removeButton, "click");
+            registerElement(removeButton, "click", function() {this.removeForm(this.container)}.bind(this));
+            const addNewButton = newElement("button", { innerText: "+", title: "Add New" });
+            registerElement(addNewButton, "click", function() {this.addNewForm(form, this.container)}.bind(this));
             addElements([addNewButton, removeButton], this.container)
         }
     }
@@ -506,7 +514,7 @@ class DependentForm {
         }.bind(this);
         registerElement(selectElem, "change", boundChange);
         for (let option of selectItem.options) {
-            const optionElem = newElement('option', { innerText: option.name, value: option.value });
+            const optionElem = newElement('option', { innerText: option.name, value: option.value || option.name });
             addElement(optionElem, selectElem);
         }
         if (selectItem.hasOwnProperty("initialValue") && selectItem.initialValue) {
@@ -519,9 +527,13 @@ class DependentForm {
         const inputElem = newElement('input', inputItem.properties || {});
         return this.labelField(inputElem, inputItem.label);
     }
-    removeForm() {
+    removeForm(form) {
+        if (this.container.parentElement.childElementCount < 2) return;
+        form.remove();
     }
-    addNewForm() {
+    addNewForm(form, element) {
+        const newForm = new DependentForm(form);
+        addElement(newForm.getContainer(), element, "afterend");
     }
     labelField(fieldElem, label) {
         if (!label) return fieldElem;
@@ -530,45 +542,58 @@ class DependentForm {
         return labelElem;
     }
     updateChildForms(fieldName, fieldValue) {
-        // if a child form depends on the value of this field, update it
-        // this includes adding any child form that does not currently exist
-        // check every child form (even if it doesn't exist) to see if it relies on this fieldname
         const existingChildren = this.childFormsContainer.children;
+        let lastExistingChild;
+        for (let childForm of this.formInfo.children) {
+            let currentForm = this.itemIfExists(form.name, existingChildren, "formName");
+            if (childForm.hasOwnProperty("dependsOn") && childForm.dependsOn.fieldName === fieldName) {
+                const shouldExist = childForm.dependsOn.fieldValues.indexOf(fieldValue) >= 0;
+                if (currentForm && !shouldExist) {
+                    currentForm.remove();
+                    currentForm = undefined;
+                }
+                if (!currentForm && shouldExist) {
+                    const newForm = new DependentForm(childForm);
+                    if (lastExistingChild) addElement(newForm.getContainer(), lastExistingChild, "afterend");
+                    else addElement(newForm.getContainer(), this.childFormsContainer, "afterbegin");
+                    currentForm = newForm;
+                }
+            }
+            if (currentForm) {
+                lastExistingChild = currentForm;
+            }
+        }
+
     }
     updateFields(fieldName, fieldValue) {
-        // if a field on this form depends on a value of this field, update it
-        // this includes adding any field that does not currently exist
-        // check every form field to see if it relies on this fieldname
         const existingFields = this.fieldsContainer.children;
         let lastExistingField;
         for (let field of this.formInfo.fields) {
-            let fieldExists = false;
-            let currentField;
-            for (let existingField of existingFields) {
-                if (existingField.dataset.fieldName === field.name) {
-                    fieldExists = true;
-                    currentField = existingField;
-                    break;
-                }
-            }
+            let currentField = this.itemIfExists(field.name, existingFields, "fieldName");
             if (field.hasOwnProperty("dependsOn") && field.dependsOn.fieldName === fieldName) {
                 const shouldExist = field.dependsOn.fieldValues.indexOf(fieldValue) >= 0;
-                if (fieldExists && !shouldExist) {
+                if (currentField && !shouldExist) {
                     if (field.type === "select") this.updateFields(field.name, "");
                     currentField.remove();
-                    continue;
+                    currentField = undefined;
                 }
-                if (!fieldExists && shouldExist) {
+                if (!currentField && shouldExist) {
                     const newField = this.createField(field);
                     if (lastExistingField) addElement(newField, lastExistingField, "afterend");
                     else addElement(newField, this.fieldsContainer, "afterbegin");
-                    if (field.type === "select") this.updateFields(field.name, field.initalValue || field.options[0]);
-                    lastExistingField = newField;
-                    continue;
+                    if (field.type === "select") this.updateFields(field.name, field.initialValue || field.options[0].name);
+                    currentField = newField;
                 }
             }
-            if (fieldExists) {
+            if (currentField) {
                 lastExistingField = currentField;
+            }
+        }
+    }
+    itemIfExists(name, list, prop) {
+        for (let item of list) {
+            if (item.dataset[prop] === name) {
+                return item;
             }
         }
     }
@@ -587,7 +612,7 @@ const formStructure = {
         {
             name: "",
             label: "",
-            initalValue: "",
+            initialValue: "",
             type: "", // "select", "input", "button", "checkbox"
             options: [], // only valid for type "select"
             properties: {},
