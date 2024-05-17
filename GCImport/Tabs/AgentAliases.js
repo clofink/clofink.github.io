@@ -93,16 +93,16 @@ class AgentAliasTab extends Tab {
         const users = await this.getAllUsers();
         const userInfo = {};
         for (let user of users) {
-            userInfo[user.email] = {id: user.id, version: user.version};
+            userInfo[user.email.toLowerCase()] = {id: user.id, version: user.version};
         }
     
         const results = [];
         for (let user of fileContents.data) {
-            if (!userInfo[user.Email]) {
+            if (!userInfo[user.Email.toLowerCase()]) {
                 results.push({name: user.Email, type: "Agent Alias", status: "failed", error: `No active user matching email ${user.Email}`});
                 continue;
             }
-            await makeCallAndHandleErrors(this.updateUserAlias, [userInfo[user.Email], user.Alias], results, user.Email, "Agent Alias");
+            await makeCallAndHandleErrors(this.updateUserAlias, [userInfo[user.Email.toLowerCase()], user.Alias], results, user.Email, "Agent Alias");
         }
         return results;
     }
