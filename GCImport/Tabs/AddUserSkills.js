@@ -91,12 +91,12 @@ class UserSkillsTab extends Tab {
         const allUsers = await this.getAllUsers();
         const userInfo = {};
         for (let user of allUsers) {
-            userInfo[user.email] = user.id;
+            userInfo[user.email.toLowerCase()] = user.id;
         }
 
         const results = [];
         for (let user of fileContents.data) {
-            if (!userInfo[user.Email]) {
+            if (!userInfo[user.Email.toLowerCase()]) {
                 results.push({name: user.Email, type: "User Skill", status: "failed", error: `No active user matching email ${user.Email}`});
                 continue;
             }
@@ -109,18 +109,19 @@ class UserSkillsTab extends Tab {
                     const newSkill = await makeCallAndHandleErrors(createItem, ["/api/v2/routing/skills", {name: parts[0]}], results, parts[0], "Skill");
                     skillsInfo[skillName] = newSkill.id;
                 }
-                if (parts[1] && (isNaN(parseInt(parts[1])) || [0,1,2,3,4,5].indexOf(parseInt(parts[1])) < 0)) {
+                const skillVal = parseInt(parts[1])
+                if (parts[1] && (isNaN(skillVal) || ![0,1,2,3,4,5].includes(skillVal))) {
                     results.push({name: parts[0], type: "User Skill", status: "failed", error: `Invalid proficiency ${parts[1]} for skill ${parts[0]}`})
                     continue;
                 }
                 const skill = {};
                 if (!parts[1]) skill.proficiency = 0;
-                else skill.proficiency = parseInt(parts[1]);
+                else skill.proficiency = skillVal;
                 skill.id = skillsInfo[skillName];
                 skills.push(skill);
             }
             if (skills.length < 1) continue;
-            await makeCallAndHandleErrors(this.bulkAddSkills, [userInfo[user.Email], skills], results, user.Email, "User Skills")
+            await makeCallAndHandleErrors(this.bulkAddSkills, [userInfo[user.Email.toLowerCase()], skills], results, user.Email, "User Skills")
         }
         return results;
     }
