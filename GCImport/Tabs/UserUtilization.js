@@ -84,13 +84,13 @@ class UtilizationTab extends Tab {
         const allUsers = await this.getAllUsers();
         const userInfo = {};
         for (let user of allUsers) {
-            userInfo[user.email] = user.id;
+            userInfo[user.email.toLowerCase()] = user.id;
         }
 
         const results = [];
         for (let user of fileContents.data) {
-            if (!userInfo[user["User Email"]]) {
-                results.push({ name: user.Email, type: "Utilization", status: "failed", error: `No active user matching email ${user['User Email']}` });
+            if (!userInfo[user["User Email"].toLowerCase()]) {
+                results.push({ name: user.Email.toLowerCase(), type: "Utilization", status: "failed", error: `No active user matching email ${user['User Email']}` });
                 continue;
             }
             const utilization = {utilization: {}}
@@ -98,7 +98,7 @@ class UtilizationTab extends Tab {
             for (let type of ["Call", "Message", "Email", "Chat", "Callback", "Workitem"]) {
                 if (user[type]) {
                     if (isNaN(parseInt(user[type]))) {
-                        results.push({ name: user["User Email"], type: "Utilization", status: "failed", error: `Invalid value for ${type} utlization ${user[type]}` });
+                        results.push({ name: user["User Email"].toLowerCase(), type: "Utilization", status: "failed", error: `Invalid value for ${type} utlization ${user[type]}` });
                     }
                     else {
                         utilization.utilization[type.toLowerCase()] = {maximumCapacity: parseInt(user[type])}
@@ -106,7 +106,7 @@ class UtilizationTab extends Tab {
                 }
             }
             if (Object.keys(utilization.utilization).length < 1) continue;
-            await makeCallAndHandleErrors(this.updateUtilization, [userInfo[user["User Email"]], utilization], results, user["User Email"], "Utilization")
+            await makeCallAndHandleErrors(this.updateUtilization, [userInfo[user["User Email"].toLowerCase()], utilization], results, user["User Email"], "Utilization")
         }
         return results;
     }

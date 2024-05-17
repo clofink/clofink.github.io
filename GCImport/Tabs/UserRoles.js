@@ -90,7 +90,7 @@ class UserRolesTab extends Tab {
         const allUsers = await this.getAllUsers();
         const userInfo = {};
         for (let user of allUsers) {
-            userInfo[user.email] = user.id;
+            userInfo[user.email.toLowerCase()] = user.id;
         }
 
         const allRoles = await getAll("/api/v2/authorization/roles?", "entities", 200); 
@@ -107,8 +107,8 @@ class UserRolesTab extends Tab {
 
         const results = [];
         for (let user of fileContents.data) {
-            if (!userInfo[user["Email"]]) {
-                results.push({ name: user.Email, type: "User Role", status: "failed", error: `No active user matching email ${user.Email}` });
+            if (!userInfo[user["Email"].toLowerCase()]) {
+                results.push({ name: user.Email.toLowerCase(), type: "User Role", status: "failed", error: `No active user matching email ${user.Email}` });
                 continue;
             }
             const roles = user["Roles"].split(",");
@@ -134,7 +134,7 @@ class UserRolesTab extends Tab {
                 }
                 newRoles.push(newRole);
             }
-            await makeCallAndHandleErrors(this.updateRoles, [userInfo[user.Email], {grants: newRoles}], results, user.Email, "User Role")
+            await makeCallAndHandleErrors(this.updateRoles, [userInfo[user.Email.toLowerCase()], {grants: newRoles}], results, user.Email, "User Role")
         }
         return results;
     }
