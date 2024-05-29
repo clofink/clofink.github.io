@@ -179,6 +179,30 @@ async function getAll(path, resultsKey, pageSize) {
     return items;
 }
 
+async function getAllPost(path, body, pageSize) {
+    const items = [];
+    let pageNum = 0;
+    let totalPages = 1;
+
+    while (pageNum < totalPages) {
+        pageNum++;
+        body.pageSize = pageSize;
+        body.pageNumber = pageNum;
+        const url = `https://api.${window.localStorage.getItem('environment')}${path}`;
+        const result = await fetch(url, {method: "POST", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
+        const resultJson = await result.json();
+        if (result.ok) {
+            resultJson.status = 200;
+        }
+        else {
+            throw resultJson.message;
+        }
+        items.push(...resultJson.results);
+        totalPages = resultJson.pageCount;
+    }
+    return items;
+}
+
 async function createItem(path, body) {
     const url = `https://api.${window.localStorage.getItem('environment')}${path}`;
     const result = await fetch(url, {method: "POST", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
