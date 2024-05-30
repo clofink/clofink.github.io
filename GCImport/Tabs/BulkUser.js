@@ -3,7 +3,7 @@ class BulkUserTab extends Tab {
 
     render() {
         window.requiredFields = ["Action", "Email"];
-        window.allValidFields = ["Action", "Email", "Skills", "Language Skills", "Queues", "Roles", "Groups", "Division", "Phone", "Utilization", "Title", "Manager", "Department", "Work Phone", "Hire Date", "Location", "Home Phone", "Agent Alias"];
+        window.allValidFields = ["Action", "Email", "Skills", "Language Skills", "Queues", "Roles", "Groups", "Division", "Phone", "Call Utilization", "Callback Utilization", "Chat Utilization", "Email Utilization", "Message Utilization", "Workitem Utilization", "Title", "Manager", "Department", "Work Phone", "Hire Date", "Location", "Home Phone", "Agent Alias"];
     
         this.container = newElement('div', {id: "userInputs"});
         const label = newElement('label', {innerText: "Agent Aliases CSV: "});
@@ -42,7 +42,7 @@ class BulkUserTab extends Tab {
     }
 
     async bulkUserActions() {
-        if (!fileContents) window.fileContents = {data: [{Utilization: "Messaging:3|Phone:2", Phone: "Tims Phone", Division: "Connor Test", Groups: "Connor Group", Skills: "testskill:1|testskill1| testskill2:5", Queues: "Connor Test|Connor Test 2", Roles: "employee:Connor Test~Home|AI Agent:Test|Developer"}]};
+        if (!fileContents) window.fileContents = {data: [{Action: "Import", Email: "connor.lofink@genesys.com", "Message Utilization": "4", "Call Utilization": "1", "Email Utilization": "3:call|message|callback", Phone: "Tims Phone", Division: "Connor Test", Groups: "Connor Group", Skills: "testskill:1|testskill1| testskill2:5", Queues: "Connor Test|Claims|Customer Service", Roles: "employee:Connor Test~Home|AI Agent:Test|Developer"}]};
 
         const allSkills = await getAll("/api/v2/routing/skills?", "entities", 200);
         const skillsInfo = this.mapProperty("name", "id", allSkills, true);
@@ -76,7 +76,7 @@ class BulkUserTab extends Tab {
             for (let queueMember of queueMembers) {
                 if (!userInfo[queueMember.user.email.toLowerCase()]) throw `No existing user found with email [${queueMember.user.email}]`;
                 userInfo[queueMember.user.email.toLowerCase()].queues = userInfo[queueMember.user.email.toLowerCase()].queues || [];
-                userInfo[queueMember.user.email.toLowerCase()].queues.push(queueInfo[queue]);
+                userInfo[queueMember.user.email.toLowerCase()].queues.push(queueInfo[queue].id);
             }
         }
 
@@ -89,11 +89,9 @@ class BulkUserTab extends Tab {
         log(languageSkillsInfo);
         log(stationInfo);
 
-        const updates = {
-            queueMembership: {},
-            groupMembership: {},
-            rolwMembership: {}
-        }
+        const queueAdditions = {};
+        const queueDeletions = {};
+
         for (let row of fileContents.data) {
             const setProperties = {
                 queues: [],
@@ -105,17 +103,34 @@ class BulkUserTab extends Tab {
                 division: undefined,
                 phone: undefined,
             }
+
+            const user = userInfo[row["Email"].toLowerCase().trim()];
+            const userEmail = row["Email"].toLowerCase().trim();
+            const action = row["Action"].toLowerCase().trim();
+
             for (let header in row) {
                 switch (header.toLowerCase().trim()) {
                     case "skills": // per user
                         // testskill:1|testskill1| testskill2:5
-                        setProperties.skills = row[header].split("|").map((e) => e.toLowerCase().trim().split(":")).map((t) => ({"name": t[0], "proficiency": t[1] && !isNaN(parseInt(t[1], 10)) ? parseInt(t[1], 10) : undefined, "id": skillsInfo[t[0]]}));
+                        setProperties.skills = row[header].split("|").map((e) => e.toLowerCase().trim().split(":")).map((t) => ({"proficiency": t[1] && !isNaN(parseInt(t[1], 10)) ? parseInt(t[1], 10) : undefined, "id": skillsInfo[t[0]]}));
                         break;
                     case "languageskills": // per user
-                        setProperties.languageSkills = row[header].split("|").map((e) => e.toLowerCase().trim().split(":")).map((t) => ({"name": t[0], "proficiency": t[1] && !isNaN(parseInt(t[1], 10)) ? parseInt(t[1], 10) : undefined, "id": skillsInfo[t[0]]}));
+                        setProperties.languageSkills = row[header].split("|").map((e) => e.toLowerCase().trim().split(":")).map((t) => ({"proficiency": t[1] && !isNaN(parseInt(t[1], 10)) ? parseInt(t[1], 10) : undefined, "id": skillsInfo[t[0]]}));
                         break;
                     case "queues": // per queue
-                        setProperties.queues = row[header].split("|").map((e) => ({name: e.trim().toLowerCase(), id: queueInfo[e.trim().toLowerCase()].id}));
+                        setProperties.queues = row[header].split("|").map((e) => queueInfo[e.trim().toLowerCase()].id);
+                        const currentUserQueues = new Set(user.queues);
+                        const newSetQueues = new Set(setProperties.queues);
+                        for (let queue of currentUserQueues.difference(newSetQueues)) {
+                            // queues to remove the user from
+                            queueDeletions[queue] = queueDeletions[queue] || [];
+                            queueDeletions[queue].push(user.id);
+                        }
+                        for(let queue of newSetQueues.difference(currentUserQueues)) {
+                            // queues to add the user to
+                            queueAdditions[queue] = queueAdditions[queue] || [];
+                            queueAdditions[queue].push(user.id);
+                        }
                         break;
                     case "roles": // per user
                         // employee:ConnorTest~Home|AI Agent:Test|Developer
@@ -130,25 +145,66 @@ class BulkUserTab extends Tab {
                     case "phone": // per user
                         setProperties.phone = {name: row[header].toLowerCase().trim(), id: stationInfo[row[header].toLowerCase().trim()]};
                         break;
+                    case "call utilization":
+                        setProperties.utilization.call = { maxCapacity: parseInt(row[header].split(":")[0], 10), interruptableMediaTypes: row[header].split(":")[1] ? row[header].split(":")[1].split("|").map((e)=>(e.toLowerCase().trim())) : []}
+                        break;
+                    case "callback utilization":
+                        setProperties.utilization.callback = { maxCapacity: parseInt(row[header].split(":")[0], 10), interruptableMediaTypes: row[header].split(":")[1] ? row[header].split(":")[1].split("|").map((e)=>(e.toLowerCase().trim())) : []}
+                        break;
+                    case "chat utilization":
+                        setProperties.utilization.chat = { maxCapacity: parseInt(row[header].split(":")[0], 10), interruptableMediaTypes: row[header].split(":")[1] ? row[header].split(":")[1].split("|").map((e)=>(e.toLowerCase().trim())) : []}
+                        break;
+                    case "email utilization":
+                        setProperties.utilization.email = { maxCapacity: parseInt(row[header].split(":")[0], 10), interruptableMediaTypes: row[header].split(":")[1] ? row[header].split(":")[1].split("|").map((e)=>(e.toLowerCase().trim())) : []}
+                        break;
+                    case "message utilization":
+                        setProperties.utilization.message = { maxCapacity: parseInt(row[header].split(":")[0], 10), interruptableMediaTypes: row[header].split(":")[1] ? row[header].split(":")[1].split("|").map((e)=>(e.toLowerCase().trim())) : []}
+                        break;
+                    case "workitem utilization":
+                        setProperties.utilization.workitem = { maxCapacity: parseInt(row[header].split(":")[0], 10), interruptableMediaTypes: row[header].split(":")[1] ? row[header].split(":")[1].split("|").map((e)=>(e.toLowerCase().trim())) : []}
+                        break;
                     default:
-                        log(`Unknown header [${header}]`, "error");
+                        // log(`Unknown header [${header}]`, "error");
                         break;
                 }
             }
 
-            // switch (action) {
-            //     case "update":
-            //         if (!userInfo[row.Email.toLowerCase()]) throw `No existing user found with email [${row.Email}]`;
-            //         break;
-            //     case "import":
-            //         break;
-            //     case "delete":
-            //         if (!userInfo[row.Email.toLowerCase()]) throw `No existing user found with email [${row.Email}]`;
-            //         break;
-            //     default:
-            //         throw `Unknown action [${row.Action}]`;
-            // }
+            switch (action) {
+                case "update":
+                    if (!user) throw `No existing user found with email [${userEmail}]`;
+                    break;
+                case "import":
+                    // order:
+                    //  create user
+                    //      what fields are needed?
+                    //  
+                    break;
+                case "delete":
+                    if (!user) throw `No existing user found with email [${userEmail}]`;
+                    break;
+                default:
+                    throw `Unknown action [${action}]`;
+            }
             log(setProperties);
         }
+        // update queues
+        // update groups
+    }
+
+    itemsToRemove(currentSet, newSet) {
+        const itemsToRemove = [];
+        for (let item of currentSet.difference(newSet)) {
+            // queues to remove the user from
+            itemsToRemove.push(item);
+        }
+        return itemsToRemove;
+    }
+    itemsToAdd(currentSet, newSet) {
+        const itemsToAdd = [];
+        for (let item of newSet.difference(currentSet)) {
+            // queues to remove the user from
+            itemsToAdd.push(item);
+        }
+        return itemsToAdd;
     }
 }
