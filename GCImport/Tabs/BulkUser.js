@@ -79,7 +79,7 @@ class BulkUserTab extends Tab {
             }
         }
 
-        const headers = ["Action", "Activated", "Email", "Name", "Skills", "Language Skills", "Groups", "Queues", "Manager", "Department", "Title", "Hire Date", "Location", "Division", "Roles", "Utilization", "Alias", "Work Phone", "Extension", "Station"];
+        const headers = ["Action", "Activated", "Email", "Name", "Skills", "Language Skills", "Groups", "Queues", "Manager", "Department", "Title", "Hire Date", "Location", "Division", "Roles", "Utilization Level", "Utilization", "Alias", "Work Phone", "Extension", "Station"];
         const dataRows = [];
         for (let user in allUsers) {
             const currentUser = allUsers[user];
@@ -102,6 +102,7 @@ class BulkUserTab extends Tab {
                 currentUser.locations.map((e)=>locationIdMapping[e.locationDefinition.id]).join(","),
                 currentUser.division.name,
                 this.processRoles(currentUser.roles.grants),
+                currentUser.utilization.level,
                 this.processUtilization(currentUser.utilization.utilization),
                 currentUser.preferredName ? currentUser.preferredName : "",
                 phoneInfo.number,
@@ -317,7 +318,7 @@ class BulkUserTab extends Tab {
     }
     processUtilization(utilization) {
         const results = [];
-        for (let mediaType in utilization) {
+        for (let mediaType of Object.keys(utilization).sort()) {
             results.push(`${mediaType}:${utilization[mediaType].maximumCapacity}${utilization[mediaType].interruptableMediaTypes.length > 0 ? ":" + utilization[mediaType].interruptableMediaTypes.join("|") : ""}`);
         }
         return results.join(",");
