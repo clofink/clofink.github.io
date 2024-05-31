@@ -109,12 +109,12 @@ class BulkUserTab extends Tab {
             dataRows.push(dataRow);
         }
         log(dataRows);
-        const download = createDownloadLink("Users Export.csv", Papa.unparse({fields: headers, data: dataRows}, {escapeFormulae: true}), "text/csv");
-        download.click(); 
+        // const download = createDownloadLink("Users Export.csv", Papa.unparse({fields: headers, data: dataRows}, {escapeFormulae: true}), "text/csv");
+        // download.click(); 
     }
 
     async bulkUserActions() {
-        if (!fileContents) window.fileContents = {data: [{Action: "Import", Email: "connor.lofink@genesys.com", "Message Utilization": "4", "Call Utilization": "1", "Email Utilization": "3:call|message|callback", Phone: "Tims Phone", Division: "Connor Test", Groups: "Connor Group", Skills: "testskill:1,testskill1, testskill2:5", Queues: "Connor Test,Claims,Customer Service", Roles: "employee:Connor Test~Home|AI Agent:Test|Developer"}]};
+        if (!fileContents) window.fileContents = {data: [{Action: "Import", Email: "connor.lofink@genesys.com", Utilization: "callback:1,chat:1,workitem:1,message:4,call:1,email:3:call|message|callback", Phone: "Tims Phone", Division: "Connor Test", Groups: "Connor Group", Skills: "testskill:1,testskill1, testskill2:5", Queues: "Connor Test,Claims  , Customer Service ", Roles: "employee:Connor Test|Home,AI Agent:Test,Developer"}]};
 
         const allSkills = await getAll("/api/v2/routing/skills?", "entities", 200);
         const skillsInfo = this.mapProperty("name", "id", allSkills, true);
@@ -156,15 +156,6 @@ class BulkUserTab extends Tab {
             }
         }
 
-        log(userInfo);
-        log(queueInfo);
-        log(groupsInfo);
-        log(rolesInfo);
-        log(divisionInfo);
-        log(skillsInfo);
-        log(languageSkillsInfo);
-        log(stationInfo);
-
         const queueAdditions = {};
         const queueDeletions = {};
 
@@ -187,14 +178,14 @@ class BulkUserTab extends Tab {
             for (let header in row) {
                 switch (header.toLowerCase().trim()) {
                     case "skills": // per user
-                        // testskill:1|testskill1| testskill2:5
+                        // testskill:1,testskill1, testskill2:5
                         setProperties.skills = row[header].split(",").map((e) => e.toLowerCase().trim().split(":")).map((t) => ({"proficiency": t[1] && !isNaN(parseInt(t[1], 10)) ? parseInt(t[1], 10) : 0, "id": skillsInfo[t[0]]}));
                         break;
                     case "languageskills": // per user
                         setProperties.languageSkills = row[header].split(",").map((e) => e.toLowerCase().trim().split(":")).map((t) => ({"proficiency": t[1] && !isNaN(parseInt(t[1], 10)) ? parseInt(t[1], 10) : 0, "id": skillsInfo[t[0]]}));
                         break;
                     case "queues": // per queue
-                    setProperties.queues = row[header].split(",").map((e) => queueInfo[e.trim().toLowerCase()].id);
+                        setProperties.queues = row[header].split(",").map((e) => queueInfo[e.trim().toLowerCase()].id);
                         const currentUserQueues = new Set(user.queues);
                         const newSetQueues = new Set(setProperties.queues);
                         for (let queue of currentUserQueues.difference(newSetQueues)) {
@@ -209,8 +200,8 @@ class BulkUserTab extends Tab {
                         }
                         break;
                     case "roles": // per user
-                        // employee:ConnorTest~Home|AI Agent:Test|Developer
-                        setProperties.roles = row[header].split("|").map((e)=>(e.toLowerCase().trim().split(":"))).map((t) => ({name: t[0], id: rolesInfo[t[0]], divisions: t[1] ? t[1].split("~").map((r) => ({name: r, id: divisionInfo[r]})) : undefied}))
+                        // employee:Connor Test|Home,AI Agent:Test,Developer
+                        setProperties.roles = row[header].split(",").map((e)=>(e.toLowerCase().trim().split(":"))).map((t) => ({name: t[0], id: rolesInfo[t[0]], divisions: t[1] ? t[1].split("|").map((r) => ({name: r, id: divisionInfo[r]})) : undefined}))
                         break;
                     case "groups": // per group
                         setProperties.groups = row[header].split("|").map((e) => e.toLowerCase().trim()).map((e) => ({name: e, id: groupsInfo[e]}));
@@ -221,23 +212,9 @@ class BulkUserTab extends Tab {
                     case "phone": // per user
                         setProperties.phone = {name: row[header].toLowerCase().trim(), id: stationInfo[row[header].toLowerCase().trim()]};
                         break;
-                    case "call utilization":
-                        setProperties.utilization.call = { maxCapacity: parseInt(row[header].split(":")[0], 10), interruptableMediaTypes: row[header].split(":")[1] ? row[header].split(":")[1].split("|").map((e)=>(e.toLowerCase().trim())) : []}
-                        break;
-                    case "callback utilization":
-                        setProperties.utilization.callback = { maxCapacity: parseInt(row[header].split(":")[0], 10), interruptableMediaTypes: row[header].split(":")[1] ? row[header].split(":")[1].split("|").map((e)=>(e.toLowerCase().trim())) : []}
-                        break;
-                    case "chat utilization":
-                        setProperties.utilization.chat = { maxCapacity: parseInt(row[header].split(":")[0], 10), interruptableMediaTypes: row[header].split(":")[1] ? row[header].split(":")[1].split("|").map((e)=>(e.toLowerCase().trim())) : []}
-                        break;
-                    case "email utilization":
-                        setProperties.utilization.email = { maxCapacity: parseInt(row[header].split(":")[0], 10), interruptableMediaTypes: row[header].split(":")[1] ? row[header].split(":")[1].split("|").map((e)=>(e.toLowerCase().trim())) : []}
-                        break;
-                    case "message utilization":
-                        setProperties.utilization.message = { maxCapacity: parseInt(row[header].split(":")[0], 10), interruptableMediaTypes: row[header].split(":")[1] ? row[header].split(":")[1].split("|").map((e)=>(e.toLowerCase().trim())) : []}
-                        break;
-                    case "workitem utilization":
-                        setProperties.utilization.workitem = { maxCapacity: parseInt(row[header].split(":")[0], 10), interruptableMediaTypes: row[header].split(":")[1] ? row[header].split(":")[1].split("|").map((e)=>(e.toLowerCase().trim())) : []}
+                    case "utilization":
+                        // callback:1,chat:1,workitem:1,message:4,call:1,email:3:call|message|callback
+                        setProperties.utilization = this.processUtilizationInput(row[header]);
                         break;
                     default:
                         // log(`Unknown header [${header}]`, "error");
@@ -342,7 +319,26 @@ class BulkUserTab extends Tab {
         }
         return results.join(",");
     }
-
+    processUtilizationInput(utilizationString) {
+        const utilization = {};
+        const parts = utilizationString.split(",").map((e)=>e.toLowerCase().trim());
+        for (let i = 0; i < parts.length; i++) {
+            let part;
+            switch (i) {
+                case 0:
+                    part = parts[i];
+                    utilization[parts[i]] = {};
+                    break;
+                case 1:
+                    utilization[part].maximumCapacity = !isNaN(parseInt(parts[i])) ? parseInt(parts[i]) : 0;
+                    break;
+                case 2:
+                    utilization[part].interruptableMediaTypes = parts[i].split("|").map((e)=>e.trim());
+                    break;
+            }
+        }
+        return utilization;
+    }
     processPhone(addresses) {
         const phone = {number: "", extension: ""}
         for (let address of addresses) {
