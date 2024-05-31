@@ -2,8 +2,8 @@ class BulkUserTab extends Tab {
     tabName = "Bulk User";
 
     render() {
-        window.requiredFields = ["Action", "Email"];
-        window.allValidFields = ["Action", "Email", "Skills", "Language Skills", "Queues", "Roles", "Groups", "Division", "Phone", "Utilization", "Title", "Manager Email", "Department", "Work Phone", "Hire Date", "Location", "Home Phone", "Agent Alias"];
+        window.requiredFields = ["Action", "Email", "Name", "Division"];
+        window.allValidFields = ["Action", "Email", "Name", "Skills", "Language Skills", "Queues", "Roles", "Groups", "Division", "Phone", "Utilization", "Title", "Manager Email", "Department", "Work Phone", "Hire Date", "Location", "Home Phone", "Agent Alias"];
     
         this.container = newElement('div', {id: "userInputs"});
         const label = newElement('label', {innerText: "Bulk User CSV: "});
@@ -23,7 +23,8 @@ class BulkUserTab extends Tab {
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
             `Must have "users", "stations", "routing", "authorization" scopes`, 
-            `Required CSV columns "Action" and "Email"`,
+            `Required CSV columns "Action", "Email", "Name", "Division"`,
+            `Valid values for Action are REPLACE, UPDATE, CREATE`,
             `Skills format: <skillName>,<skillName>:<proficiency>`,
             `Language Skills format: <languageSkillName>,<languageSkillName>:<proficiency>`,
             `Queues format: <queueName>,<queueName>`,
@@ -53,7 +54,7 @@ class BulkUserTab extends Tab {
     }
 
     async bulkUserExport() {
-        const allUsers = await getAllPost("/api/v2/users/search", {"query": [{"type":"EXACT", "fields":["state"], "values":["active"]}], "sortOrder":"ASC", "sortBy":"name", "expand": ["skills", "groups", "languages", "team", "locations", "employerInfo", "station"], "enforcePermissions":false}, 200);
+        const allUsers = await getAllPost("/api/v2/users/search", {"query":[{"type":"EXACT","fields":["state"],"values":["active","inactive"]}], "sortOrder":"ASC", "sortBy":"name", "expand": ["skills", "groups", "languages", "team", "locations", "employerInfo", "station"], "enforcePermissions":false}, 200);
         const userIdMapping = this.mapProperty("id", "email", allUsers, true);
         const userInfo = this.mapProperty("email", null, allUsers, true);
         const allGroups = await getAllPost("/api/v2/groups/search", {"query": [{"type":"EXACT", "fields":["state"], "value":"active"}], "sortOrder":"ASC", "sortBy":"name"}, 200);
@@ -78,7 +79,7 @@ class BulkUserTab extends Tab {
             }
         }
 
-        const headers = ["Name", "Email", "Skills", "Language Skills", "Groups", "Queues", "Manager", "Department", "Title", "Hire Date", "Location", "Division", "Roles", "Utilization", "Alias", "Work Phone", "Extension", "Station"];
+        const headers = ["Action", "Activated", "Email", "Name", "Skills", "Language Skills", "Groups", "Queues", "Manager", "Department", "Title", "Hire Date", "Location", "Division", "Roles", "Utilization", "Alias", "Work Phone", "Extension", "Station"];
         const dataRows = [];
         for (let user in allUsers) {
             const currentUser = allUsers[user];
@@ -86,8 +87,10 @@ class BulkUserTab extends Tab {
             currentUser.roles = await this.getUserRoles(currentUser.id);
             const phoneInfo = this.processPhone(currentUser.addresses);
             const dataRow = [
-                currentUser.name,
+                "REPLACE",
+                currentUser.state === "active" ? true : false,
                 currentUser.email,
+                currentUser.name,
                 currentUser.skills.map((e)=>`${e.name}:${e.proficiency}`).join(","),
                 currentUser.languages.map((e)=>`${e.name}:${e.proficiency}`).join(","),
                 currentUser.groups.map((e)=>groupIdMapping[e.id]).join(","),
@@ -109,8 +112,8 @@ class BulkUserTab extends Tab {
             dataRows.push(dataRow);
         }
         log(dataRows);
-        // const download = createDownloadLink("Users Export.csv", Papa.unparse({fields: headers, data: dataRows}, {escapeFormulae: true}), "text/csv");
-        // download.click(); 
+        const download = createDownloadLink("Users Export.csv", Papa.unparse({fields: headers, data: dataRows}, {escapeFormulae: true}), "text/csv");
+        download.click(); 
     }
 
     async bulkUserActions() {
