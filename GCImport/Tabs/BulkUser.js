@@ -11,7 +11,7 @@ class BulkUserTab extends Tab {
         addElement(fileInput, label);
         registerElement(fileInput, "change", loadFile);
 
-        const startButton = newElement('button', {innerText: "Import", disabled: true});
+        const startButton = newElement('button', {innerText: "Import"});
         const buttonClickHandler = this.bulkUserActionsWrapper.bind(this);
         registerElement(startButton, "click", buttonClickHandler);
 
@@ -24,7 +24,7 @@ class BulkUserTab extends Tab {
         const helpSection = addHelp([
             `Must have "users", "stations", "routing", "authorization" scopes`, 
             `Required CSV columns "Action", "Email", "Name", "Division"`,
-            `Valid values for Action are REPLACE, UPDATE, CREATE`,
+            `Valid values for Action are CREATE and UPDATE`,
             `Skills format: <skillName>,<skillName>:<proficiency>`,
             `Language Skills format: <languageSkillName>,<languageSkillName>:<proficiency>`,
             `Queues format: <queueName>,<queueName>`,
@@ -118,7 +118,7 @@ class BulkUserTab extends Tab {
     }
 
     async bulkUserActions() {
-        if (!fileContents) window.fileContents = {data: [{Action: "Import", Email: "connor.lofink@genesys.com", Utilization: "callback:1,chat:1,workitem:1,message:4,call:1,email:3:call|message|callback", Phone: "Tims Phone", Division: "Connor Test", Groups: "Connor Group", Skills: "testskill:1,testskill1, testskill2:5", Queues: "Connor Test,Claims  , Customer Service ", Roles: "employee:Connor Test|Home,AI Agent:Test,Developer"}]};
+        if (!fileContents) window.fileContents = {data: [{Action: "UPDATE", Email: "connor.lofink+test@gmail.com", "Utilization Level": "Agent", Utilization: "callback:1,chat:4,workitem:2,message:4,call:1,email:3:call|message|callback", Division: "Connor Test", Groups: "Connor Group", "Language Skills": "english:4", Skills: "testskill:5,testskill1", Queues: "Connor Test,Claims  , Customer Service ", Roles: "employee:Connor Test|Home,AI Agent:Test,Developer"}]};
 
         const allSkills = await getAll("/api/v2/routing/skills?", "entities", 200);
         const skillsInfo = this.mapProperty("name", "id", allSkills, true);
@@ -126,7 +126,7 @@ class BulkUserTab extends Tab {
         const allLanguageSkills = await getAll("/api/v2/routing/languages?", "entities", 200);
         const languageSkillsInfo = this.mapProperty("name", "id", allLanguageSkills, true);
 
-        const allUsers = await getAllPost("/api/v2/users/search", {"query": [{"type":"EXACT", "fields":["state"], "values":["active"]}], "sortOrder":"ASC", "sortBy":"name", "expand": ["skills", "groups", "languages", "team", "locations", "employerInfo", "station"], "enforcePermissions":false}, 200);
+        const allUsers = await getAllPost("/api/v2/users/search", {"query":[{"type":"EXACT","fields":["state"],"values":["active","inactive"]}], "sortOrder":"ASC", "sortBy":"name", "expand": ["skills", "groups", "languages", "team", "locations", "employerInfo", "station"], "enforcePermissions":false}, 200);
         const userInfo = this.mapProperty("email", null, allUsers, true);
         
         const allGroups = await getAllPost("/api/v2/groups/search", {"query": [{"type":"EXACT", "fields":["state"], "value":"active"}], "sortOrder":"ASC", "sortBy":"name"}, 200);
@@ -170,6 +170,7 @@ class BulkUserTab extends Tab {
                 roles: [],
                 skills: [],
                 languageSkills: [],
+                utilizationLevel: undefined,
                 utilization: [],
                 division: undefined,
                 phone: undefined,
@@ -179,14 +180,22 @@ class BulkUserTab extends Tab {
             const userEmail = row["Email"].toLowerCase().trim();
             const action = row["Action"].toLowerCase().trim();
 
+            const userUtiliation = await this.getUserUtilization(user.id);
+            const currentUtilization = user ? this.processUtilization(userUtiliation.utilization) : "";
+            const userRoles = await this.getUserRoles(user.id);
+            const currentRoles  = user ? this.processRoles(userRoles.grants) : "";
+
+            // "Action", "Activated", "Email", "Name", "Skills", "Language Skills", "Groups", "Queues", 
+            // "Manager", "Department", "Title", "Hire Date", "Location", "Division", "Roles", 
+            // "Utilization Level", "Utilization", "Alias", "Work Phone", "Extension", "Station"
             for (let header in row) {
                 switch (header.toLowerCase().trim()) {
                     case "skills": // per user
                         // testskill:1,testskill1, testskill2:5
                         setProperties.skills = row[header].split(",").map((e) => e.toLowerCase().trim().split(":")).map((t) => ({"proficiency": t[1] && !isNaN(parseInt(t[1], 10)) ? parseInt(t[1], 10) : 0, "id": skillsInfo[t[0]]}));
                         break;
-                    case "languageskills": // per user
-                        setProperties.languageSkills = row[header].split(",").map((e) => e.toLowerCase().trim().split(":")).map((t) => ({"proficiency": t[1] && !isNaN(parseInt(t[1], 10)) ? parseInt(t[1], 10) : 0, "id": skillsInfo[t[0]]}));
+                    case "language skills": // per user
+                        setProperties.languageSkills = row[header].split(",").map((e) => e.toLowerCase().trim().split(":")).map((t) => ({"proficiency": t[1] && !isNaN(parseInt(t[1], 10)) ? parseInt(t[1], 10) : 0, "id": languageSkillsInfo[t[0]]}));
                         break;
                     case "queues": // per queue
                         setProperties.queues = row[header].split(",").map((e) => queueInfo[e.trim().toLowerCase()].id);
@@ -216,6 +225,9 @@ class BulkUserTab extends Tab {
                     case "phone": // per user
                         setProperties.phone = {name: row[header].toLowerCase().trim(), id: stationInfo[row[header].toLowerCase().trim()]};
                         break;
+                    case "utilization level":
+                        setProperties.utilizationLevel = row[header].toLowerCase().trim();
+                        break;
                     case "utilization":
                         // callback:1,chat:1,workitem:1,message:4,call:1,email:3:call|message|callback
                         setProperties.utilization = this.processUtilizationInput(row[header]);
@@ -229,29 +241,36 @@ class BulkUserTab extends Tab {
             switch (action) {
                 case "update":
                     if (!user) throw `No existing user found with email [${userEmail}]`;
+                    // only want to do any of these if the column is included
+                    // AND the value has changed
+                    // if (setProperties.roles) await this.updateUserRoles(user.id, setProperties.roles);
+                    if (setProperties.skills) await this.updateUserSkills(user.id, setProperties.skills);
+                    if (setProperties.languageSkills) await this.updateUserLanguageSkills(user.id, setProperties.languageSkills);
+                    if (row['Utilization'] && row['Utilization'] !== currentUtilization && setProperties.utilization) await this.updateUserUtilization(user.id, setProperties.utilization)
                     break;
-                case "import":
+                case "create":
                     // order:
                     //  create user
                     //      what fields are needed?
                     //  
-                    break;
-                case "delete":
-                    if (!user) throw `No existing user found with email [${userEmail}]`;
                     break;
                 default:
                     throw `Unknown action [${action}]`;
             }
             log(setProperties);
         }
-        // update queues
+        if (Object.keys(queueAdditions).length > 0) {
+            // add all users to queues
+        }
+        if (Object.keys(queueDeletions).length > 0) {
+            // remove all users from queue
+        }
         // update groups
     }
 
     itemsToRemove(currentSet, newSet) {
         const itemsToRemove = [];
         for (let item of currentSet.difference(newSet)) {
-            // queues to remove the user from
             itemsToRemove.push(item);
         }
         return itemsToRemove;
@@ -259,7 +278,6 @@ class BulkUserTab extends Tab {
     itemsToAdd(currentSet, newSet) {
         const itemsToAdd = [];
         for (let item of newSet.difference(currentSet)) {
-            // queues to remove the user from
             itemsToAdd.push(item);
         }
         return itemsToAdd;
@@ -326,19 +344,22 @@ class BulkUserTab extends Tab {
     processUtilizationInput(utilizationString) {
         const utilization = {};
         const parts = utilizationString.split(",").map((e)=>e.toLowerCase().trim());
-        for (let i = 0; i < parts.length; i++) {
-            let part;
-            switch (i) {
-                case 0:
-                    part = parts[i];
-                    utilization[parts[i]] = {};
-                    break;
-                case 1:
-                    utilization[part].maximumCapacity = !isNaN(parseInt(parts[i])) ? parseInt(parts[i]) : 0;
-                    break;
-                case 2:
-                    utilization[part].interruptableMediaTypes = parts[i].split("|").map((e)=>e.trim());
-                    break;
+        for (let part of parts) {
+            const subParts = part.split(":");
+            let subPart;
+            for (let i = 0; i < subParts.length; i++) {
+                switch (i) {
+                    case 0:
+                        subPart = subParts[i];
+                        utilization[subParts[i]] = {};
+                        break;
+                    case 1:
+                        utilization[subPart].maximumCapacity = !isNaN(parseInt(subParts[i])) ? parseInt(subParts[i]) : 0;
+                        break;
+                    case 2:
+                        utilization[subPart].interruptableMediaTypes = subParts[i].split("|").map((e)=>e.trim());
+                        break;
+                }
             }
         }
         return utilization;
@@ -357,5 +378,43 @@ class BulkUserTab extends Tab {
         const fileData = new Blob([fileContents], { type: fileType });
         const fileURL = window.URL.createObjectURL(fileData);
         return newElement('a', { href: fileURL, download: fileName });
+    }
+
+    async updateUser(userId, updates) {
+
+    }
+    async updateUserUtilization(userId, utilization) {
+        return this.updateOnPath(`/api/v2/routing/users/${userId}/utilization`, 'PUT', {utilization: utilization});
+    }
+    // async addUserRoles(userId, roles) {
+    //     return this.updateOnPath(`/api/v2/authorization/roles/${userId}/bulkadd`, 'POST', roles);
+    // }
+    // async removeUserRoles(userId, roles) {
+    //     return this.updateOnPath(`/api/v2/authorization/roles/${userId}/bulkremove`, 'POST', roles);
+    // }
+    async updateUserRoles() {
+        return this.updateOnPath(`/api/v2/authorization/roles/${userId}/bulkreplace`, 'POST', roles);
+    }
+    async updateQueue(queueId, updates) {
+
+    }
+    async updateUserSkills(userId, skills) {
+        return this.updateOnPath(`/api/v2/users/${userId}/routingskills/bulk`, 'PUT', skills);
+    }
+    async updateUserLanguageSkills(userId, languageSkills) {
+        return this.updateOnPath(`/api/v2/users/${userId}/routinglanguages/bulk`, 'PATCH', languageSkills);
+    }
+    async updateUserStation(userId, stationId) {
+        return this.updateOnPath(`platform/api/v2/users/${userId}/station/defaultstation/${stationId}`, 'PUT', {});
+    }
+    async removeUserStation(userId, stationId) {
+        this.updateOnPath(`/api/v2/users/${userId}/station/defaultstation`, "DELETE", {});
+        this.updateOnPath(`/api/v2/stations/${stationId}/associateduser`, "DELETE", {});
+    }
+    async updateOnPath(path, method, body) {
+        const url = `https://api.${window.localStorage.getItem('environment')}${path}`;
+        const result = await fetch(url, {method: method, body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
+        const resultJson = await result.json();
+        return resultJson;
     }
 }
