@@ -180,6 +180,9 @@ class BulkUserTab extends Tab {
             const userEmail = row["Email"].toLowerCase().trim();
             const action = row["Action"].toLowerCase().trim();
 
+            const currentSkills = user.skills.map((e)=>`${e.name}:${e.proficiency}`).join(",");
+            const currentLanguageSkills = user.languages.map((e)=>`${e.name}:${e.proficiency}`).join(",");
+
             const userUtiliation = await this.getUserUtilization(user.id);
             const currentUtilization = user ? this.processUtilization(userUtiliation.utilization) : "";
             const userRoles = await this.getUserRoles(user.id);
@@ -192,13 +195,19 @@ class BulkUserTab extends Tab {
                 switch (header.toLowerCase().trim()) {
                     case "skills": // per user
                         // testskill:1,testskill1, testskill2:5
-                        setProperties.skills = row[header].split(",").map((e) => e.toLowerCase().trim().split(":")).map((t) => ({"proficiency": t[1] && !isNaN(parseInt(t[1], 10)) ? parseInt(t[1], 10) : 0, "id": skillsInfo[t[0]]}));
+                        const normalizedSkillsString = this.normalizeList(row[header], [",", ":"]);
+                        this.validateSkills(normalizedSkillsString, {skills: skillsInfo});
+                        setProperties.skills = row[header].split(",").map((e) => e.split(":")).map((t) => ({"proficiency": t[1] ? parseInt(t[1], 10) : 0, "id": skillsInfo[t[0]]}));
                         break;
                     case "language skills": // per user
-                        setProperties.languageSkills = row[header].split(",").map((e) => e.toLowerCase().trim().split(":")).map((t) => ({"proficiency": t[1] && !isNaN(parseInt(t[1], 10)) ? parseInt(t[1], 10) : 0, "id": languageSkillsInfo[t[0]]}));
+                        const normalizedLanguageSkillsString = this.normalizeList(row[header], [",", ":"]);
+                        this.validateSkills(normalizedLanguageSkillsString, {skills: languageSkillsInfo});
+                        setProperties.languageSkills = normalizedLanguageSkillsString.split(",").map((e) => e.split(":")).map((t) => ({"proficiency": t[1] ? parseInt(t[1], 10) : 0, "id": languageSkillsInfo[t[0]]}));
                         break;
                     case "queues": // per queue
-                        setProperties.queues = row[header].split(",").map((e) => queueInfo[e.trim().toLowerCase()].id);
+                        const normalizedQueueString = this.normalizeList(row[header], [","]);
+                        this.validateQueues(normalizedQueueString, {queues: queueInfo});
+                        setProperties.queues = normalizedQueueString.split(",").map((e) => queueInfo[e].id);
                         const currentUserQueues = new Set(user.queues);
                         const newSetQueues = new Set(setProperties.queues);
                         for (let queue of currentUserQueues.difference(newSetQueues)) {
@@ -213,10 +222,12 @@ class BulkUserTab extends Tab {
                         }
                         break;
                     case "roles": // per user
-                        // employee:Connor Test|Home,AI Agent:Test,Developer
-                        setProperties.roles = row[header].split(",").map((e)=>(e.toLowerCase().trim().split(":"))).map((t) => ({name: t[0], id: rolesInfo[t[0]], divisions: t[1] ? t[1].split("|").map((r) => ({name: r, id: divisionInfo[r]})) : undefined}))
+                        const normalizedRolesString = this.normalizeList(row[header], [",", ":", "|"]);
+                        this.validateRoles(normalizedRolesString, {roles: rolesInfo, divisions: divisionInfo});
+                        setProperties.roles = normalizedRolesString.split(",").map((e)=>(e.split(":"))).map((t) => ({name: t[0], id: rolesInfo[t[0]], divisions: t[1] ? t[1].split("|").map((r) => ({name: r, id: divisionInfo[r]})) : undefined}))
                         break;
                     case "groups": // per group
+                        this.normalizeList(row[header], [","]);
                         setProperties.groups = row[header].split("|").map((e) => e.toLowerCase().trim()).map((e) => ({name: e, id: groupsInfo[e]}));
                         break;
                     case "division": // per user
@@ -229,6 +240,7 @@ class BulkUserTab extends Tab {
                         setProperties.utilizationLevel = row[header].toLowerCase().trim();
                         break;
                     case "utilization":
+                        this.normalizeList(row[header], [",", ":", "|"]);
                         // callback:1,chat:1,workitem:1,message:4,call:1,email:3:call|message|callback
                         setProperties.utilization = this.processUtilizationInput(row[header]);
                         break;
@@ -241,12 +253,23 @@ class BulkUserTab extends Tab {
             switch (action) {
                 case "update":
                     if (!user) throw `No existing user found with email [${userEmail}]`;
-                    // only want to do any of these if the column is included
-                    // AND the value has changed
-                    // if (setProperties.roles) await this.updateUserRoles(user.id, setProperties.roles);
-                    if (setProperties.skills) await this.updateUserSkills(user.id, setProperties.skills);
-                    if (setProperties.languageSkills) await this.updateUserLanguageSkills(user.id, setProperties.languageSkills);
-                    if (row['Utilization'] && row['Utilization'] !== currentUtilization && setProperties.utilization) await this.updateUserUtilization(user.id, setProperties.utilization)
+
+                    this.validateSkills(this.normalizeList(row['Skills'], [",", ":"]), {skills: skillsInfo});
+                    if (this.areSkillsListsEqual(this.normalizeList(currentSkills, [",", ":"]).split(","), this.normalizeList(row['Skills'], [",", ":"]).split(","))) console.log("Skills are equal")
+                    else console.log("Skills are not equal")
+
+                    this.validateSkills(this.normalizeList(row['Language Skills'], [",", ":"]), {skills: languageSkillsInfo});
+                    if (this.areSkillsListsEqual(this.normalizeList(currentLanguageSkills, [",", ":"]).split(","), this.normalizeList(row['Language Skills'], [",", ":"]).split(","))) console.log("Language Skills are equal");
+                    else console.log("Language skills are not equal")
+
+                    this.validateRoles(this.normalizeList(row['Roles'], [",", ":", "|"]), {roles: rolesInfo, divisions: divisionInfo});
+                    if (this.areRolesListsEqual(this.normalizeList(currentRoles, [",", ":", "|"]).split(","), this.normalizeList(row['Roles'], [",", ":", "|"]).split(","))) console.log("Roles are equal");
+                    else console.log("Roles are not equal");
+
+                    this.validateUtilization(this.normalizeList(row['Utilization'], [",", ":", "|"]));
+                    if (this.areUtilizationListsEqual(this.normalizeList(currentUtilization, [",", ":", "|"]).split(","), this.normalizeList(row['Utilization'], [",", ":", "|"]).split(","))) console.log("Utilization is equal");
+                    else console.log("Utilization is not equal")
+
                     break;
                 case "create":
                     // order:
@@ -384,6 +407,7 @@ class BulkUserTab extends Tab {
 
     }
     async updateUserUtilization(userId, utilization) {
+        return;
         return this.updateOnPath(`/api/v2/routing/users/${userId}/utilization`, 'PUT', {utilization: utilization});
     }
     // async addUserRoles(userId, roles) {
@@ -392,16 +416,19 @@ class BulkUserTab extends Tab {
     // async removeUserRoles(userId, roles) {
     //     return this.updateOnPath(`/api/v2/authorization/roles/${userId}/bulkremove`, 'POST', roles);
     // }
-    async updateUserRoles() {
+    async updateUserRoles(userId, roles) {
+        return;
         return this.updateOnPath(`/api/v2/authorization/roles/${userId}/bulkreplace`, 'POST', roles);
     }
     async updateQueue(queueId, updates) {
 
     }
     async updateUserSkills(userId, skills) {
+        return;
         return this.updateOnPath(`/api/v2/users/${userId}/routingskills/bulk`, 'PUT', skills);
     }
     async updateUserLanguageSkills(userId, languageSkills) {
+        return;
         return this.updateOnPath(`/api/v2/users/${userId}/routinglanguages/bulk`, 'PATCH', languageSkills);
     }
     async updateUserStation(userId, stationId) {
@@ -416,5 +443,153 @@ class BulkUserTab extends Tab {
         const result = await fetch(url, {method: method, body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
         const resultJson = await result.json();
         return resultJson;
+    }
+    areSkillsListsEqual(skillListA, skillListB) {
+        console.log(skillListA);
+        console.log(skillListB);
+        if (skillListA.length !== skillListB.length) return false;
+        for (let skill of skillListA) {
+            if (!skillListB.includes(skill)) return false;
+        }
+        return true;
+    }
+    areQueuesListsEqual(queuesListA, queuesListB) {
+        if (queuesListA.length !== queuesListB.length) return false;
+        for (let queue of queuesListA) {
+            if (!queuesListB.includes(queue)) return false;
+        }
+        return true;
+    }
+    areRolesListsEqual(rolesListA, rolesListB) {
+        console.log(rolesListA);
+        console.log(rolesListB);
+        if (rolesListA.length !== rolesListB.length) return false;
+        for (let roleA of rolesListA) {
+            const aParts = roleA.split(":");
+            const aDivisions = aParts[1] ? aParts[1].split("|") : [];
+            let foundMatch = false;
+            for (let roleB of rolesListB) {
+                const bParts = roleB.split(":");
+                if (aParts[0] !== bParts[0]) continue;
+                foundMatch = true;
+                const bDivisions = bParts[1] ? bParts[1].split("|") : [];
+                if (aDivisions.length !== bDivisions.length) return false;
+                for (let division of aDivisions) {
+                    if (!bDivisions.includes(division)) return false;
+                }
+            }
+            if (!foundMatch) return false;
+        }
+        return true;
+    }
+    areUtilizationListsEqual(utilizationListA, utilizationListB) {
+        console.log(utilizationListA);
+        console.log(utilizationListB);
+        if (utilizationListA.length !== utilizationListB.length) return false;
+        for (let utilizationA of utilizationListA) {
+            const aParts = utilizationA.split(":");
+            const interruptableMediaTypesA = aParts[2] ? aParts[2].split("|") : [];
+            let foundMatch = false;
+            for (let utilizationB of utilizationListB) {
+                const bParts = utilizationB.split(":");
+                if (aParts[0] !== bParts[0]) continue;
+                foundMatch = true;
+                const interruptableMediaTypesB = bParts[2] ? bParts[2].split("|") : [];
+                if (interruptableMediaTypesA.length !== interruptableMediaTypesB.length) return false;
+                for (let interruptableMediaType of interruptableMediaTypesA) {
+                    if (!interruptableMediaTypesB.includes(interruptableMediaType)) return false;
+                }
+            }
+            if (!foundMatch) return false;
+        }
+        return true;
+    }
+    normalizeList(list, delimiters) {
+        const currentDelimiter = delimiters.pop();
+        const listLevel = list.split(currentDelimiter);
+        const normalizedValues = [];
+        for (let item of listLevel) {
+            let value = item.toLowerCase().trim();
+            if (delimiters.length > 0) value = this.normalizeList(value, delimiters);
+            normalizedValues.push(value);
+        }
+        return normalizedValues.join(currentDelimiter);
+    }
+    validateValue(key, value, mappings) {
+        switch(key) {
+            case "utilization":
+                this.validateUtilization(value);
+                break;
+            case "roles":
+                this.validateRoles(value, mappings);
+            case "skills":
+                this.validateSkills(value, mappings);
+                break;
+            case "language skills":
+                this.validateSkills(value, mappings);
+                break;
+            case "queues":
+                break;
+            case "division":
+
+                break;
+        }
+    }
+    validateUtilization(value) {
+        const mediaTypes = new Set(["call", "callback", "chat", "email", "message", "workitem"]);
+        const includedMediaTypes = new Set();
+        const utilizations = value.split(",");
+        for (let utilization of utilizations) {
+            const parts = utilization.split(":");
+            if (!mediaTypes.has(parts[0])) throw `Unknown media type [${parts[0]}]`;
+            includedMediaTypes.add(parts[0]);
+            const maxCapacity = parts[1] && !isNaN(parseInt(parts[1])) ? parseInt(parts[1]) : undefined;
+            if (maxCapacity === undefined) throw `Invalid capacity [${parts[1]}] for media type [${parts[0]}]`;
+            const interruptableMediaTypes = parts[2] ? parts[2].split("|") : [];
+            for (let interruptableMediaType of interruptableMediaTypes) {
+                if (!mediaTypes.has(interruptableMediaType)) throw `Unknown interruptable media type [${interruptableMediaType}] for media type [${parts[0]}]`;
+            }
+        }
+        const missingMediaTypes = Array.from(mediaTypes.difference(includedMediaTypes));
+        if (missingMediaTypes.length > 0) throw `Missing required media types [${missingMediaTypes.join(", ")}]`;
+        return true;
+    }
+    validateRoles(value, mappings) {
+        if (value === "") return true;
+        const existingDivisions = mappings.divisions;
+        const existingRoles = mappings.roles;
+        const roles = value.split(",");
+        for (let role of roles) {
+            const parts = role.split(":");
+            const existingRole = existingRoles[parts[0]];
+            if (!existingRole) throw `No role [${parts[0]}]`;
+            const divisions = parts[1] ? parts[1].split("|") : [];
+            for (let division of divisions) {
+                const existingDivision = existingDivisions[division];
+                if (!existingDivision) throw `No division [${division}]`;
+            }
+        }
+        return true;
+    }
+    validateSkills(value, mappings) {
+        if (value === "") return true;
+        const existingSkills = mappings.skills;
+        const skills = value.split(",");
+        for (let skill of skills) {
+            const parts = skill.split(":");
+            const existingSkill = existingSkills[parts[0]];
+            if (!existingSkill) throw `No skill [${parts[0]}]`;
+            const proficiency = parts[1] ? parts[1] : undefined;
+            if (proficiency && isNaN(parseInt(parts[1]))) throw `Invalid proficiency [${parts[1]}] for skill [${parts[0]}]`;
+        }
+        return true;
+    }
+    validateQueues(value, mappings) {
+        if (value === "") return true;
+        const queues = value.split(",");
+        for (let queue of queues) {
+            if (!mappings.queues[queue]) throw `No queue [${queue}]`;
+        }
+        return true;
     }
 }
