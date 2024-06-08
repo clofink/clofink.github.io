@@ -53,68 +53,210 @@ class BulkUserTab extends Tab {
         return mapping;
     }
 
-    async bulkUserExport() {
-        const allUsers = await getAllPost("/api/v2/users/search", {"query":[{"type":"EXACT","fields":["state"],"values":["active","inactive"]}], "sortOrder":"ASC", "sortBy":"name", "expand": ["skills", "groups", "languages", "team", "locations", "employerInfo", "station"], "enforcePermissions":false}, 200);
-        const userIdMapping = this.mapProperty("id", "email", allUsers, true);
-        const userInfo = this.mapProperty("email", null, allUsers, true);
-        const allGroups = await getAllPost("/api/v2/groups/search", {"query": [{"type":"EXACT", "fields":["state"], "value":"active"}], "sortOrder":"ASC", "sortBy":"name"}, 200);
-        const groupIdMapping = this.mapProperty("id", "name", allGroups, true);
-        const allQueues = await getAll("/api/v2/routing/queues?", "entities", 200);
-        const queueInfo = this.mapProperty("name", undefined, allQueues, true);
-        const queueIdMapping = this.mapProperty("id", "name", allQueues, true);
-        const allStations = await getAll("/api/v2/stations?", "entities", 100);
-        const stationIdMapping = this.mapProperty("id", "name", allStations, true);
-        const allLocations = await getAll("/api/v2/locations?", "entities", 100);
-        const locationIdMapping = this.mapProperty("id", "name", allLocations);
+    async exportData(fields) {
+        const result = {};
 
-        for (let queue in queueInfo) {
-            if (queueInfo[queue].memberCount === 0) {
-                continue;
-            }
-            const queueMembers = await getAll(`/api/v2/routing/queues/${queueInfo[queue].id}/members?`, "entities", 200);
-            for (let queueMember of queueMembers) {
-                if (!userInfo[queueMember.user.email.toLowerCase()]) throw `No existing user found with email [${queueMember.user.email}]`;
-                userInfo[queueMember.user.email.toLowerCase()].queues = userInfo[queueMember.user.email.toLowerCase()].queues || [];
-                userInfo[queueMember.user.email.toLowerCase()].queues.push(queueInfo[queue].id);
+        let users = [];
+        let queues = [];
+        let roles = [];
+
+        for (let field of fields) {
+            switch (field) {
+                case "users": {
+                    const usersResult = await getAllPost("/api/v2/users/search", {"query":[{"type":"EXACT","fields":["state"],"values":["active","inactive"]}], "sortOrder":"ASC", "sortBy":"name", "expand": ["skills", "groups", "languages", "team", "locations", "employerInfo", "station"], "enforcePermissions":false}, 200);
+                    users = usersResult;
+                    result.users = usersResult;
+                    break;
+                }
+                case "groups": {
+                    const groupsResult = await getAllPost("/api/v2/groups/search", {"query": [{"type":"EXACT", "fields":["state"], "value":"active"}], "sortOrder":"ASC", "sortBy":"name"}, 200);
+                    result.groups = groupsResult;
+                    break;
+                }
+                case "queues": {
+                    const queuesResult = await getAll("/api/v2/routing/queues?", "entities", 200);
+                    queues = queuesResult;
+                    result.queues = queuesResult;
+                    break;
+                }
+                case "roles": {
+                    const rolesResult = await getAll("/api/v2/authorization/roles?", "entities", 200);
+                    roles = rolesResult;
+                    result.roles = rolesResult;
+                    break;
+                }
+                case "stations": {
+                    const stationsResult = await getAll("/api/v2/stations?", "entities", 100);
+                    result.stations = stationsResult;
+                    break;
+                }
+                case "locations": {
+                    const locationsResult = await getAll("/api/v2/locations?", "entities", 100);
+                    result.locations = locationsResult;
+                    break;
+                }
+                case "divisions": {
+                    const divisionResults = await getAll("/api/v2/authorization/divisions?", "entities", 100);
+                    result.divisions = divisionResults;
+                    break;
+                }
+                case "work teams": {
+                    const workTeamResults = await getAll("/api/v2/teams?", "entities", 100);
+                    result.workTeams = workTeamResults;
+                    break;
+                }
+                case "skills": {
+                    const skillResults = await getAll("/api/v2/routing/skills?", "entities", 200);
+                    result.skills = skillResults;
+                    break;
+                }
+                case "language skills": {
+                    const languageSkillResults = await getAll("/api/v2/routing/languages?", "entities", 200);
+                    result.languageSkills = languageSkillResults;
+                    break;
+                }
+                case "queue membership": {
+                    const queueMembership = {};
+                    for (let queue of queues) {
+                        if (queue.memberCount === 0) continue;
+                        const queueMembers = await getAll(`/api/v2/routing/queues/${queue.id}/members?`, "entities", 200);
+                        queueMembership[queue.id] = queueMembers;
+                    }
+                    result.queueMembership = queueMembership;
+                    break;
+                }
+                case "role membership": {
+                    const roleMembership = {};
+                    for (let role of roles) {
+                        if (role.userCount === 0) continue;
+                        const roleMembers = await getAll(`/api/v2/authorization/roles/${role.id}/subjectgrants?`, "entities", 200);
+                        roleMembership[role.id] = roleMembers;
+                    }
+                    result.roleMembership = roleMembership;
+                    break;
+                }
+                case "utilization": {
+                    const utilizations = {};
+                    for (let user of users) {
+                        const utilizationResult = await this.getUserUtilization(user.id);
+                        utilizations[user.id] = utilizationResult;
+                    }
+                    result.utilization = utilizations;
+                    break;
+                }
             }
         }
+        return result;
+    }
 
-        const headers = ["Action", "Activated", "Email", "Name", "Skills", "Language Skills", "Groups", "Queues", "Manager", "Department", "Title", "Hire Date", "Location", "Division", "Roles", "Utilization Level", "Utilization", "Alias", "Work Phone", "Extension", "Station"];
+    addToTemplate(list, template, type, defaultValue) {
+        for (let item of list) {
+            template[`${type}:${item.name}`] = defaultValue;
+        }
+    }
+
+    async bulkUserExport() {
+        const data = await this.exportData(["users", "queues", "groups", "roles", "divisions", "locations", "stations", "skills", "language skills", "work teams", "queue membership", "role membership", "utilization"]);
+        log(data);
+        const userIdMapping = this.mapProperty("id", "email", data.users, true);
+        const userInfo = this.mapProperty("email", null, data.users, true);
+        const groupIdMapping = this.mapProperty("id", "name", data.groups);
+        const queueIdMapping = this.mapProperty("id", "name", data.queues);
+        const stationIdMapping = this.mapProperty("id", "name", data.stations);
+        const locationIdMapping = this.mapProperty("id", "name", data.locations);
+        const roleIdMapping = this.mapProperty("id", "name", data.roles);
+        const divisionIdMapping = this.mapProperty("id", "name", data.divisions);
+
+        for (let queueId in data.queueMembership) {
+            for (let queueMember of data.queueMembership[queueId]) {
+                if (queueMember.user.id === "UNKNOWN-USER") continue;
+                userInfo[queueMember.user.email.toLowerCase()].queues = userInfo[queueMember.user.email.toLowerCase()].queues || [];
+                userInfo[queueMember.user.email.toLowerCase()].queues.push(queueId);
+            }
+        }
+        for (let roleId in data.roleMembership) {
+            for (let roleMember of data.roleMembership[roleId]) {
+                if (roleMember.type !== "PC_USER") continue;
+                userInfo[userIdMapping[roleMember.id]].roles = userInfo[userIdMapping[roleMember.id]].roles || [];
+                userInfo[userIdMapping[roleMember.id]].roles.push({id: roleId, divisions: roleMember.divisions});
+
+            }
+        }
+        for (let userId in data.utilization) {
+            userInfo[userIdMapping[userId]].utilization = data.utilization[userId];
+        }
+
+        const templateObject = {};
+        const headers = ["Action", "Activated", "Email", "Name", "Manager", "Department", "Title", "Hire Date", "Location", "Division", "Utilization Level", "Alias", "Work Phone", "Extension", "Station"];
+        for (let header of headers) {
+            templateObject[header] = "";
+        }
+        this.addToTemplate(data.queues, templateObject, "Queue", "N");
+        this.addToTemplate(data.groups, templateObject, "Group", "N");
+        this.addToTemplate(data.roles, templateObject, "Role", "");
+        this.addToTemplate(data.skills, templateObject, "Skill", "");
+        this.addToTemplate(data.languageSkills, templateObject, "Language Skill", "");
+        this.addToTemplate(data.workTeams, templateObject, "Work Team", "N");
+
+        for (let mediaType of ["call", "callback", "chat", "email", "message", "workitem"]) {
+            templateObject[`Utilization Capacity:${mediaType}`] = "";
+            templateObject[`Utilization Interrupted By:${mediaType}`] = "";
+        }
+
         const dataRows = [];
-        for (let user in allUsers) {
-            const currentUser = allUsers[user];
-            currentUser.utilization = await this.getUserUtilization(currentUser.id);
-            currentUser.roles = await this.getUserRoles(currentUser.id);
+        for (let user in userInfo) {
+            const currentUser = userInfo[user];
+            const dataRow = structuredClone(templateObject);
             const phoneInfo = this.processPhone(currentUser.addresses);
-            const dataRow = [
-                "REPLACE",
-                currentUser.state === "active" ? true : false,
-                currentUser.email,
-                currentUser.name,
-                currentUser.skills.map((e)=>`${e.name}:${e.proficiency}`).join(","),
-                currentUser.languages.map((e)=>`${e.name}:${e.proficiency}`).join(","),
-                currentUser.groups.map((e)=>groupIdMapping[e.id]).join(","),
-                currentUser.queues ? currentUser.queues.map((e)=>queueIdMapping[e]).join(",") : "",
-                currentUser.manager ? userIdMapping[currentUser.manager.id] : "",
-                currentUser.department ? currentUser.department : "",
-                currentUser.title ? currentUser.title : "",
-                currentUser?.employerInfo?.dateHire ? currentUser.employerInfo.dateHire : "",
-                currentUser.locations.map((e)=>locationIdMapping[e.locationDefinition.id]).join(","),
-                currentUser.division.name,
-                this.processRoles(currentUser.roles.grants),
-                currentUser.utilization.level,
-                this.processUtilization(currentUser.utilization.utilization),
-                currentUser.preferredName ? currentUser.preferredName : "",
-                phoneInfo.number,
-                phoneInfo.extension,
-                currentUser?.station?.associatedStation?.id ? stationIdMapping[currentUser.station.associatedStation.id] : ""
-            ];
+            
+            dataRow.Action = "UPDATE";
+            dataRow.Activated = currentUser.state === "active" ? true : false,
+            dataRow.Email = currentUser.email,
+            dataRow.Name = currentUser.name,
+            dataRow.Manager = currentUser.manager ? userIdMapping[currentUser.manager.id] : "",
+            dataRow.Department = currentUser.department ? currentUser.department : "",
+            dataRow.Title = currentUser.title ? currentUser.title : "",
+            dataRow["Hire Date"] = currentUser?.employerInfo?.dateHire ? currentUser.employerInfo.dateHire : "",
+            dataRow.Location = currentUser.locations.map((e)=>locationIdMapping[e.locationDefinition.id]).join(","),
+            dataRow.Division = currentUser.division.name,
+            dataRow["Utilization Level"] = currentUser.utilization.level,
+            dataRow.Alias = currentUser.preferredName ? currentUser.preferredName : "",
+            dataRow["Work Phone"] = phoneInfo.number,
+            dataRow.Extension = phoneInfo.extension,
+            dataRow.Station = currentUser?.station?.associatedStation?.id ? stationIdMapping[currentUser.station.associatedStation.id] : ""
 
+            if (currentUser.team) {
+                dataRow[`Work Team:${currentUser.team.name}`] = "Y";
+            }
+            for (let queue of currentUser.queues || []) {
+                dataRow[`Queue:${queueIdMapping[queue]}`] = "Y";
+            }
+            for (let skill of currentUser.skills || []) {
+                dataRow[`Skill:${skill.name}`] = skill.proficiency;
+            }
+            for (let languageSkill of currentUser.languages || []) {
+                dataRow[`Language Skill:${languageSkill.name}`] = languageSkill.proficiency;
+            }
+            for (let group of currentUser.groups || []) {
+                dataRow[`Group:${groupIdMapping[group.id]}`] = "Y";
+            }
+            for (let role of currentUser.roles || []) {
+                const divisions = [];
+                for (let division of role.divisions) {
+                    if (division.id === "*") divisions.push(division.id);
+                    else divisions.push(divisionIdMapping[division.id]);
+                }
+                dataRow[`Role:${roleIdMapping[role.id]}`] = divisions.join(",");
+            }
+            for (let mediaType in currentUser.utilization.utilization) {
+                dataRow[`Utilization Capacity:${mediaType}`] = currentUser.utilization.utilization[mediaType].maximumCapacity;
+                dataRow[`Utilization Interrupted By:${mediaType}`] = currentUser.utilization.utilization[mediaType].interruptableMediaTypes.join(",");
+            }
             dataRows.push(dataRow);
         }
         log(dataRows);
-        const download = createDownloadLink("Users Export.csv", Papa.unparse({fields: headers, data: dataRows}, {escapeFormulae: true}), "text/csv");
-        download.click(); 
+        // const download = createDownloadLink("Users Export.csv", Papa.unparse({fields: headers, data: dataRows}, {escapeFormulae: true}), "text/csv");
+        // download.click(); 
     }
 
     async bulkUserActions() {
