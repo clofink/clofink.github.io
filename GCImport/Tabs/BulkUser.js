@@ -255,182 +255,281 @@ class BulkUserTab extends Tab {
             dataRows.push(dataRow);
         }
         log(dataRows);
-        // const download = createDownloadLink("Users Export.csv", Papa.unparse({fields: headers, data: dataRows}, {escapeFormulae: true}), "text/csv");
-        // download.click(); 
+        const download = createDownloadLink("Users Export.csv", Papa.unparse(dataRows, {escapeFormulae: true}), "text/csv");
+        download.click(); 
     }
 
     async bulkUserActions() {
-        if (!fileContents) window.fileContents = {data: [{Action: "UPDATE", Email: "connor.lofink+test@gmail.com", "Utilization Level": "Agent", Utilization: "callback:1,chat:4,workitem:2,message:4,call:1,email:3:call|message|callback", Division: "Connor Test", Groups: "Connor Group", "Language Skills": "english:4", Skills: "testskill:5,testskill1", Queues: "Connor Test,Claims  , Customer Service ", Roles: "employee:Connor Test|Home,AI Agent:Test,Developer"}]};
-
-        const allSkills = await getAll("/api/v2/routing/skills?", "entities", 200);
-        const skillsInfo = this.mapProperty("name", "id", allSkills, true);
-
-        const allLanguageSkills = await getAll("/api/v2/routing/languages?", "entities", 200);
-        const languageSkillsInfo = this.mapProperty("name", "id", allLanguageSkills, true);
-
-        const allUsers = await getAllPost("/api/v2/users/search", {"query":[{"type":"EXACT","fields":["state"],"values":["active","inactive"]}], "sortOrder":"ASC", "sortBy":"name", "expand": ["skills", "groups", "languages", "team", "locations", "employerInfo", "station"], "enforcePermissions":false}, 200);
-        const userInfo = this.mapProperty("email", null, allUsers, true);
+        const data = await this.exportData(["skills", "language skills", "users", "groups", "roles", "divisions", "stations", "queues", "locations", "work teams", "queue membership", "role membership", "utilization"])
         
-        const allGroups = await getAllPost("/api/v2/groups/search", {"query": [{"type":"EXACT", "fields":["state"], "value":"active"}], "sortOrder":"ASC", "sortBy":"name"}, 200);
-        const groupsInfo = this.mapProperty("name", "id", allGroups, true);
+        const userInfo = this.mapProperty("email", null, data.users, true);
+        const userIdMapping = this.mapProperty("id", "email", data.users, true);
+        const skillsInfo = this.mapProperty("name", "id", data.skills);
+        const languageSkillsInfo = this.mapProperty("name", "id", data.languageSkills);
+        const groupsInfo = this.mapProperty("name", "id", data.groups);
+        const rolesInfo = this.mapProperty("name", "id", data.roles);
+        const divisionInfo = this.mapProperty("name", "id", data.divisions);
+        const queueInfo = this.mapProperty("name", undefined, data.queues);
+        const stationInfo = this.mapProperty("name", "id", data.stations);
+        const locationInfo = this.mapProperty("name", "id", data.locations);
+        const workTeamsInfo = this.mapProperty("name", "id", data.workTeams);
 
-        const allRoles = await getAll("/api/v2/authorization/roles?", "entities", 200); 
-        const rolesInfo = this.mapProperty("name", "id", allRoles, true);
-
-        const allDivisions = await getAll("/api/v2/authorization/divisions?", "entities", 200);
-        const divisionInfo = this.mapProperty("name", "id", allDivisions, true);
-
-        const allQueues = await getAll("/api/v2/routing/queues?", "entities", 200);
-        const queueInfo = this.mapProperty("name", undefined, allQueues, true);
-
-        const allStations = await getAll("/api/v2/stations?", "entities", 100);
-        const stationInfo = this.mapProperty("name", "id", allStations, true);
-
-        const allLocations = await getAll("/api/v2/locations?", "entities", 100);
-        const locationInfo = this.mapProperty("name", "id", allLocations);
-
-        // create direct association between user and the queues they belong to
-        for (let queue in queueInfo) {
-            if (queueInfo[queue].memberCount === 0) {
-                continue;
-            }
-            const queueMembers = await getAll(`/api/v2/routing/queues/${queueInfo[queue].id}/members?`, "entities", 200);
-            for (let queueMember of queueMembers) {
-                if (!userInfo[queueMember.user.email.toLowerCase()]) throw `No existing user found with email [${queueMember.user.email}]`;
+        for (let queueId in data.queueMembership) {
+            for (let queueMember of data.queueMembership[queueId]) {
+                if (queueMember.user.id === "UNKNOWN-USER") continue;
                 userInfo[queueMember.user.email.toLowerCase()].queues = userInfo[queueMember.user.email.toLowerCase()].queues || [];
-                userInfo[queueMember.user.email.toLowerCase()].queues.push(queueInfo[queue].id);
+                userInfo[queueMember.user.email.toLowerCase()].queues.push(queueId);
             }
         }
+        for (let roleId in data.roleMembership) {
+            for (let roleMember of data.roleMembership[roleId]) {
+                if (roleMember.type !== "PC_USER") continue;
+                userInfo[userIdMapping[roleMember.id]].roles = userInfo[userIdMapping[roleMember.id]].roles || [];
+                userInfo[userIdMapping[roleMember.id]].roles.push({id: roleId, divisions: roleMember.divisions});
 
-        const queueAdditions = {};
-        const queueDeletions = {};
+            }
+        }
+        for (let userId in data.utilization) {
+            userInfo[userIdMapping[userId]].utilization = data.utilization[userId];
+        }
 
+        const fullData = {userInfo, userIdMapping, skillsInfo, languageSkillsInfo, groupsInfo, rolesInfo, divisionInfo, queueInfo, stationInfo, locationInfo, workTeamsInfo}
+        log(fullData);
+        // ["Action", "Activated", "Email", "Name", "Manager", "Department", "Title", "Hire Date", "Location", "Division", "Utilization Level", "Alias", "Work Phone", "Extension", "Station"]
         for (let row of fileContents.data) {
-            const setProperties = {
-                queues: [],
-                groups: [],
-                roles: [],
+            const newUserInfo = {
                 skills: [],
                 languageSkills: [],
-                utilizationLevel: undefined,
-                utilization: [],
-                division: undefined,
-                phone: undefined,
-            }
-
-            const user = userInfo[row["Email"].toLowerCase().trim()];
-            const userEmail = row["Email"].toLowerCase().trim();
-            const action = row["Action"].toLowerCase().trim();
-
-            const currentSkills = user.skills.map((e)=>`${e.name}:${e.proficiency}`).join(",");
-            const currentLanguageSkills = user.languages.map((e)=>`${e.name}:${e.proficiency}`).join(",");
-
-            const userUtiliation = await this.getUserUtilization(user.id);
-            const currentUtilization = user ? this.processUtilization(userUtiliation.utilization) : "";
-            const userRoles = await this.getUserRoles(user.id);
-            const currentRoles  = user ? this.processRoles(userRoles.grants) : "";
-
-            // "Action", "Activated", "Email", "Name", "Skills", "Language Skills", "Groups", "Queues", 
-            // "Manager", "Department", "Title", "Hire Date", "Location", "Division", "Roles", 
-            // "Utilization Level", "Utilization", "Alias", "Work Phone", "Extension", "Station"
-            for (let header in row) {
-                switch (header.toLowerCase().trim()) {
-                    case "skills": // per user
-                        // testskill:1,testskill1, testskill2:5
-                        const normalizedSkillsString = this.normalizeList(row[header], [",", ":"]);
-                        this.validateSkills(normalizedSkillsString, {skills: skillsInfo});
-                        setProperties.skills = row[header].split(",").map((e) => e.split(":")).map((t) => ({"proficiency": t[1] ? parseInt(t[1], 10) : 0, "id": skillsInfo[t[0]]}));
+                groups: [],
+                roles: [],
+                queues: [],
+                workTeams: [],
+                utilization: {
+                    call: {},
+                    callback: {},
+                    chat: {},
+                    email: {},
+                    message: {},
+                    workitem: {}
+                }
+            };
+            for (let field in row) {
+                switch (field.toLowerCase().trim()) {
+                    case "action": {
+                        newUserInfo.action = row[field];
                         break;
-                    case "language skills": // per user
-                        const normalizedLanguageSkillsString = this.normalizeList(row[header], [",", ":"]);
-                        this.validateSkills(normalizedLanguageSkillsString, {skills: languageSkillsInfo});
-                        setProperties.languageSkills = normalizedLanguageSkillsString.split(",").map((e) => e.split(":")).map((t) => ({"proficiency": t[1] ? parseInt(t[1], 10) : 0, "id": languageSkillsInfo[t[0]]}));
+                    }
+                    case "activated": {
+                        newUserInfo.activated = row[field];
                         break;
-                    case "queues": // per queue
-                        const normalizedQueueString = this.normalizeList(row[header], [","]);
-                        this.validateQueues(normalizedQueueString, {queues: queueInfo});
-                        setProperties.queues = normalizedQueueString.split(",").map((e) => queueInfo[e].id);
-                        const currentUserQueues = new Set(user.queues);
-                        const newSetQueues = new Set(setProperties.queues);
-                        for (let queue of currentUserQueues.difference(newSetQueues)) {
-                            // queues to remove the user from
-                            queueDeletions[queue] = queueDeletions[queue] || [];
-                            queueDeletions[queue].push(user.id);
+                    }
+                    case "email": {
+                        newUserInfo.email = row[field];
+                        break;
+                    }
+                    case "name": {
+                        newUserInfo.name = row[field];
+                        break;
+                    }
+                    case "manager": {
+                        newUserInfo.manager = row[field];
+                        break;
+                    }
+                    case "department": {
+                        newUserInfo.department = row[field];
+                        break;
+                    }
+                    case "title": {
+                        newUserInfo.title = row[field];
+                        break;
+                    }
+                    case "hire date": {
+                        newUserInfo.hireDate = row[field];
+                        break;
+                    }
+                    case "location": {
+                        newUserInfo.location = row[field];
+                        break;
+                    }
+                    case "division": {
+                        newUserInfo.division = row[field];
+                        break;
+                    }
+                    case "utilization level": {
+                        newUserInfo.utilizationLevel = row[field];
+                        break;
+                    }
+                    case "alias": {
+                        newUserInfo.alias = row[field];
+                        break;
+                    }
+                    case "work phone": {
+                        newUserInfo.workPhone = row[field];
+                        break;
+                    }
+                    case "extension": {
+                        newUserInfo.extension = row[field];
+                        break;
+                    }
+                    case "station": {
+                        newUserInfo.station = row[field];
+                        break;
+                    }
+                    default: {
+                        const fieldParts = field.split(":");
+                        if (fieldParts.length < 2) {
+                            console.log(`Unknown column header [${field}]`);
+                            break;
                         }
-                        for(let queue of newSetQueues.difference(currentUserQueues)) {
-                            // queues to add the user to
-                            queueAdditions[queue] = queueAdditions[queue] || [];
-                            queueAdditions[queue].push(user.id);
+                        switch (fieldParts[0].toLowerCase().trim()) {
+                            case "skill": {
+                                newUserInfo.skills.push({name: fieldParts[1], value: row[field]});
+                                break;
+                            }
+                            case "language skill": {
+                                newUserInfo.languageSkills.push({name: fieldParts[1], value: row[field]});
+                                break;
+                            }
+                            case "queue": {
+                                newUserInfo.queues.push({name: fieldParts[1], value: row[field]});
+                                break;
+                            }
+                            case "group": {
+                                newUserInfo.groups.push({name: fieldParts[1], value: row[field]});
+                                break;
+                            }
+                            case "role": {
+                                newUserInfo.roles.push({name: fieldParts[1], value: row[field]});
+                                break;
+                            }
+                            case "work team": {
+                                newUserInfo.workTeams.push({name: fieldParts[1], value: row[field]})
+                                break;
+                            }
+                            case "utilization capacity": {
+                                newUserInfo.utilization[fieldParts[1]].maxCapacity = row[field];
+                                break;
+                            }
+                            case "utilization interrupted by": {
+                                newUserInfo.utilization[fieldParts[1]].interruptedBy = row[field];
+                                break;
+                            }
+                            default: {
+                                console.log(`Unknown column header [${field}]`);
+                                break;
+                            }
                         }
                         break;
-                    case "roles": // per user
-                        const normalizedRolesString = this.normalizeList(row[header], [",", ":", "|"]);
-                        this.validateRoles(normalizedRolesString, {roles: rolesInfo, divisions: divisionInfo});
-                        setProperties.roles = normalizedRolesString.split(",").map((e)=>(e.split(":"))).map((t) => ({name: t[0], id: rolesInfo[t[0]], divisions: t[1] ? t[1].split("|").map((r) => ({name: r, id: divisionInfo[r]})) : undefined}))
-                        break;
-                    case "groups": // per group
-                        this.normalizeList(row[header], [","]);
-                        setProperties.groups = row[header].split("|").map((e) => e.toLowerCase().trim()).map((e) => ({name: e, id: groupsInfo[e]}));
-                        break;
-                    case "division": // per user
-                        setProperties.division = {name: row[header].toLowerCase().trim(), id: divisionInfo[row[header].toLowerCase().trim()]};
-                        break;
-                    case "phone": // per user
-                        setProperties.phone = {name: row[header].toLowerCase().trim(), id: stationInfo[row[header].toLowerCase().trim()]};
-                        break;
-                    case "utilization level":
-                        setProperties.utilizationLevel = row[header].toLowerCase().trim();
-                        break;
-                    case "utilization":
-                        this.normalizeList(row[header], [",", ":", "|"]);
-                        // callback:1,chat:1,workitem:1,message:4,call:1,email:3:call|message|callback
-                        setProperties.utilization = this.processUtilizationInput(row[header]);
-                        break;
-                    default:
-                        // log(`Unknown header [${header}]`, "error");
-                        break;
+                    }
                 }
             }
+            const validationResult = this.validateRow(newUserInfo, fullData);
+            log(validationResult);
+        }
+    }
 
-            switch (action) {
-                case "update":
-                    if (!user) throw `No existing user found with email [${userEmail}]`;
-
-                    this.validateSkills(this.normalizeList(row['Skills'], [",", ":"]), {skills: skillsInfo});
-                    if (this.areSkillsListsEqual(this.normalizeList(currentSkills, [",", ":"]).split(","), this.normalizeList(row['Skills'], [",", ":"]).split(","))) console.log("Skills are equal")
-                    else console.log("Skills are not equal")
-
-                    this.validateSkills(this.normalizeList(row['Language Skills'], [",", ":"]), {skills: languageSkillsInfo});
-                    if (this.areSkillsListsEqual(this.normalizeList(currentLanguageSkills, [",", ":"]).split(","), this.normalizeList(row['Language Skills'], [",", ":"]).split(","))) console.log("Language Skills are equal");
-                    else console.log("Language skills are not equal")
-
-                    this.validateRoles(this.normalizeList(row['Roles'], [",", ":", "|"]), {roles: rolesInfo, divisions: divisionInfo});
-                    if (this.areRolesListsEqual(this.normalizeList(currentRoles, [",", ":", "|"]).split(","), this.normalizeList(row['Roles'], [",", ":", "|"]).split(","))) console.log("Roles are equal");
-                    else console.log("Roles are not equal");
-
-                    this.validateUtilization(this.normalizeList(row['Utilization'], [",", ":", "|"]));
-                    if (this.areUtilizationListsEqual(this.normalizeList(currentUtilization, [",", ":", "|"]).split(","), this.normalizeList(row['Utilization'], [",", ":", "|"]).split(","))) console.log("Utilization is equal");
-                    else console.log("Utilization is not equal")
-
-                    break;
-                case "create":
-                    // order:
-                    //  create user
-                    //      what fields are needed?
-                    //  
-                    break;
-                default:
-                    throw `Unknown action [${action}]`;
+    validateRow(newUserInfo, data) {
+        newUserInfo.errors = [];
+        if (data.divisionInfo.hasOwnProperty(newUserInfo.division)) {
+            newUserInfo.division = {name: newUserInfo.division, id: data.divisionInfo[newUserInfo.division]}
+        }
+        else {
+            newUserInfo.errors.push(`No division with name [${newUserInfo.division}] in account`);
+        }
+        for (let queue of newUserInfo.queues) {
+            if (data.queueInfo.hasOwnProperty(queue.name)) queue.id = data.queueInfo[queue.name].id;
+            else {
+                newUserInfo.errors.push(`No queue with name [${queue.name}] in account`);
             }
-            log(setProperties);
         }
-        if (Object.keys(queueAdditions).length > 0) {
-            // add all users to queues
+        for (let role of newUserInfo.roles) {
+            if (data.rolesInfo.hasOwnProperty(role.name)) {
+                role.id = data.rolesInfo[role.name];
+                role.divisions = [];
+                if (role.value) {
+                    const divisions = role.value.split(",");
+                    for (let division of divisions) {
+                        if (division === "*") {
+                            role.divisions.push(division);
+                        }
+                        else if (data.divisionInfo.hasOwnProperty(division)) {
+                            role.divisions.push(data.divisionInfo[division]);
+                        }
+                        else {
+                            newUserInfo.errors.push(`No division with name [${division}] in account`);
+                        }
+                    }
+                }
+            }
+            else {
+                newUserInfo.errors.push(`No role with name [${role.name}] in account`);
+            }
         }
-        if (Object.keys(queueDeletions).length > 0) {
-            // remove all users from queue
+        for (let skill of newUserInfo.skills) {
+            if (data.skillsInfo.hasOwnProperty(skill.name)) {
+                skill.id = data.skillsInfo[skill.name];
+            }
+            else {
+                newUserInfo.errors.push(`No skill with name [${skill.name}] in account`);
+            }
+            if (skill.value !== null && skill.value !== "N") {
+                const intProficiency = parseInt(skill.value, 10);
+                if (isNaN(intProficiency) || intProficiency < 0 || intProficiency > 5) {
+                    newUserInfo.errors.push(`Invalid proficiency [${skill.value}] provided for skill [${skill.name}]`);
+                }
+            }
         }
-        // update groups
+        for (let languageSkill of newUserInfo.languageSkills) {
+            if (data.languageSkillsInfo.hasOwnProperty(languageSkill.name)) {
+                languageSkill.id = data.languageSkillsInfo[languageSkill.name];
+            }
+            else {
+                newUserInfo.errors.push(`No language skill with name [${languageSkill.name}] in account`);
+            }
+            if (languageSkill.value !== null && languageSkill.value !== "N") {
+                const intProficiency = parseInt(languageSkill.value, 10);
+                if (isNaN(intProficiency) || intProficiency < 0 || intProficiency > 5) {
+                    newUserInfo.errors.push(`Invalid proficiency [${languageSkill.value}] provided for language skill [${languageSkill.name}]`);
+                }
+            }
+        }
+        for (let group of newUserInfo.groups) {
+            if (data.groupsInfo.hasOwnProperty(group.name)) {
+                group.id = data.groupsInfo[group.name];
+            }
+            else {
+                newUserInfo.errors.push(`No group with name [${group.name}] in account`);
+            }
+        }
+        for (let workTeam of newUserInfo.workTeams) {
+            if (data.workTeamsInfo.hasOwnProperty(workTeam.name)) {
+                workTeam.id = data.workTeamsInfo[workTeam.name];
+            }
+            else {
+                newUserInfo.errors.push(`No group with name [${workTeam.name}] in account`);
+            }
+        }
+        for (let mediaType in newUserInfo.utilization) {
+            const validMediaTypes = ['call', 'callback', 'chat', 'email', 'message', 'workitem'];
+            if (validMediaTypes.includes(mediaType)) {
+                const intCapacity = parseInt(newUserInfo.utilization[mediaType].maxCapacity, 10);
+                if (isNaN(intCapacity)) {
+                    newUserInfo.errors.push(`Invalid capacity value [${newUserInfo.utilization[mediaType].maxCapacity}] for media type [${mediaType}]`);
+                }
+                if (newUserInfo.utilization[mediaType].interruptedBy) {
+                    const interruptableMediaTypes = newUserInfo.utilization[mediaType].interruptedBy.split(",");
+                    for (let interruptableMediaType of interruptableMediaTypes) {
+                        if (!validMediaTypes.includes(interruptableMediaType)) {
+                            newUserInfo.errors.push(`Invalid interruptable media type [${interruptableMediaType}] for media type [${mediaType}]`);
+                        }
+                    }
+                }
+            }
+            else {
+                newUserInfo.errors.push(`Invalid media type [${mediaType}]`);
+            }
+        }
+        return newUserInfo;
     }
 
     itemsToRemove(currentSet, newSet) {
