@@ -158,24 +158,39 @@ function addHelp(textList) {
     return details;
 }
 
+async function waitFor(seconds) {
+    return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+}
+
 async function getAll(path, resultsKey, pageSize) {
     const items = [];
     let pageNum = 0;
     let totalPages = 1;
 
     while (pageNum < totalPages) {
-        pageNum++;
-        const url = `https://api.${window.localStorage.getItem('environment')}${path}&pageNumber=${pageNum}&pageSize=${pageSize}`;
-        const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-        const resultJson = await result.json();
-        if (result.ok) {
-            resultJson.status = 200;
+        let unsuccessful = true;
+        while(unsuccessful) {
+            pageNum++;
+            const url = `https://api.${window.localStorage.getItem('environment')}${path}&pageNumber=${pageNum}&pageSize=${pageSize}`;
+            const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
+            if (result.status === 429) {
+                const retryWait = result.headers.get("Retry-After");
+                const waitSeconds = isNaN(parseInt(retryWait, 10)) ? 1 : parseInt(retryWait, 10);
+                await waitFor(waitSeconds);
+            }
+            else {
+                unsuccessful = false;
+                const resultJson = await result.json();
+                if (result.ok) {
+                    resultJson.status = 200;
+                }
+                else {
+                    throw resultJson.message;
+                }
+                items.push(...resultJson[resultsKey]);
+                totalPages = resultJson.pageCount;
+            }
         }
-        else {
-            throw resultJson.message;
-        }
-        items.push(...resultJson[resultsKey]);
-        totalPages = resultJson.pageCount;
     }
     return items;
 }
