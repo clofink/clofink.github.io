@@ -155,6 +155,10 @@ class BulkUserTab extends Tab {
         }
     }
 
+    async waitFor(seconds) {
+        return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+    }
+
     async bulkUserExport() {
         const data = await this.exportData(["users", "queues", "groups", "roles", "divisions", "locations", "stations", "skills", "language skills", "work teams", "queue membership", "role membership", "utilization"]);
         log(data);
@@ -436,6 +440,14 @@ class BulkUserTab extends Tab {
         else {
             newUserInfo.errors.push(`No division with name [${newUserInfo.division}] in account`);
         }
+        if (newUserInfo.manager) {
+            if (data.userInfo.hasOwnProperty(newUserInfo.manager)) {
+                newUserInfo.manager = {email: newUserInfo.manager, id: data.userInfo[newUserInfo.manager]}
+            }
+            else {
+                newUserInfo.errors.push(`No user with email [${newUserInfo.manager}] in account to set as manager for user [${newUserInfo.email}]`);
+            }
+        }
         for (let queue of newUserInfo.queues) {
             if (data.queueInfo.hasOwnProperty(queue.name)) queue.id = data.queueInfo[queue.name].id;
             else {
@@ -531,7 +543,6 @@ class BulkUserTab extends Tab {
         }
         return newUserInfo;
     }
-
     itemsToRemove(currentSet, newSet) {
         const itemsToRemove = [];
         for (let item of currentSet.difference(newSet)) {
@@ -546,7 +557,6 @@ class BulkUserTab extends Tab {
         }
         return itemsToAdd;
     }
-
     async setUserSkills(skills, userId) {
         const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/users/${userId}/routingskills/bulk`;
         const result = await fetch(url, {method: "PUT", body: JSON.stringify(skills), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
@@ -565,7 +575,6 @@ class BulkUserTab extends Tab {
         }
         return resultJson;
     }
-
     async getUserUtilization(userId) {
         const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/routing/users/${userId}/utilization?pageSize=99999`;
         const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
@@ -574,59 +583,6 @@ class BulkUserTab extends Tab {
             resultJson.status = 200;
         }
         return resultJson;
-    }
-    async getUserRoles(userId) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/authorization/subjects/${userId}?pageSize=99999`;
-        const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-        const resultJson = await result.json();
-        if (result.ok) {
-            resultJson.status = 200;
-        }
-        return resultJson;
-    }
-
-    processRoles(grants) {
-        const roles = {};
-        for (let grant of grants) {
-            roles[grant.role.name] = roles[grant.role.name] || [];
-            if (grant.division.id !== "*") roles[grant.role.name].push(grant.division.name)
-        }
-
-        const results = [];
-        for (let role in roles) {
-            results.push(`${role}${roles[role].length > 0 ? ":" + roles[role].join("|") : ""}`)
-        }
-        return results.join(",");
-    }
-    processUtilization(utilization) {
-        const results = [];
-        for (let mediaType of Object.keys(utilization).sort()) {
-            results.push(`${mediaType}:${utilization[mediaType].maximumCapacity}${utilization[mediaType].interruptableMediaTypes.length > 0 ? ":" + utilization[mediaType].interruptableMediaTypes.join("|") : ""}`);
-        }
-        return results.join(",");
-    }
-    processUtilizationInput(utilizationString) {
-        const utilization = {};
-        const parts = utilizationString.split(",").map((e)=>e.toLowerCase().trim());
-        for (let part of parts) {
-            const subParts = part.split(":");
-            let subPart;
-            for (let i = 0; i < subParts.length; i++) {
-                switch (i) {
-                    case 0:
-                        subPart = subParts[i];
-                        utilization[subParts[i]] = {};
-                        break;
-                    case 1:
-                        utilization[subPart].maximumCapacity = !isNaN(parseInt(subParts[i])) ? parseInt(subParts[i]) : 0;
-                        break;
-                    case 2:
-                        utilization[subPart].interruptableMediaTypes = subParts[i].split("|").map((e)=>e.trim());
-                        break;
-                }
-            }
-        }
-        return utilization;
     }
     processPhone(addresses) {
         const phone = {number: "", extension: ""}
@@ -648,7 +604,6 @@ class BulkUserTab extends Tab {
 
     }
     async updateUserUtilization(userId, utilization) {
-        return;
         return this.updateOnPath(`/api/v2/routing/users/${userId}/utilization`, 'PUT', {utilization: utilization});
     }
     // async addUserRoles(userId, roles) {
@@ -658,18 +613,15 @@ class BulkUserTab extends Tab {
     //     return this.updateOnPath(`/api/v2/authorization/roles/${userId}/bulkremove`, 'POST', roles);
     // }
     async updateUserRoles(userId, roles) {
-        return;
         return this.updateOnPath(`/api/v2/authorization/roles/${userId}/bulkreplace`, 'POST', roles);
     }
     async updateQueue(queueId, updates) {
 
     }
     async updateUserSkills(userId, skills) {
-        return;
         return this.updateOnPath(`/api/v2/users/${userId}/routingskills/bulk`, 'PUT', skills);
     }
     async updateUserLanguageSkills(userId, languageSkills) {
-        return;
         return this.updateOnPath(`/api/v2/users/${userId}/routinglanguages/bulk`, 'PATCH', languageSkills);
     }
     async updateUserStation(userId, stationId) {
@@ -685,66 +637,6 @@ class BulkUserTab extends Tab {
         const resultJson = await result.json();
         return resultJson;
     }
-    areSkillsListsEqual(skillListA, skillListB) {
-        console.log(skillListA);
-        console.log(skillListB);
-        if (skillListA.length !== skillListB.length) return false;
-        for (let skill of skillListA) {
-            if (!skillListB.includes(skill)) return false;
-        }
-        return true;
-    }
-    areQueuesListsEqual(queuesListA, queuesListB) {
-        if (queuesListA.length !== queuesListB.length) return false;
-        for (let queue of queuesListA) {
-            if (!queuesListB.includes(queue)) return false;
-        }
-        return true;
-    }
-    areRolesListsEqual(rolesListA, rolesListB) {
-        console.log(rolesListA);
-        console.log(rolesListB);
-        if (rolesListA.length !== rolesListB.length) return false;
-        for (let roleA of rolesListA) {
-            const aParts = roleA.split(":");
-            const aDivisions = aParts[1] ? aParts[1].split("|") : [];
-            let foundMatch = false;
-            for (let roleB of rolesListB) {
-                const bParts = roleB.split(":");
-                if (aParts[0] !== bParts[0]) continue;
-                foundMatch = true;
-                const bDivisions = bParts[1] ? bParts[1].split("|") : [];
-                if (aDivisions.length !== bDivisions.length) return false;
-                for (let division of aDivisions) {
-                    if (!bDivisions.includes(division)) return false;
-                }
-            }
-            if (!foundMatch) return false;
-        }
-        return true;
-    }
-    areUtilizationListsEqual(utilizationListA, utilizationListB) {
-        console.log(utilizationListA);
-        console.log(utilizationListB);
-        if (utilizationListA.length !== utilizationListB.length) return false;
-        for (let utilizationA of utilizationListA) {
-            const aParts = utilizationA.split(":");
-            const interruptableMediaTypesA = aParts[2] ? aParts[2].split("|") : [];
-            let foundMatch = false;
-            for (let utilizationB of utilizationListB) {
-                const bParts = utilizationB.split(":");
-                if (aParts[0] !== bParts[0]) continue;
-                foundMatch = true;
-                const interruptableMediaTypesB = bParts[2] ? bParts[2].split("|") : [];
-                if (interruptableMediaTypesA.length !== interruptableMediaTypesB.length) return false;
-                for (let interruptableMediaType of interruptableMediaTypesA) {
-                    if (!interruptableMediaTypesB.includes(interruptableMediaType)) return false;
-                }
-            }
-            if (!foundMatch) return false;
-        }
-        return true;
-    }
     normalizeList(list, delimiters) {
         const currentDelimiter = delimiters.pop();
         const listLevel = list.split(currentDelimiter);
@@ -755,82 +647,5 @@ class BulkUserTab extends Tab {
             normalizedValues.push(value);
         }
         return normalizedValues.join(currentDelimiter);
-    }
-    validateValue(key, value, mappings) {
-        switch(key) {
-            case "utilization":
-                this.validateUtilization(value);
-                break;
-            case "roles":
-                this.validateRoles(value, mappings);
-            case "skills":
-                this.validateSkills(value, mappings);
-                break;
-            case "language skills":
-                this.validateSkills(value, mappings);
-                break;
-            case "queues":
-                break;
-            case "division":
-
-                break;
-        }
-    }
-    validateUtilization(value) {
-        const mediaTypes = new Set(["call", "callback", "chat", "email", "message", "workitem"]);
-        const includedMediaTypes = new Set();
-        const utilizations = value.split(",");
-        for (let utilization of utilizations) {
-            const parts = utilization.split(":");
-            if (!mediaTypes.has(parts[0])) throw `Unknown media type [${parts[0]}]`;
-            includedMediaTypes.add(parts[0]);
-            const maxCapacity = parts[1] && !isNaN(parseInt(parts[1])) ? parseInt(parts[1]) : undefined;
-            if (maxCapacity === undefined) throw `Invalid capacity [${parts[1]}] for media type [${parts[0]}]`;
-            const interruptableMediaTypes = parts[2] ? parts[2].split("|") : [];
-            for (let interruptableMediaType of interruptableMediaTypes) {
-                if (!mediaTypes.has(interruptableMediaType)) throw `Unknown interruptable media type [${interruptableMediaType}] for media type [${parts[0]}]`;
-            }
-        }
-        const missingMediaTypes = Array.from(mediaTypes.difference(includedMediaTypes));
-        if (missingMediaTypes.length > 0) throw `Missing required media types [${missingMediaTypes.join(", ")}]`;
-        return true;
-    }
-    validateRoles(value, mappings) {
-        if (value === "") return true;
-        const existingDivisions = mappings.divisions;
-        const existingRoles = mappings.roles;
-        const roles = value.split(",");
-        for (let role of roles) {
-            const parts = role.split(":");
-            const existingRole = existingRoles[parts[0]];
-            if (!existingRole) throw `No role [${parts[0]}]`;
-            const divisions = parts[1] ? parts[1].split("|") : [];
-            for (let division of divisions) {
-                const existingDivision = existingDivisions[division];
-                if (!existingDivision) throw `No division [${division}]`;
-            }
-        }
-        return true;
-    }
-    validateSkills(value, mappings) {
-        if (value === "") return true;
-        const existingSkills = mappings.skills;
-        const skills = value.split(",");
-        for (let skill of skills) {
-            const parts = skill.split(":");
-            const existingSkill = existingSkills[parts[0]];
-            if (!existingSkill) throw `No skill [${parts[0]}]`;
-            const proficiency = parts[1] ? parts[1] : undefined;
-            if (proficiency && isNaN(parseInt(parts[1]))) throw `Invalid proficiency [${parts[1]}] for skill [${parts[0]}]`;
-        }
-        return true;
-    }
-    validateQueues(value, mappings) {
-        if (value === "") return true;
-        const queues = value.split(",");
-        for (let queue of queues) {
-            if (!mappings.queues[queue]) throw `No queue [${queue}]`;
-        }
-        return true;
     }
 }
