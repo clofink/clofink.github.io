@@ -33,6 +33,8 @@ td {
     flex-direction: column;
     align-items: center;
     padding: .5em;
+    user-select: none;
+    cursor: pointer;
 }
 .title {
     font-size: 1.5em;

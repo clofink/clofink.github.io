@@ -71,6 +71,8 @@ function makeSelectUi(movie1, movie2, container) {
     const movieOptions = newElement("div", { id: "options" });
     const movie1Elems = makeMovieSelect(movie1, "left");
     const movie2Elems = makeMovieSelect(movie2, "right");
+    registerElement(movie1Elems, "click", () => {vote(movie1, movie2); showOptions()});
+    registerElement(movie2Elems, "click", () => {vote(movie2, movie1); showOptions()});
     addElements([movie1Elems, movie2Elems], movieOptions);
 
     const controls = newElement("div", { id: "controls" });
