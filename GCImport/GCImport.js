@@ -48,7 +48,6 @@ function showMainMenu() {
         new UserSkillsTab(),
         new UtilizationTab(),
         new UserRolesTab(),
-        new BulkUserTab(),
     ]);
     addElement(tabContainer.getTabContainer(), page);
     getOrgDetails().then(function(result) {
