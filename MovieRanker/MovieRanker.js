@@ -1,4 +1,4 @@
-var movieList, fileContents;
+var movieList, fileContents, unratedMovies;
 const MAX_RETRIES = 10;
 
 var requiredFields = ["Title"];
@@ -36,6 +36,7 @@ function loadFile(event) {
     catch (error) {
         handleError(error);
     }
+    window.unratedMovies = undefined;
     event.target.value = "";
 }
 
@@ -96,7 +97,7 @@ function makeSelectUi(movie1, movie2, container) {
 function showOptions() {
     if (!fileContents || fileContents.data.length < 2) return;
 
-    const missingEloMovies = fileContents.data.filter((e) => (!e.hasOwnProperty("ELO") || !e.ELO) && (!e.hasOwnProperty("Seen") || e.Seen !== "FALSE"));
+    const missingEloMovies = getUnratedMovies(fileContents.data);
     if (missingEloMovies.length > 0) {
         const selectContainer = eById("selections");
         clearElement(selectContainer);
@@ -176,7 +177,7 @@ function downloadBlob(content) {
 
 function checkKey(event) {
     if (!event) return;
-    if (!qs("left") && !qs("right")) return;
+    if (!qs(".left") && !qs(".right")) return;
     if (event.shiftKey && event.code === "ArrowRight") {
         const rightOption = fileContents.data.find((e) => e.Title === qs(".right").dataset.title)
         markUnseen(rightOption);
@@ -203,6 +204,12 @@ function checkKey(event) {
         console.log("skipped")
         showOptions();
     }
+}
+
+function getUnratedMovies(list) {
+    if (window.unratedMovies) return window.unratedMovies;
+    window.unratedMovies = list.filter((e) => (!e.hasOwnProperty("ELO") || !e.ELO) && (!e.hasOwnProperty("Seen") || e.Seen !== "FALSE"));
+    return window.unratedMovies;
 }
 
 // filter for ones with no ELO score
