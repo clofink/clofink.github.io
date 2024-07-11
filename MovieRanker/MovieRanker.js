@@ -27,6 +27,7 @@ function loadFile(event) {
                 start();
             }
             catch (error) {
+                console.error(error);
                 throw `${file.name} does not contain valid CSV.`
             }
         })
@@ -35,6 +36,7 @@ function loadFile(event) {
     catch (error) {
         handleError(error);
     }
+    event.target.value = "";
 }
 
 // from https://github.com/moroshko/elo.js
@@ -93,6 +95,17 @@ function makeSelectUi(movie1, movie2, container) {
 
 function showOptions() {
     if (!fileContents || fileContents.data.length < 2) return;
+
+    const missingEloMovies = fileContents.data.filter((e) => (!e.hasOwnProperty("ELO") || !e.ELO) && (!e.hasOwnProperty("Seen") || e.Seen !== "FALSE"));
+    if (missingEloMovies.length > 0) {
+        const selectContainer = eById("selections");
+        clearElement(selectContainer);
+        const currentMovie = missingEloMovies.shift();
+        const rater = makeMovieRater(currentMovie);
+        addElement(rater, selectContainer);
+        return;
+    }
+
     const movie1 = getRandomMovie(fileContents.data);
     let movie2 = getRandomMovie(fileContents.data);
     let tries = 0;
@@ -122,6 +135,7 @@ function vote(winner, loser) {
 }
 
 function start() {
+    // get the ones withouth an ELO property or no value for the ELO property
     showOptions();
 }
 
@@ -130,7 +144,8 @@ function markUnseen(movie) {
 }
 
 function makeMovieSelect(movie, side) {
-    const movieContainer = newElement("div", { class: ["movieOption", side], "data-title": movie.Title });
+    const movieContainer = newElement("div", { class: ["movieOption"], "data-title": movie.Title });
+    if (side) movieContainer.classList.add(side);
     const title = newElement("div", { class: ["title"], innerText: movie.Title });
     addElement(title, movieContainer);
     if (movie.Director) {
@@ -161,6 +176,7 @@ function downloadBlob(content) {
 
 function checkKey(event) {
     if (!event) return;
+    if (!qs("left") && !qs("right")) return;
     if (event.shiftKey && event.code === "ArrowRight") {
         const rightOption = fileContents.data.find((e) => e.Title === qs(".right").dataset.title)
         markUnseen(rightOption);
@@ -187,6 +203,32 @@ function checkKey(event) {
         console.log("skipped")
         showOptions();
     }
+}
+
+// filter for ones with no ELO score
+// go through those first to give a "star" rating (1-5)
+// use that to set an initial ELO
+// 700 1100 1500 1900 2300
+
+function makeMovieRater(movie) {
+    const starEloMapping = ["700", "1100", "1500", "1900", "2300"];
+    const ratingContainer = newElement("div", { class: ["ratingContainer"]});
+    const controls = newElement("div", { id: "controls" });
+    const movieCard = makeMovieSelect(movie, "");
+
+    const markUnseenButton = newElement("button", {innerText: "Mark Unseen"});
+    registerElement(markUnseenButton, "click", () => {markUnseen(movie); showOptions()})
+
+    const starButtonContainer = newElement("div", {id: "starButtons"})
+    for (let i = 0; i < 5; i++) {
+        const starButton = newElement("span", { class: ["star"] });
+        registerElement(starButton, "click", () => {movie.ELO = starEloMapping[i]; showOptions()});
+        addElement(starButton, starButtonContainer);
+    }
+    addElement(markUnseenButton, controls);
+    addElements([movieCard, controls, starButtonContainer], ratingContainer);
+    
+    return ratingContainer;
 }
 
 const importField = document.getElementById('import');
