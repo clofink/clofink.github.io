@@ -43,7 +43,7 @@ button {
     cursor: pointer;
 }
 .movieOption {
-    height: 6em;
+    height: 8em;
     width: 20em;
     border-radius: .5em;
     background-color: lightgray;

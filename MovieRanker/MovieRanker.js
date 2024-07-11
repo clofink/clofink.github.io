@@ -133,6 +133,10 @@ function makeMovieSelect(movie, side) {
     const movieContainer = newElement("div", { class: ["movieOption", side], "data-title": movie.Title });
     const title = newElement("div", { class: ["title"], innerText: movie.Title });
     addElement(title, movieContainer);
+    if (movie.Director) {
+        const director = newElement("div", { class: ["director"], innerText: `Dir: ${movie.Director}` });
+        addElement(director, movieContainer)
+    }
     if (movie.Year) {
         const year = newElement("div", { class: ["year"], innerText: `(${movie.Year})` });
         addElement(year, movieContainer);
