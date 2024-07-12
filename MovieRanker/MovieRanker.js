@@ -110,7 +110,7 @@ function showOptions() {
     const movie1 = getRandomMovie(fileContents.data);
     let movie2 = getRandomMovie(fileContents.data);
     let tries = 0;
-    while (movie1 === movie2 && tries < MAX_RETRIES) {
+    while ((movie1 === movie2 || !couldOutcomeAdjustBothScores(movie1, movie2)) && tries < MAX_RETRIES) {
         tries++;
         movie2 = getRandomMovie(fileContents.data);
     }
@@ -133,6 +133,16 @@ function vote(winner, loser) {
     updateRating(winner, getNewRating(winnerRating, loserRating, 1));
     updateRating(loser, getNewRating(loserRating, winnerRating, 0));
     console.log(`"${winner.Title}" (${winnerRating} -> ${winner.ELO}) beat "${loser.Title}" (${loserRating} -> ${loser.ELO})`);
+}
+
+function couldOutcomeAdjustBothScores(movie1, movie2) {
+    const movie1Win = getRatingDelta(movie1.ELO, movie2.ELO, 1);
+    const movie2Win = getRatingDelta(movie2.ELO, movie1.ELO, 1);
+    const result = movie1Win > 0 && movie2Win > 0;
+    if (!result) {
+        console.log(`Skipping "${movie1.Title}" and "${movie2.Title}" since there may be no ELO change`);
+    }
+    return result
 }
 
 function start() {
@@ -201,7 +211,6 @@ function checkKey(event) {
         showOptions();
     }
     else if (event.code === "ArrowDown") {
-        console.log("skipped")
         showOptions();
     }
 }
