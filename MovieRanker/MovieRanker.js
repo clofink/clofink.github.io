@@ -128,8 +128,12 @@ function parsedNumOrDefault(numString, fallback) {
 }
 
 function vote(winner, loser) {
-    const winnerRating = winner.ELO
-    const loserRating = loser.ELO
+    const winnerRating = parseInt(winner.ELO, 10);
+    const loserRating = parseInt(loser.ELO, 10);
+    if (Number.isNaN(winnerRating) || Number.isNaN(loserRating)) {
+        console.log(`"${winner.Title}" or "${loser.Title}" has a non-integer ELO somehow`);
+        return;
+    }
     updateRating(winner, getNewRating(winnerRating, loserRating, 1));
     updateRating(loser, getNewRating(loserRating, winnerRating, 0));
     console.log(`"${winner.Title}" (${winnerRating} -> ${winner.ELO}) beat "${loser.Title}" (${loserRating} -> ${loser.ELO})`);
