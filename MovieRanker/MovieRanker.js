@@ -227,7 +227,7 @@ function getUnratedMovies(list) {
 // 700 1100 1500 1900 2300
 
 function makeMovieRater(movie) {
-    const starEloMapping = ["700", "1100", "1500", "1900", "2300"];
+    const starEloMapping = [700, 1100, 1500, 1900, 2300];
     const ratingContainer = newElement("div", { class: ["ratingContainer"]});
     const controls = newElement("div", { id: "controls" });
     const movieCard = makeMovieSelect(movie, "");
