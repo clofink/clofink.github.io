@@ -58,7 +58,7 @@ function makeSelectUi(container) {
     showOptions(movieOptions);
 
     const controls = newElement("div", { id: "controls" });
-    const nextRoundButton = newElement("button", { innerText: "Next Round" });
+    const nextRoundButton = newElement("button", { id: "nextRound", innerText: "Next Round", disabled: true });
     registerElement(nextRoundButton, "click", nextRound);
     const restartButton = newElement("button", { innerText: "Restart" });
     registerElement(restartButton, "click", restart);
@@ -72,6 +72,7 @@ function nextRound() {
     window.currentRound++;
     window.currentMovies = window.nextRoundMovies;
     window.nextRoundMovies = [];
+    eById("nextRound").setAttribute("disabled", true);
     showCurrentMovies(eById("options"));
 }
 
@@ -79,7 +80,7 @@ function restart() {
     window.currentRound = 0;
     window.currentMovies = [];
     window.nextRoundMovies = [];
-    showOptions(eById("options"));
+    makeSelectUi(eById("selections"));
 }
 
 function showCurrentMovies(container) {
@@ -91,10 +92,15 @@ function showCurrentMovies(container) {
             if (window.nextRoundMovies.includes(movie)) {
                 window.nextRoundMovies.splice(window.nextRoundMovies.indexOf(movie), 1);
                 movieChoice.classList.remove("chosen");
+                eById("nextRound").setAttribute("disabled", true);
                 return;
             }
+            if (window.nextRoundMovies.length === ROUND_CHOICES[window.currentRound + 1]) return;
             movieChoice.classList.add("chosen");
             window.nextRoundMovies.push(movie);
+            if (window.nextRoundMovies.length === ROUND_CHOICES[window.currentRound + 1]) {
+                eById("nextRound").removeAttribute("disabled");
+            }
         });
         if (window.nextRoundMovies.includes(movie)) movieChoice.classList.add("chosen");
         addElement(movieChoice, container);
@@ -148,9 +154,7 @@ function makeMovieSelect(movie) {
         const rerollButton = newElement("button", { innerText: "Reroll" });
         registerElement(rerollButton, "click", () => {
             const replaceIndex = window.currentMovies.indexOf(movie);
-            if (window.nextRoundMovies.includes(movie)) {
-                window.nextRoundMovies.splice(window.nextRoundMovies.indexOf(movie), 1);
-            }
+            removeFromArray(window.nextRoundMovies, movie);
             let tries = 0;
             let newMovie;
             while (!window.currentMovies.includes(newMovie) && tries < MAX_RETRIES) {
