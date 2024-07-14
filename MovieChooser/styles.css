@@ -1,0 +1,85 @@
+#inputs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: .5em;
+}
+table {
+    margin: auto;
+    width: 50%;
+}
+td {
+    text-align: center;
+    width: 10vw;
+}
+#selections {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    row-gap: 1em;
+}
+#options {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    column-gap: 1em;
+}
+#options, #controls {
+    display: flex;
+}
+#options {
+    column-gap: 1em;
+    align-items: center;
+}
+#controls {
+    column-gap: .5em;
+}
+.movieOption {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: .5em;
+    user-select: none;
+    height: calc(100vh / 3);
+    max-width: calc(100vw / 6);
+    min-width: calc(100vw / 6);
+    width: calc(100vw / 6);
+    border-radius: .5em;
+    background-color: lightgray;
+    text-align: center;
+    row-gap: .5em;
+    cursor: pointer;
+    position:relative;
+}
+.movieOption:hover {
+    background-color: rgb(168, 168, 168);
+}
+.movieOption.chosen {
+    background-color: rgb(88, 88, 88);
+    color: white;
+}
+.movieOption .buttons {
+    position: absolute;
+    bottom: .5em;
+}
+.title {
+    font-size: 1.5em;
+}
+button {
+    cursor: pointer;
+}
+.star::before {
+    content: "★";
+    font-size: 2em;
+}
+.star:hover {
+    color: red;
+}
+.ratingContainer {
+    display: flex;
+    flex-direction: column;
+    row-gap: 1em;
+    align-items: center;
+}
