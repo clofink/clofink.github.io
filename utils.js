@@ -82,3 +82,9 @@ async function wait(time) {
         setTimeout(() => {resolve()}, time);
     })
 }
+
+function removeFromArray(array, item) {
+    const indexToRemove = array.indexOf(item);
+    if (indexToRemove < 0) return;
+    array.splice(indexToRemove, 1);
+}
