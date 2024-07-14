@@ -90,7 +90,7 @@ function showCurrentMovies(container) {
         registerElement(movieChoice, "click", (e) => {
             if (e.target.nodeName === "BUTTON") return;
             if (window.nextRoundMovies.includes(movie)) {
-                window.nextRoundMovies.splice(window.nextRoundMovies.indexOf(movie), 1);
+                removeFromArray(window.nextRoundMovies, movie);
                 movieChoice.classList.remove("chosen");
                 eById("nextRound").setAttribute("disabled", true);
                 return;
@@ -154,6 +154,9 @@ function makeMovieSelect(movie) {
         const rerollButton = newElement("button", { innerText: "Reroll" });
         registerElement(rerollButton, "click", () => {
             const replaceIndex = window.currentMovies.indexOf(movie);
+            if (window.nextRoundMovies.includes(movie)) {
+                eById('nextRound').setAttribute("disabled", true);
+            }
             removeFromArray(window.nextRoundMovies, movie);
             let tries = 0;
             let newMovie;
