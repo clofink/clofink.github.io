@@ -88,3 +88,9 @@ function removeFromArray(array, item) {
     if (indexToRemove < 0) return;
     array.splice(indexToRemove, 1);
 }
+
+function replaceInArray(array, item, replacement) {
+    const indexToRemove = array.indexOf(item);
+    if (indexToRemove < 0) return;
+    array.splice(indexToRemove, 1, replacement);
+}
