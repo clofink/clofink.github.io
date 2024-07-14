@@ -96,6 +96,7 @@ function showCurrentMovies(container) {
             movieChoice.classList.add("chosen");
             window.nextRoundMovies.push(movie);
         });
+        if (window.nextRoundMovies.includes(movie)) movieChoice.classList.add("chosen");
         addElement(movieChoice, container);
     }
 }
