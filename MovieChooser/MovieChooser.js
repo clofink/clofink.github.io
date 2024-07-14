@@ -148,6 +148,9 @@ function makeMovieSelect(movie) {
         const rerollButton = newElement("button", { innerText: "Reroll" });
         registerElement(rerollButton, "click", () => {
             const replaceIndex = window.currentMovies.indexOf(movie);
+            if (window.nextRoundMovies.includes(movie)) {
+                window.nextRoundMovies.splice(window.nextRoundMovies.indexOf(movie), 1);
+            }
             let tries = 0;
             let newMovie;
             while (!window.currentMovies.includes(newMovie) && tries < MAX_RETRIES) {
