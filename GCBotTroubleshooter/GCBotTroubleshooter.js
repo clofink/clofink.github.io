@@ -518,7 +518,7 @@ async function getBotFlows() {
 function showLoginPage() {
     const urls = ["usw2.pure.cloud", "mypurecloud.com", "use2.us-gov-pure.cloud", "cac1.pure.cloud", "mypurecloud.ie", "euw2.pure.cloud", "mypurecloud.de", "aps1.pure.cloud", "mypurecloud.jp", "apne2.pure.cloud", "mypurecloud.com.au", "sae1.pure.cloud", "inintca.com"]
     const inputsWrapper = newElement('div', { id: "inputs" });
-    const clientIdLabel = newElement('label', { innerText: "Client ID: " });
+    const clientIdLabel = newElement('label', { innerText: "Client ID: "});
     const clientInput = newElement('input', { name: "clientId" });
     addElement(clientInput, clientIdLabel);
     const environmentLabel = newElement('label', { innerText: "Environment: " });
@@ -609,18 +609,13 @@ async function generateCodeChallengeFromVerifier(v) {
     return base64encoded;
 }
 
-// function login() {
-//     window.localStorage.setItem('environment', qs('[name="environment"]').value);
-//     window.location.replace(`https://login.${window.localStorage.getItem('environment')}/oauth/authorize?response_type=token&client_id=${qs('[name="clientId"]').value}&redirect_uri=${encodeURIComponent(location.origin + location.pathname)}`);
-// }
-
 function logout() {
     window.flows = undefined;
     window.localStorage.removeItem('auth');
+    window.localStorage.removeItem('code');
     window.localStorage.removeItem('environment');
     window.localStorage.removeItem("clientId");
     window.localStorage.removeItem("redirectUri");
-    window.localStorage.removeItem("codeChallenge");
     window.localStorage.removeItem("codeVerifier");
     eById('header').innerText = `Current Org Name: \nCurrent Org ID:`;
     showLoginPage();
@@ -630,11 +625,26 @@ function storeToken(token) {
     window.localStorage.setItem('auth', token);
 }
 
-function getToken() {
-    if (window.localStorage.getItem('auth')) {
-        return window.localStorage.getItem('auth');
+function canGetToken() {
+    if (window.localStorage.getItem('auth')) return true;
+
+    if (window.localStorage.getItem('code') &&
+        window.localStorage.getItem('redirectUri') &&
+        window.localStorage.getItem('clientId') &&
+        window.localStorage.getItem('codeVerifier') &&
+        window.localStorage.getItem('environment')
+    ) {
+        return true;
     }
-    return '';
+    return false
+}
+
+function getToken() {
+    const authToken = window.localStorage.getItem('auth');
+    if (authToken) {
+        return authToken;
+    }
+    return "";
 }
 
 async function getOrgDetails() {
@@ -650,7 +660,7 @@ async function login() {
     const clientId = storeAndReturnValue("clientId", qs('[name="clientId"]').value);
     const redirectUri = storeAndReturnValue("redirectUri", location.origin + location.pathname);
     const codeVerifier = storeAndReturnValue("codeVerifier", generateCodeVerifier());
-    const codeChallenge = storeAndReturnValue("codeChallenge", await generateCodeChallengeFromVerifier(codeVerifier));
+    const codeChallenge =  await generateCodeChallengeFromVerifier(codeVerifier);
     window.localStorage.setItem('environment', environment);
     window.location.replace(`https://login.${environment}/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge_method=S256&code_challenge=${codeChallenge}`);
 }
@@ -665,7 +675,7 @@ async function getAuthToken() {
     const url = `https://login.${window.localStorage.getItem('environment')}/oauth/token`;
     const formData = new URLSearchParams();
     formData.append("grant_type", "authorization_code");
-    formData.append("code", window.localStorage.getItem("auth")); // auth code
+    formData.append("code", window.localStorage.getItem("code"));
     formData.append("redirect_uri", window.localStorage.getItem("redirectUri"));
     formData.append("client_id", window.localStorage.getItem("clientId"));
     formData.append("code_verifier", window.localStorage.getItem("codeVerifier"));
@@ -683,17 +693,6 @@ function createUrlEncodedFormBody(obj) {
         formBody.push(encodedKey + "=" + encodedValue);
     }
     return formBody.join("&");
-}
-
-if (window.location.search) {
-    const searchParams = new URLSearchParams(window.location.search);
-    storeToken(searchParams.get("code"));
-}
-if (!getToken()) {
-    showLoginPage();
-}
-else {
-    
 }
 
 async function showLoading(loadingFunc) {
@@ -729,3 +728,21 @@ async function getAll(path, resultsKey, pageSize) {
     return items;
 }
 
+async function loginAndShowPage() {
+    if (!window.localStorage.getItem('auth')) {
+        const auth = await getAuthToken();
+        window.localStorage.setItem("auth", auth.access_token);
+    }
+    showMainMenu();
+}
+
+if (window.location.search) {
+    const searchParams = new URLSearchParams(window.location.search);
+    window.localStorage.setItem("code", (searchParams.get("code")));
+}
+if (window.localStorage.getItem('auth') || canGetToken()) {
+    loginAndShowPage();
+}
+else {
+    showLoginPage();
+}
