@@ -27,7 +27,7 @@ class BotSession {
             },
             "language": ""
         }
-    
+
         const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/textbots/botflows/sessions`;
         const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
         const resultJson = await result.json();
@@ -49,7 +49,7 @@ class BotSession {
                     }
                 ]
             },
-            "previousTurn": this.previousTurnId ? {"id": this.previousTurnId} : null,
+            "previousTurn": this.previousTurnId ? { "id": this.previousTurnId } : null,
             "inputEventType": inputEventType
         }
         const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/textbots/botflows/sessions/${this.sessionId}/turns`;
@@ -68,37 +68,37 @@ class TestBotTab extends Tab {
     render() {
         this.container = newElement('div');
         const inputs = newElement("div", { id: "inputs" });
-        const botSelectLabel = newElement('label', { innerText: "Bot Flow: "});
-        const botSelect = newElement('select', {id: "botFlow"});
+        const botSelectLabel = newElement('label', { innerText: "Bot Flow: " });
+        const botSelect = newElement('select', { id: "botFlow" });
         addElement(botSelect, botSelectLabel);
         addElement(botSelectLabel, inputs);
-    
-        const messageContainer = newElement('div', {id: "messageContainer"});
-    
-        const startButton = newElement('button', {innerText: "Start"});
+
+        const messageContainer = newElement('div', { id: "messageContainer" });
+
+        const startButton = newElement('button', { innerText: "Start" });
         function startFunc() {
             clearElement(messageContainer);
             this.run();
         }
         registerElement(startButton, "click", startFunc.bind(this));
-        showLoading(async () => {await populateBotList(botSelect)});
-    
+        showLoading(async () => { await populateBotList(botSelect) });
+
         const logoutButton = newElement('button', { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
 
-        const showTestButton = newElement('button', {innerText: "Save Test"});
+        const showTestButton = newElement('button', { innerText: "Save Test" });
         function saveTestFunc() {
             if (this.currentItem) this.currentTest.push(this.currentItem);
-            window.tests.push({name: "", commands: this.currentTest});
+            window.tests.push({ name: "", commands: this.currentTest });
             this.currentTest = [];
         }
         registerElement(showTestButton, "click", saveTestFunc.bind(this));
 
-        const runTestsButton = newElement('button', {innerText: "Run Tests"});
+        const runTestsButton = newElement('button', { innerText: "Run Tests" });
         registerElement(runTestsButton, "click", this.runTests.bind(this));
 
         addElements([inputs, startButton, logoutButton, showTestButton, runTestsButton, messageContainer], this.container);
-    
+
         return this.container;
     }
 
@@ -108,8 +108,8 @@ class TestBotTab extends Tab {
                 await this.runTest(test);
                 log(`Test [${test.name}] succeeded`);
             }
-            catch(error) {
-                log(`Test [${test.name}] failed with error [${error}]`,'warn');
+            catch (error) {
+                log(`Test [${test.name}] failed with error [${error}]`, 'warn');
             }
         }
     }
@@ -118,7 +118,7 @@ class TestBotTab extends Tab {
         const selectedFlow = eById('botFlow').value;
         const botSession = new BotSession(selectedFlow);
         await botSession.createSession();
-    
+
         for (let command of testCase.commands) {
             switch (command.action) {
                 case "start": {
@@ -150,7 +150,7 @@ class TestBotTab extends Tab {
         }
     }
 
-    
+
     compareResultToExpected(result, expected) {
         const messages = result?.prompts?.textPrompts?.segments
         if (!messages || messages.length < 1) throw `Expected [${expected.length}] but got no response`;
@@ -168,7 +168,7 @@ class TestBotTab extends Tab {
                         if (!Array.isArray(expectation.content)) throw `Bad expectation: [content] for quickReplies must be a list`;
                         for (let t = 0; t < expectation.content.length; t++) {
                             const expectedButtonText = expectation.content[t];
-    
+
                             if (!currentMessage.content[t]) throw `Expected QuickReply but got none`;
                             if (currentMessage.content[t].contentType !== "QuickReply") throw `Expected QuickReply [${expectedButtonText}] but got [${currentMessage.content[t].contentType}]`
                             if (expectedButtonText === currentMessage.content[t].quickReply.text) continue;
@@ -189,10 +189,10 @@ class TestBotTab extends Tab {
         if (messages.length > expected.length) throw `Received more [${messages.length}] messages than expected [${expected.length}]`;
         return true;
     }
-    
+
     createMessageRow(message, sender) {
-        const messageRow = newElement('div', {class: ["message-row"]});
-        const messageBubble = newElement('div', {class: ["message-bubble", sender]});
+        const messageRow = newElement('div', { class: ["message-row"] });
+        const messageBubble = newElement('div', { class: ["message-bubble", sender] });
         const messageContent = this.createMessageContent(message, sender);
         addElement(messageContent, messageBubble);
         addElement(messageBubble, messageRow);
@@ -202,12 +202,12 @@ class TestBotTab extends Tab {
     }
 
     createMessageContent(message, sender) {
-        const messageContent = newElement('div', {class: ["message-content", sender]});
+        const messageContent = newElement('div', { class: ["message-content", sender] });
         if (message?.prompts?.textPrompts?.segments) {
             for (let prompt of message.prompts.textPrompts.segments) {
                 switch (prompt.type) {
                     case "Text":
-                        this.currentItem.expects.push({"type": "message", "content": prompt.text})
+                        this.currentItem.expects.push({ "type": "message", "content": prompt.text })
                         addElement(this.createMessage(prompt), messageContent);
                         break;
                     case "RichMedia":
@@ -227,11 +227,11 @@ class TestBotTab extends Tab {
     handleResponse(message) {
         this.createMessageRow(message, "bot");
         if (message.nextActionDisconnect) {
-            this.createMessageRow({text: `Bot disconnected [${message.nextActionDisconnect.reason}] in [${message.nextActionDisconnect.flowLocation.sequenceName}] from block [${message.nextActionDisconnect.flowLocation.actionNumber} ${message.nextActionDisconnect.flowLocation.actionName}]${message.nextActionDisconnect.reasonExtendedInfo ? ` with reason: [${message.nextActionDisconnect.reasonExtendedInfo}]`: ""}`}, "system");
+            this.createMessageRow({ text: `Bot disconnected [${message.nextActionDisconnect.reason}] in [${message.nextActionDisconnect.flowLocation.sequenceName}] from block [${message.nextActionDisconnect.flowLocation.actionNumber} ${message.nextActionDisconnect.flowLocation.actionName}]${message.nextActionDisconnect.reasonExtendedInfo ? ` with reason: [${message.nextActionDisconnect.reasonExtendedInfo}]` : ""}` }, "system");
             this.disableInputs();
         }
         if (message.nextActionExit) {
-            this.createMessageRow({text: `Bot disconnected [${message.nextActionExit.reason}] in [${message.nextActionExit.flowLocation.sequenceName}] from block [${message.nextActionExit.flowLocation.actionNumber} ${message.nextActionExit.flowLocation.actionName}]${message.nextActionExit.reasonExtendedInfo ? ` with reason: [${message.nextActionExit.reasonExtendedInfo}]`: ""}`}, "system");
+            this.createMessageRow({ text: `Bot disconnected [${message.nextActionExit.reason}] in [${message.nextActionExit.flowLocation.sequenceName}] from block [${message.nextActionExit.flowLocation.actionNumber} ${message.nextActionExit.flowLocation.actionName}]${message.nextActionExit.reasonExtendedInfo ? ` with reason: [${message.nextActionExit.reasonExtendedInfo}]` : ""}` }, "system");
             this.disableInputs();
         }
         if (message.nextActionType === "NoOp") {
@@ -245,72 +245,72 @@ class TestBotTab extends Tab {
     }
 
     createMessage(prompt) {
-        const message = newElement('div', {innerText: prompt.text});
+        const message = newElement('div', { innerText: prompt.text });
         return message;
     }
 
     async run() {
-        this.currentItem = {"expects": []};
+        this.currentItem = { "expects": [] };
         const selectedFlow = eById('botFlow').value;
         this.botSession = new BotSession(selectedFlow);
         await this.botSession.createSession();
-    
+
         const messageContainer = eById('messageContainer');
-        this.messagesContainer = newElement("div", {class: ["messages-container"]});
+        this.messagesContainer = newElement("div", { class: ["messages-container"] });
         addElement(this.messagesContainer, messageContainer);
-    
+
         this.inputField = newElement('input');
-        this.button = newElement('button', {innerText: "Send"});
+        this.button = newElement('button', { innerText: "Send" });
         function keyPressFunc(event) {
             if (event.keyCode === 13) {
                 event.preventDefault();
                 this.button.click();
             }
-        } 
+        }
         this.inputField.addEventListener("keyup", keyPressFunc.bind(this));
         function sendFunc() {
             this.currentTest.push(this.currentItem);
-            this.currentItem = {"action": "sendMessage", "message": this.inputField.value, "expects": []};
+            this.currentItem = { "action": "sendMessage", "message": this.inputField.value, "expects": [] };
             this.sendTurnEvent(this.inputField.value, "UserInput");
             this.inputField.value = "";
         }
         registerElement(this.button, 'click', sendFunc.bind(this));
         addElements([this.messagesContainer, this.inputField, this.button], messageContainer);
-    
+
         this.sendTurnEvent("", "NoOp"); // to start the session
         this.currentItem.action = "start";
     }
 
     createQuickButtons(prompt) {
-        const buttonContainer = newElement('div', {class: ['button-container']});
+        const buttonContainer = newElement('div', { class: ['button-container'] });
         const buttonTexts = [];
         for (let option of prompt.content) {
             if (option.contentType === "Attachment") {
-                this.currentItem.expects.push({"type": "image", "content": option.attachment.url});
-                return newElement('img', {src: option.attachment.url});
+                this.currentItem.expects.push({ "type": "image", "content": option.attachment.url });
+                return newElement('img', { src: option.attachment.url });
             }
             if (option.contentType !== "QuickReply") {
                 log(`Unhandled option type [${option.contentType}]`, "warn");
                 continue;
             }
-            const quickButton = newElement("button", {innerText: option.quickReply.text, class: ["quickReply"]});
+            const quickButton = newElement("button", { innerText: option.quickReply.text, class: ["quickReply"] });
             buttonTexts.push(option.quickReply.text);
             function buttonFunc() {
                 this.currentTest.push(this.currentItem);
-                this.currentItem = {"action": "sendMessage", "message": option.quickReply.payload, "expects": []};
+                this.currentItem = { "action": "sendMessage", "message": option.quickReply.payload, "expects": [] };
                 this.sendTurnEvent(option.quickReply.payload, "UserInput");
             }
             registerElement(quickButton, "click", buttonFunc.bind(this));
             addElement(quickButton, buttonContainer);
         }
-        if (buttonTexts.length > 0) this.currentItem.expects.push({"type": "quickReplies", "content": buttonTexts})
+        if (buttonTexts.length > 0) this.currentItem.expects.push({ "type": "quickReplies", "content": buttonTexts })
         return buttonContainer;
     }
 
     async sendTurnEvent(message, inputEventType) {
         if (message) {
             qs(".button-container")?.remove();
-            this.createMessageRow({text: message}, "visitor");
+            this.createMessageRow({ text: message }, "visitor");
         }
         const resultJson = await this.botSession.sendTurnEvent(message, inputEventType);
         this.handleResponse(resultJson);
@@ -337,13 +337,13 @@ class TestCreationTab extends Tab {
         return this.container;
     }
     pageRenderer(testInfo) {
-        const testsContainer = newElement("div", {class: ['tests-container']});
+        const testsContainer = newElement("div", { class: ['tests-container'] });
         addElement(this.addTest(testInfo), testsContainer);
         return testsContainer;
     }
 
     parseTestFromPage() {
-        const test = {name: qs(".test-container input", this.pageModel.getContainer()).value, commands: []};
+        const test = { name: qs(".test-container input", this.pageModel.getContainer()).value, commands: [] };
         const actionsElems = qsa(".actions-container", this.pageModel.getContainer());
         for (let actionsElem of actionsElems) {
             const actionElems = qsa(".action-container", actionsElem);
@@ -365,7 +365,7 @@ class TestCreationTab extends Tab {
                     }
                 }
                 test.commands.push(action);
-            } 
+            }
         }
         return test;
     }
@@ -377,11 +377,11 @@ class TestCreationTab extends Tab {
 
     addTest(test) {
         test = test || {};
-        const testContainer = newElement('div', {class: ["test-container"]});
-        const nameLabel = newElement('label', {innerText: "Test Name: "});
-        const nameInput = newElement('input', {value: test.name ? test.name : ""});
+        const testContainer = newElement('div', { class: ["test-container"] });
+        const nameLabel = newElement('label', { innerText: "Test Name: " });
+        const nameInput = newElement('input', { value: test.name ? test.name : "" });
         addElement(nameInput, nameLabel);
-        const actionsContainer = newElement('div', {class: ["actions-container"]});
+        const actionsContainer = newElement('div', { class: ["actions-container"] });
         if (test.commands && test.commands.length > 0) {
             for (let command of test.commands) {
                 addElement(this.addAction(command), actionsContainer);
@@ -398,11 +398,11 @@ class TestCreationTab extends Tab {
     }
     addAction(action) {
         action = action || {};
-        const actionContainer = newElement('div', {class: ['action-container']});
+        const actionContainer = newElement('div', { class: ['action-container'] });
         const actionList = ["start", "sendMessage"];
         const actionSelect = newElement('select');
         for (let action of actionList) {
-            const actionOption = newElement('option', {innerText: action, value: action});
+            const actionOption = newElement('option', { innerText: action, value: action });
             addElement(actionOption, actionSelect);
         }
         if (action.action) actionSelect.value = action.action;
@@ -410,8 +410,8 @@ class TestCreationTab extends Tab {
             const existingInput = qs(".action-message-input", actionContainer);
             existingInput?.remove();
             if (actionSelect.value === "sendMessage") {
-                const newLabel = newElement('label', {innerText: "Message Text: ", class: ["action-message-input"]});
-                const newInput = newElement('input', {value: action.message ? action.message : ""});
+                const newLabel = newElement('label', { innerText: "Message Text: ", class: ["action-message-input"] });
+                const newInput = newElement('input', { value: action.message ? action.message : "" });
                 addElement(newInput, newLabel);
                 addElement(newLabel, actionSelect, "afterend")
             }
@@ -419,8 +419,8 @@ class TestCreationTab extends Tab {
         registerElement(actionSelect, 'change', selectChange);
         const removeButton = this.createRemoveButton(actionContainer, ".actions-container");
         const addActionBelowButton = this.createAddBelowButton(actionContainer, this.addAction);
-        
-        const expectationsContainer = newElement('div', {class: ['expectations-container']});
+
+        const expectationsContainer = newElement('div', { class: ['expectations-container'] });
         if (action.expects && action.expects.length > 0) {
             for (let expectation of action.expects) {
                 addElement(this.addExpectation(expectation), expectationsContainer);
@@ -435,11 +435,11 @@ class TestCreationTab extends Tab {
     }
     addExpectation(expects) {
         expects = expects || {};
-        const expectationContainer = newElement('div', {class: ['expectation-container']})
+        const expectationContainer = newElement('div', { class: ['expectation-container'] })
         const expectationTypeList = ["message", "image", "quickReplies"];
         const expectationSelect = newElement('select');
         for (let expectation of expectationTypeList) {
-            const expectationOption = newElement('option', {innerText: expectation, value: expectation});
+            const expectationOption = newElement('option', { innerText: expectation, value: expectation });
             addElement(expectationOption, expectationSelect);
         }
         if (expects.type) expectationSelect.value = expects.type;
@@ -447,19 +447,19 @@ class TestCreationTab extends Tab {
             qs(".expectation-message-input", expectationContainer)?.remove();
             qs(".buttons-container", expectationContainer)?.remove();
             if (expectationSelect.value === "message") {
-                const newLabel = newElement('label', {innerText: "Message Text: ", class: ["expectation-message-input"]});
-                const newInput = newElement('input', {value: expects.content ? expects.content : ""});
+                const newLabel = newElement('label', { innerText: "Message Text: ", class: ["expectation-message-input"] });
+                const newInput = newElement('input', { value: expects.content ? expects.content : "" });
                 addElement(newInput, newLabel);
                 addElement(newLabel, expectationSelect, "afterend");
             }
             else if (expectationSelect.value === "image") {
-                const newLabel = newElement('label', {innerText: "Image URL: ", class: ["expectation-message-input"]});
-                const newInput = newElement('input', {value: expects.content ? expects.content : ""});
+                const newLabel = newElement('label', { innerText: "Image URL: ", class: ["expectation-message-input"] });
+                const newInput = newElement('input', { value: expects.content ? expects.content : "" });
                 addElement(newInput, newLabel);
                 addElement(newLabel, expectationSelect, "afterend");
             }
             else if (expectationSelect.value === "quickReplies") {
-                const buttonsContainer = newElement('div', {class: ["buttons-container"]});
+                const buttonsContainer = newElement('div', { class: ["buttons-container"] });
                 if (expects.type === "quickReplies" && expects.content && expects.content.length > 0) {
                     for (let button of expects.content) {
                         addElement(this.addQuickButton(button), buttonsContainer);
@@ -472,27 +472,27 @@ class TestCreationTab extends Tab {
             }
         }
         registerElement(expectationSelect, 'change', selectChange.bind(this));
-        
+
         const removeButton = this.createRemoveButton(expectationContainer, ".expectations-container");
         const addExpectationBelowButton = this.createAddBelowButton(expectationContainer, this.addExpectation);
-        
+
         addElements([expectationSelect, removeButton, addExpectationBelowButton], expectationContainer);
         expectationSelect.dispatchEvent(new Event("change"));
         return expectationContainer;
     }
 
     addQuickButton(button) {
-        const buttonElem = newElement('input', {class: ["quickReply-text"], value: button ? button : ""});
+        const buttonElem = newElement('input', { class: ["quickReply-text"], value: button ? button : "" });
         return buttonElem;
     }
 
     createRemoveButton(container, containerSelector) {
-        const removeButton = newElement('button', {innerText: "x"});
-        registerElement(removeButton, "click", () => {if (container.closest(containerSelector).children.length === 1) return; container.remove()});
+        const removeButton = newElement('button', { innerText: "x" });
+        registerElement(removeButton, "click", () => { if (container.closest(containerSelector).children.length === 1) return; container.remove() });
         return removeButton;
     }
     createAddBelowButton(container, addFunc) {
-        const addBelowButton = newElement('button', {innerText: "+"});
+        const addBelowButton = newElement('button', { innerText: "+" });
         function addBelowFunc() {
             addElement(addFunc.bind(this)(), container, "afterend")
         }
@@ -501,11 +501,18 @@ class TestCreationTab extends Tab {
     }
 }
 
-async function getBots() {
-    if (window.flows) return window.flows
+async function getDigitalBotFlows() {
     // https://api.usw2.pure.cloud/api/v2/flows?includeSchemas=true&nameOrDescription=&sortBy=name&sortOrder=asc&pageNumber=1&pageSize=50&type=digitalbot
-    window.flows = await getAll("/api/v2/flows?sortBy=name&sortOrder=asc&type=digitalbot&includeSchemas=true", "entities", 50);
-    return window.flows;
+    return getAll("/api/v2/flows?type=digitalbot&includeSchemas=true", "entities", 50);
+}
+
+async function getByobIntegrations() {
+    const integrations = await getAll("/api/v2/integrations?pageNumber=1&pageSize=100&sortBy=name&sortOrder=ASC", "entities", 50);
+    return integrations.filter((e) => e.integrationType.id === "genesys-byob");
+}
+
+async function getBotFlows() {
+    return getAll("/api/v2/flows?type=bot&includeSchemas=true", "entities", 50);
 }
 
 function showLoginPage() {
@@ -551,31 +558,72 @@ function showMainMenu() {
 }
 
 async function populateBotList(select) {
-    const bots = await getBots();
-    for (let bot of bots) {
-        const botOption = newElement("option", {innerText: bot.name, value: bot.id});
+    if (!window.flows) {
+        const digitalBots = await getDigitalBotFlows();
+        const bots = await getBotFlows();
+        const byobs = await getByobIntegrations();
+        window.flows = [...digitalBots, ...bots, ...byobs];
+        window.flows.sort((a, b) => a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1);
+    }
+    console.log(window.flows);
+    for (let bot of window.flows) {
+        const botOption = newElement("option", { innerText: bot.name, value: bot.id });
         addElement(botOption, select);
     }
 }
 
-function login() {
-    window.localStorage.setItem('environment', qs('[name="environment"]').value);
-    window.location.replace(`https://login.${window.localStorage.getItem('environment')}/oauth/authorize?response_type=token&client_id=${qs('[name="clientId"]').value}&redirect_uri=${encodeURIComponent(location.origin + location.pathname)}`);
+// GENERATING CODE VERIFIER
+function dec2hex(dec) {
+    return ("0" + dec.toString(16)).substr(-2);
 }
+
+function generateCodeVerifier() {
+    var array = new Uint32Array(56 / 2);
+    window.crypto.getRandomValues(array);
+    return Array.from(array, dec2hex).join("");
+}
+
+function sha256(plain) {
+    // returns promise ArrayBuffer
+    const encoder = new TextEncoder();
+    const data = encoder.encode(plain);
+    return window.crypto.subtle.digest("SHA-256", data);
+}
+
+function base64urlencode(a) {
+    var str = "";
+    var bytes = new Uint8Array(a);
+    var len = bytes.byteLength;
+    for (var i = 0; i < len; i++) {
+        str += String.fromCharCode(bytes[i]);
+    }
+    return btoa(str)
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
+}
+
+async function generateCodeChallengeFromVerifier(v) {
+    var hashed = await sha256(v);
+    var base64encoded = base64urlencode(hashed);
+    return base64encoded;
+}
+
+// function login() {
+//     window.localStorage.setItem('environment', qs('[name="environment"]').value);
+//     window.location.replace(`https://login.${window.localStorage.getItem('environment')}/oauth/authorize?response_type=token&client_id=${qs('[name="clientId"]').value}&redirect_uri=${encodeURIComponent(location.origin + location.pathname)}`);
+// }
 
 function logout() {
     window.flows = undefined;
     window.localStorage.removeItem('auth');
     window.localStorage.removeItem('environment');
+    window.localStorage.removeItem("clientId");
+    window.localStorage.removeItem("redirectUri");
+    window.localStorage.removeItem("codeChallenge");
+    window.localStorage.removeItem("codeVerifier");
     eById('header').innerText = `Current Org Name: \nCurrent Org ID:`;
     showLoginPage();
-}
-
-function getParameterByName(name) {
-    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-    var regex = new RegExp("[\\#&]" + name + "=([^&#]*)"),
-        results = regex.exec(location.hash);
-    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
 function storeToken(token) {
@@ -597,18 +645,55 @@ async function getOrgDetails() {
     return resultJson;
 }
 
-if (window.location.hash) {
-    storeToken(getParameterByName('access_token'));
-    let now = new Date().valueOf();
-    let expireTime = parseInt(getParameterByName('expires_in')) * 1000;
-    log(new Date(now + expireTime));
-    location.hash = ''
+async function login() {
+    const environment = storeAndReturnValue("environment", qs('[name="environment"]').value);
+    const clientId = storeAndReturnValue("clientId", qs('[name="clientId"]').value);
+    const redirectUri = storeAndReturnValue("redirectUri", location.origin + location.pathname);
+    const codeVerifier = storeAndReturnValue("codeVerifier", generateCodeVerifier());
+    const codeChallenge = storeAndReturnValue("codeChallenge", await generateCodeChallengeFromVerifier(codeVerifier));
+    window.localStorage.setItem('environment', environment);
+    window.location.replace(`https://login.${environment}/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge_method=S256&code_challenge=${codeChallenge}`);
+}
+
+function storeAndReturnValue (key, value) {
+    if (window.localStorage.getItem(key)) return window.localStorage.getItem(key);
+    window.localStorage.setItem(key, value);
+    return value;
+}
+
+async function getAuthToken() {
+    const url = `https://login.${window.localStorage.getItem('environment')}/oauth/token`;
+    const formData = new URLSearchParams();
+    formData.append("grant_type", "authorization_code");
+    formData.append("code", window.localStorage.getItem("auth")); // auth code
+    formData.append("redirect_uri", window.localStorage.getItem("redirectUri"));
+    formData.append("client_id", window.localStorage.getItem("clientId"));
+    formData.append("code_verifier", window.localStorage.getItem("codeVerifier"));
+    formData.append("code_challenge_method", "S256");
+    const result = await fetch(url, { method: "POST", body: formData });
+    const resultJson = await result.json();
+    return resultJson;
+}
+
+function createUrlEncodedFormBody(obj) {
+    var formBody = [];
+    for (var property in obj) {
+        var encodedKey = encodeURIComponent(property);
+        var encodedValue = encodeURIComponent(details[property]);
+        formBody.push(encodedKey + "=" + encodedValue);
+    }
+    return formBody.join("&");
+}
+
+if (window.location.search) {
+    const searchParams = new URLSearchParams(window.location.search);
+    storeToken(searchParams.get("code"));
 }
 if (!getToken()) {
     showLoginPage();
 }
 else {
-    showMainMenu();
+    
 }
 
 async function showLoading(loadingFunc) {
@@ -630,7 +715,7 @@ async function getAll(path, resultsKey, pageSize) {
     while (pageNum < totalPages) {
         pageNum++;
         const url = `https://api.${window.localStorage.getItem('environment')}${path}&pageNumber=${pageNum}&pageSize=${pageSize}`;
-        const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
+        const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
         const resultJson = await result.json();
         if (result.ok) {
             resultJson.status = 200;
