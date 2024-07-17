@@ -46,7 +46,7 @@ function getRatingDelta(myRating, opponentRating, myGameResult) {
         return null;
     }
 
-    var myChanceToWin = 1 / ( 1 + Math.pow(10, (opponentRating - myRating) / 400));
+    const myChanceToWin = 1 / ( 1 + Math.pow(10, (opponentRating - myRating) / 400));
 
     return Math.round(32 * (myGameResult - myChanceToWin));
 }
@@ -108,11 +108,14 @@ function showOptions() {
     }
 
     const movie1 = getRandomMovie(fileContents.data);
+    if (!movie1.ID) movie1.ID = crypto.randomUUID();
     let movie2 = getRandomMovie(fileContents.data);
+    if (!movie2.ID) movie2.ID = crypto.randomUUID();
     let tries = 0;
     while ((movie1 === movie2 || !couldOutcomeAdjustBothScores(movie1, movie2)) && tries < MAX_RETRIES) {
         tries++;
         movie2 = getRandomMovie(fileContents.data);
+        if (!movie2.ID) movie2.ID = crypto.randomUUID();
     }
     if (tries === MAX_RETRIES) throw `Unable to find a non duplicate movie`;
     movie1.ELO = parsedNumOrDefault(movie1.ELO, 1500);
@@ -159,7 +162,7 @@ function markUnseen(movie) {
 }
 
 function makeMovieSelect(movie, side) {
-    const movieContainer = newElement("div", { class: ["movieOption"], "data-title": movie.Title });
+    const movieContainer = newElement("div", { class: ["movieOption"], "data-movie-id": movie.ID });
     if (side) movieContainer.classList.add(side);
     const title = newElement("div", { class: ["title"], innerText: movie.Title });
     addElement(title, movieContainer);
@@ -193,24 +196,24 @@ function checkKey(event) {
     if (!event) return;
     if (!qs(".left") && !qs(".right")) return;
     if (event.shiftKey && event.code === "ArrowRight") {
-        const rightOption = fileContents.data.find((e) => e.Title === qs(".right").dataset.title)
+        const rightOption = fileContents.data.find((e) => e.ID === qs(".right").dataset.movieId)
         markUnseen(rightOption);
         showOptions();
     }
     else if (event.shiftKey && event.code === "ArrowLeft") {
-        const leftOption = fileContents.data.find((e) => e.Title === qs(".left").dataset.title)
+        const leftOption = fileContents.data.find((e) => e.ID === qs(".left").dataset.movieId)
         markUnseen(leftOption);
         showOptions();
     }
     else if (event.code === "ArrowRight") {
-        const leftOption = fileContents.data.find((e) => e.Title === qs(".left").dataset.title)
-        const rightOption = fileContents.data.find((e) => e.Title === qs(".right").dataset.title)
+        const leftOption = fileContents.data.find((e) => e.ID === qs(".left").dataset.movieId)
+        const rightOption = fileContents.data.find((e) => e.ID === qs(".right").dataset.movieId)
         vote(rightOption, leftOption);
         showOptions();
     }
     else if (event.code === "ArrowLeft") {
-        const leftOption = fileContents.data.find((e) => e.Title === qs(".left").dataset.title)
-        const rightOption = fileContents.data.find((e) => e.Title === qs(".right").dataset.title)
+        const leftOption = fileContents.data.find((e) => e.ID === qs(".left").dataset.movieId)
+        const rightOption = fileContents.data.find((e) => e.ID === qs(".right").dataset.movieId)
         vote(leftOption, rightOption);
         showOptions();
     }
@@ -254,5 +257,5 @@ function makeMovieRater(movie) {
 const importField = document.getElementById('import');
 importField.addEventListener("change", loadFile);
 const exportButton = document.getElementById('export');
-exportButton.addEventListener("click", ()=>{if(!fileContents) return; downloadBlob(fileContents.data)});
+exportButton.addEventListener("click", ()=>{if(!fileContents) return; fileContents.data.map((e) => delete e.ID); downloadBlob(fileContents.data)});
 document.addEventListener('keyup', checkKey);
