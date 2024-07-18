@@ -84,10 +84,6 @@ async function getAllDraftActions() {
 }
 
 async function run() {
-    createNew();
-}
-
-async function createNew() {
     const integrationSelection = eById("integrationSelect")?.selectedOptions[0];
     const actionName = eById('actionNameInput')?.value;
     const runtimeSelection = eById("runtimeSelect")?.selectedOptions[0]?.value;
@@ -115,7 +111,7 @@ async function createNew() {
         "handler": handlerName,
         "runtime": runtimeSelection,
     }
-    const updatedSettings = await updateDraftFunctionSettings(newAction.id, settingsBody);
+    await updateDraftFunctionSettings(newAction.id, settingsBody);
 
     const packageUploadUrl = await createPackageUploadUrl(newAction.id, {fileName: fileName});
 
@@ -123,11 +119,16 @@ async function createNew() {
         ...packageUploadUrl.headers,
         "Content-Type": "application/zip"
     }
-    const uploadResult = await fetch(packageUploadUrl.url, { method: "PUT", headers: uploadHeaders, body: zipFile});
+    await fetch(packageUploadUrl.url, { method: "PUT", headers: uploadHeaders, body: zipFile});
 
-    await wait(10);
-
-    const draftSettings = await getDraftFunctionSettings(newAction.id);
+    let newDraftSettings = {}
+    let retries = 0;
+    const limit = 5;
+    while(!newDraftSettings.zip && retries < limit) {
+        retries++;
+        await wait(1);
+        newDraftSettings = await getDraftFunctionSettings(newAction.id);
+    }
 }
 
 async function popupateIntegrationDropdown(select) {
