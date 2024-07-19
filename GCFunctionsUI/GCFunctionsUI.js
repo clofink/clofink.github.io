@@ -1,3 +1,192 @@
+var integrationList, runtimeList, actionList;
+
+class NewActionTab extends Tab {
+    tabName = "New"
+
+    render() {
+        this.container = newElement("div", { id: "tabContainer" })
+        const inputs = newElement("div", { id: "inputs" });
+
+        const integrationLabel = newElement('label', { innerText: "Integration: " })
+        const integrationSelect = newElement('select', { id: "integrationSelect" });
+        addElement(integrationSelect, integrationLabel);
+        const runtimeLabel = newElement('label', { innerText: "Runtime: " })
+        const runtimeSelect = newElement('select', { id: "runtimeSelect" });
+        addElement(runtimeSelect, runtimeLabel);
+        showLoading(populateSelects, [integrationSelect, popupateIntegrationDropdown, runtimeSelect, popupateRuntimeDropdown]);
+    
+        const actionNameLabel = newElement('label', {innerText: "Action Name: "});
+        const actionNameInput = newElement('input', { id: "actionNameInput" });
+        addElement(actionNameInput, actionNameLabel);
+    
+        const entryPointLabel = newElement('label', {innerText: "Handler: "});
+        const entryPointInput = newElement('input', { id: "entryPointInput", value: "src/index.handler" });
+        addElement(entryPointInput, entryPointLabel);
+    
+        const zipLabel = newElement('label', { innerText: "Zip File: " })
+        const zipInput = newElement('input', { type: "file", id: "zipInput", accept: ".zip" });
+        addElement(zipInput, zipLabel);
+    
+        addElements([integrationLabel, runtimeLabel, actionNameLabel, entryPointLabel, zipLabel], inputs);
+    
+        const startButton = newElement('button', { innerText: "Start" });
+        registerElement(startButton, "click", () => {showLoading(run)});
+    
+        const logoutButton = newElement('button', { innerText: "Logout" });
+        registerElement(logoutButton, "click", logout);
+    
+    
+        addElements([inputs, startButton, logoutButton], this.container);
+        return this.container;
+    }
+}
+
+class UpdateActionTab extends Tab {
+    tabName = "Update"
+
+    render() {
+        this.container = newElement("div", { id: "tabContainer" })
+        const inputs = newElement("div", { id: "inputs" });
+
+        const runtimeLabel = newElement('label', { innerText: "Runtime: " })
+        const runtimeSelect = newElement('select', { id: "runtimeSelect" });
+        addElement(runtimeSelect, runtimeLabel);
+        const actionLabel = newElement('label', { innerText: "Action: " })
+        const actionSelect = newElement('select', { id: "actionSelect" });
+        addElement(actionSelect, actionLabel);
+        showLoading(populateSelects, [runtimeSelect, popupateRuntimeDropdown, actionSelect, populateActionDropdown]);
+
+        addElements([actionLabel, runtimeLabel], inputs);
+
+        addElements([inputs], this.container);
+        return this.container;
+    }
+}
+
+class TestActionTab extends Tab {
+    tabName = "Test"
+
+    render() {
+        this.container = newElement("div", { id: "tabContainer" })
+        const inputs = newElement("div", { id: "inputs" });
+
+        const actionLabel = newElement('label', { innerText: "Action: " })
+        const actionSelect = newElement('select', { id: "actionSelect" });
+        const inputLabel = newElement('label', { innerText: "Input: " });
+        const inputText = newElement('textarea', { id: "actionInput" });
+        addElement(inputText, inputLabel);
+        registerElement(actionSelect, "change", () => {
+            const selectedActionId = actionSelect.selectedOptions[0].value;
+            let selectedAction = window.actionList.find((e) => e.id === selectedActionId);
+            showLoading(async () => {
+                if (!selectedAction.contract.input.inputSchema) {
+                    if (selectedAction.type === "draft") {
+                        selectedAction = await getDraftActionDetails(selectedActionId);
+                    }
+                    else {
+                        selectedAction = await getActionDetails(selectedActionId);
+                    }
+                }
+                inputText.value = JSON.stringify(formatInputSchema(selectedAction?.contract?.input?.inputSchema?.properties ? selectedAction.contract.input.inputSchema.properties : {}), null, 2);
+            })
+        })
+        addElement(actionSelect, actionLabel);
+        const testButton = newElement('button', { innerText: "Run Test" });
+
+        registerElement(testButton, "click", () => {
+            const selectedActionId = actionSelect.selectedOptions[0].value;
+            let selectedAction = window.actionList.find((e) => e.id === selectedActionId);
+            showLoading(testAction, [selectedAction, inputText.value]);
+        })
+
+        showLoading(populateSelects, [actionSelect, populateActionDropdown]);
+
+        addElements([actionLabel, inputLabel, testButton], inputs);
+        this.resultsContainer = newElement('div', { id: "results" });
+        addElements([inputs,this.resultsContainer], this.container);
+        return this.container;
+    }
+}
+
+async function testAction(action, testBody) {
+    let result;
+    if (action.type === "draft") {
+        result = await runDraftActionTest(action.id, JSON.parse(testBody));
+    }
+    else {
+        result = await runActionTest(action.id, JSON.parse(testBody));
+    }
+    const resultsContainer = eById("results");
+    clearElement(resultsContainer);
+    if (result.success) {
+        const successContainer = newElement('div', { class: ['result', 'success'] });
+        const successResult = newElement('pre', { innerText: JSON.stringify(result.finalResult, null, 2) })
+        addElement(successResult, successContainer);
+        addElement(successContainer, resultsContainer);
+    }
+    else {
+        const errorResult = newElement('div', { class: ['result', 'error'] });
+        if (result.error.errors.length > 1) {
+            const errorList = newElement("ul");
+            for (let error of result.error.errors) {
+                const errorItem = newElement("span", { innerText: error.message.split("    ").join("\n") });
+                addElement(errorItem, errorList);
+            }
+            addElement(errorList, errorResult);
+        }
+        else {
+            const errorItem = newElement("span", { innerText: result.error.errors[0].message.split("    ").join("\n") });
+            addElement(errorItem, errorResult);
+        }
+        addElement(errorResult, resultsContainer);
+    }
+    const resultList = renderResults(result);
+    addElement(resultList, resultsContainer);
+}
+
+function renderResults(results) {
+    const resultsList =  newElement("ol");
+    for (let operation of results.operations) {
+        const operationItem = newElement("li", {class: ['resultListItem']});
+        if (operation.success) operationItem.classList.add("success");
+        else operationItem.classList.add("error");
+        if (operation.result || operation.error) {
+            const details = newElement('details');
+            const summary = newElement("summary", {innerText: operation.name });
+            const operationResult = newElement('pre', { innerText: JSON.stringify(operation.result || operation.error.errors, null, 2)});
+            addElements([summary, operationResult], details);
+            addElement(details, operationItem);
+        }
+        else {
+            const operationName = newElement('span', { innerText: operation.name });
+            addElement(operationName, operationItem);
+        }
+        addElement(operationItem, resultsList);
+    }
+    return resultsList;
+}
+
+function formatInputSchema(schema) {
+    const formattedSchema = {};
+    for (let field in schema) {
+        switch (schema[field].type) {
+            case "string":
+                formattedSchema[field] = "";
+                break;
+            case "number":
+            case "integer":
+                formattedSchema[field] = 0;
+                break;
+            case "boolean":
+                formattedSchema[field] = true;
+                break;
+            default:
+                break;
+        }
+    }
+    return formattedSchema;
+}
+
 async function makeGenesysRequest(path, method, body, isEmptyResponse) {
     let needsRepeating = true;
     while(needsRepeating) {
@@ -10,10 +199,11 @@ async function makeGenesysRequest(path, method, body, isEmptyResponse) {
         }
         else {
             needsRepeating = false;
-            if (result.ok && !isEmptyResponse) {
+            const contentType = result.headers.has("Content-Type") ? result.headers.get("Content-Type") : "";
+            if (result.ok && contentType === "application/json" && !isEmptyResponse) {
                 return await result.json();
             }
-            else if (!isEmptyResponse) {
+            else if (!isEmptyResponse  && contentType === "application/json") {
                 return await result.json();
             }
             else {
@@ -83,6 +273,26 @@ async function getAllDraftActions() {
     return getAllGenesysItems(path);
 }
 
+async function getActionDetails(actionId) {
+    const path = `/api/v2/integrations/actions/${actionId}?expand=contract`;
+    return makeGenesysRequest(path);
+}
+
+async function getDraftActionDetails(actionId) {
+    const path = `/api/v2/integrations/actions/${actionId}/draft?expand=contract`;
+    return makeGenesysRequest(path);
+}
+
+async function runActionTest(actionId, testBody) {
+    const path = `/api/v2/integrations/actions/${actionId}/test`;
+    return makeGenesysRequest(path, "POST", testBody);
+}
+
+async function runDraftActionTest(actionId, testBody) {
+    const path = `/api/v2/integrations/actions/${actionId}/draft/test`;
+    return makeGenesysRequest(path, "POST", testBody);
+}
+
 async function run() {
     const integrationSelection = eById("integrationSelect")?.selectedOptions[0];
     const actionName = eById('actionNameInput')?.value;
@@ -133,8 +343,8 @@ async function run() {
 
 async function popupateIntegrationDropdown(select) {
     clearElement(select);
-    const allIntegrations = await getFunctionIntegrations();
-    for (let integration of allIntegrations) {
+    if (!window.integrationList) window.integrationList = await getFunctionIntegrations();
+    for (let integration of window.integrationList) {
         if (integration.integrationType.id === "function-data-actions") {
             const integrationOption = newElement("option", { innerText: integration.name, value: integration.id});
             addElement(integrationOption, select);
@@ -144,11 +354,26 @@ async function popupateIntegrationDropdown(select) {
 
 async function popupateRuntimeDropdown(select) {
     clearElement(select);
-    const runtimes = await getAvailableRuntimes();
-    for (let runtime of runtimes) {
+    if (!window.runtimeList) window.runtimeList = await getAvailableRuntimes();
+    for (let runtime of window.runtimeList) {
         if (runtime.status === "Available") {
             const runtimeOption = newElement("option", { innerText: runtime.description, value: runtime.name});
             addElement(runtimeOption, select);
+        }
+    }
+}
+
+async function populateActionDropdown(select, includePublished = true) {
+    clearElement(select);
+    if (!window.actionList) {
+        window.actionList = [];
+        window.actionList.push(...(await getAllDraftActions()).map((e) => ({...e, type: "draft"})));
+        window.actionList.push(...(await getAllPublishedActions()).map((e) => ({...e, type: "published"})));
+    }
+    for (let action of window.actionList) {
+        if (window.integrationList.some((e) => e.integrationType.id === "function-data-actions" && e.id === action.integrationId) && (includePublished || action.type === "draft")) {
+            const actionOption = newElement("option", { innerText: action.name, value: action.id, "data-integration-id": action.integrationId });
+            addElement(actionOption, select);
         }
     }
 }
@@ -215,38 +440,12 @@ function showMainMenu() {
     const page = eById('page');
     clearElement(page);
 
-    const inputs = newElement("div", { id: "inputs" });
+    const tabContainer = new TabContainer([
+        new NewActionTab(),
+        new TestActionTab()
+    ]);
+    addElement(tabContainer.getTabContainer(), page);
 
-    const integrationLabel = newElement('label', { innerText: "Integration: " })
-    const integrationSelect = newElement('select', { id: "integrationSelect" });
-    addElement(integrationSelect, integrationLabel);
-    const runtimeLabel = newElement('label', { innerText: "Runtime: " })
-    const runtimeSelect = newElement('select', { id: "runtimeSelect" });
-    addElement(runtimeSelect, runtimeLabel);
-    showLoading(populateSelects, [integrationSelect, popupateIntegrationDropdown, runtimeSelect, popupateRuntimeDropdown]);
-
-    const actionNameLabel = newElement('label', {innerText: "Action Name: "});
-    const actionNameInput = newElement('input', { id: "actionNameInput" });
-    addElement(actionNameInput, actionNameLabel);
-
-    const entryPointLabel = newElement('label', {innerText: "Handler: "});
-    const entryPointInput = newElement('input', { id: "entryPointInput", value: "src/index.handler" });
-    addElement(entryPointInput, entryPointLabel);
-
-    const zipLabel = newElement('label', { innerText: "Zip File: " })
-    const zipInput = newElement('input', { type: "file", id: "zipInput", accept: ".zip" });
-    addElement(zipInput, zipLabel);
-
-    addElements([integrationLabel, runtimeLabel, actionNameLabel, entryPointLabel, zipLabel], inputs);
-
-    const startButton = newElement('button', { innerText: "Start" });
-    registerElement(startButton, "click", () => {showLoading(run)});
-
-    const logoutButton = newElement('button', { innerText: "Logout" });
-    registerElement(logoutButton, "click", logout);
-
-
-    addElements([inputs, startButton, logoutButton], page);
     getOrgDetails().then(function (result) {
         if (result.status !== 200) {
             log(result.message, "error");

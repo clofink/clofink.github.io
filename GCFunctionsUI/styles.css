@@ -128,3 +128,61 @@ table.sortable th span {
     border-radius: 5px;
     border: 1px solid black;
 }
+#tabList {
+    white-space: nowrap;
+    overflow-x: scroll;
+    scrollbar-width: none;
+}
+#tabList::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+.tabHeader {
+    display: inline-block;
+    border: 1px solid black;
+    padding: .5em;
+    border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
+    border-bottom: none;
+    background-color: lightgrey;
+    user-select: none;
+    cursor: pointer;
+}
+.tabHeader.selected {
+    background-color: white;
+}
+#tabContent {
+    border: 1px solid black;
+}
+#tabContainer {
+    margin: .5em;
+}
+
+.result {
+    margin-top: .5em;
+    border: 1px solid;
+    padding: .5em;
+    border-radius: .25em;
+}
+.result.success, .resultListItem.success {
+    background-color: rgba(161,211,24,0.2);
+    border-color: #99c817;
+}
+.result.error, .resultListItem.error {
+    background-color: rgba(245,49,49,0.2);
+    border-color: #f42323;
+}
+.resultListItem {
+    padding: .25em;
+    border: 1px solid;
+    border-radius: .25em;
+    margin-top: .5em;
+    margin-bottom: .5em;
+}
+#results ol {
+    margin-block-start: 0em;
+    padding-inline-start: 1em;
+}
+pre {
+    overflow-x: auto;
+}
