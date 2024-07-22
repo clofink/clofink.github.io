@@ -56,14 +56,9 @@ class UpdateActionTab extends Tab {
         addElement(runtimeSelect, runtimeLabel);
         const actionLabel = newElement('label', { innerText: "Action: " })
         const actionSelect = newElement('select', { id: "actionSelect" });
-        registerElement(actionSelect, "change", async() => {
-            const actionData = await getActionInfo(actionSelect.value);
-            entryPointInput.value = actionData?.functionInfo?.function?.handler ? actionData.functionInfo.function.handler : "";
-            timeoutInput.value = actionData?.functionInfo?.function?.timeoutSeconds ? actionData.functionInfo.function.timeoutSeconds : "";
-            runtimeSelect.value = actionData.functionInfo.function.runtime;
-        });
+        registerElement(actionSelect, "change", () => {showLoading(prefillUpdateFields, [actionSelect.value])});
         addElement(actionSelect, actionLabel);
-        showLoading(populateSelects, [runtimeSelect, popupateRuntimeDropdown, actionSelect, populateActionDropdown]);
+        showLoading(populateSelects, [runtimeSelect, popupateRuntimeDropdown, actionSelect, getUpdatableActions]);
     
         const entryPointLabel = newElement('label', {innerText: "Handler: "});
         const entryPointInput = newElement('input', { id: "entryPointInput" });
@@ -88,6 +83,18 @@ class UpdateActionTab extends Tab {
         addElements([inputs, updateButton, logoutButton], this.container);
         return this.container;
     }
+}
+
+async function getUpdatableActions(select) {
+    await populateActionDropdown(select, false);
+    prefillUpdateFields(window.actionList[0].id);
+}
+
+async function prefillUpdateFields(actionId) {
+    const actionData = await getActionInfo(actionId);
+    entryPointInput.value = actionData?.functionInfo?.function?.handler ? actionData.functionInfo.function.handler : "";
+    timeoutInput.value = actionData?.functionInfo?.function?.timeoutSeconds ? actionData.functionInfo.function.timeoutSeconds : "";
+    runtimeSelect.value = actionData.functionInfo.function.runtime;
 }
 
 async function getActionInfo(actionId) {
@@ -179,23 +186,9 @@ class TestActionTab extends Tab {
         const inputLabel = newElement('label', { innerText: "Input: " });
         const inputText = newElement('textarea', { id: "actionInput" });
         addElement(inputText, inputLabel);
-        registerElement(actionSelect, "change", () => {
-            const selectedActionId = actionSelect.selectedOptions[0].value;
-            let selectedAction = window.actionList.find((e) => e.id === selectedActionId);
-            showLoading(async () => {
-                if (!selectedAction.contract.input.inputSchema) {
-                    if (selectedAction.type === "draft") {
-                        selectedAction = await getDraftActionDetails(selectedActionId);
-                    }
-                    else {
-                        selectedAction = await getActionDetails(selectedActionId);
-                    }
-                }
-                inputText.value = JSON.stringify(formatInputSchema(selectedAction?.contract?.input?.inputSchema?.properties ? selectedAction.contract.input.inputSchema.properties : {}), null, 2);
-            })
-        })
+        registerElement(actionSelect, "change", () => {showLoading(populateInputTextArea, [actionSelect.value])})
         addElement(actionSelect, actionLabel);
-        showLoading(populateSelects, [actionSelect, populateActionDropdown]);
+        showLoading(populateSelects, [actionSelect, getTestableActions]);
         
         const testButton = newElement('button', { innerText: "Run Test" });
 
@@ -213,6 +206,31 @@ class TestActionTab extends Tab {
         addElements([inputs, testButton, logoutButton, this.resultsContainer], this.container);
         return this.container;
     }
+}
+
+async function getTestableActions(select) {
+    await populateActionDropdown(select);
+    populateInputTextArea(window.actionList[0].id);
+}
+
+async function populateInputTextArea(selectedActionId) {
+    const inputText = eById('actionInput');
+    const selectedAction = window.actionList.find((e) => e.id === selectedActionId);
+    console.log(selectedAction);
+    if (!selectedAction.contract.input.inputSchema) {
+        console.log(selectedAction);
+        if (selectedAction.type === "draft") {
+            const actionDetails = await getDraftActionDetails(selectedActionId);
+            selectedAction.contract.input = actionDetails?.contract?.input;
+            if (!selectedAction?.contract?.input?.inputSchema) selectedAction.contract.input.inputSchema = {};
+        }
+        else {
+            const actionDetails = await getActionDetails(selectedActionId);
+            selectedAction.contract.input = actionDetails?.contract?.input;
+            if (!selectedAction?.contract?.input?.inputSchema) selectedAction.contract.input.inputSchema = {};
+        }
+    }
+    inputText.value = JSON.stringify(formatInputSchema(selectedAction?.contract?.input?.inputSchema?.properties ? selectedAction.contract.input.inputSchema.properties : {}), null, 2);
 }
 
 async function testAction(action, testBody) {
