@@ -23,18 +23,21 @@ class NewActionTab extends Tab {
         const entryPointInput = newElement('input', { id: "entryPointInput", value: "src/index.handler" });
         addElement(entryPointInput, entryPointLabel);
     
+        const timeoutLabel = newElement('label', {innerText: "Timeout Seconds: "});
+        const timeoutInput = newElement('input', { id: "timeoutInput", type: "number", max: 60, min: 1, value: 15 });
+        addElement(timeoutInput, timeoutLabel);
+
         const zipLabel = newElement('label', { innerText: "Zip File: " })
         const zipInput = newElement('input', { type: "file", id: "zipInput", accept: ".zip" });
         addElement(zipInput, zipLabel);
     
-        addElements([integrationLabel, runtimeLabel, actionNameLabel, entryPointLabel, zipLabel], inputs);
+        addElements([integrationLabel, runtimeLabel, actionNameLabel, entryPointLabel, timeoutLabel, zipLabel], inputs);
     
         const startButton = newElement('button', { innerText: "Start" });
         registerElement(startButton, "click", () => {showLoading(run)});
     
         const logoutButton = newElement('button', { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
-    
     
         addElements([inputs, startButton, logoutButton], this.container);
         return this.container;
@@ -53,13 +56,114 @@ class UpdateActionTab extends Tab {
         addElement(runtimeSelect, runtimeLabel);
         const actionLabel = newElement('label', { innerText: "Action: " })
         const actionSelect = newElement('select', { id: "actionSelect" });
+        registerElement(actionSelect, "change", async() => {
+            const actionData = await getActionInfo(actionSelect.value);
+            entryPointInput.value = actionData?.functionInfo?.function?.handler ? actionData.functionInfo.function.handler : "";
+            timeoutInput.value = actionData?.functionInfo?.function?.timeoutSeconds ? actionData.functionInfo.function.timeoutSeconds : "";
+            runtimeSelect.value = actionData.functionInfo.function.runtime;
+        });
         addElement(actionSelect, actionLabel);
         showLoading(populateSelects, [runtimeSelect, popupateRuntimeDropdown, actionSelect, populateActionDropdown]);
+    
+        const entryPointLabel = newElement('label', {innerText: "Handler: "});
+        const entryPointInput = newElement('input', { id: "entryPointInput" });
+        addElement(entryPointInput, entryPointLabel);
 
-        addElements([actionLabel, runtimeLabel], inputs);
+        const timeoutLabel = newElement('label', {innerText: "Timeout Seconds: "});
+        const timeoutInput = newElement('input', { id: "timeoutInput", type: "number", max: 60, min: 1 });
+        addElement(timeoutInput, timeoutLabel);
+    
+        const zipLabel = newElement('label', { innerText: "Zip File: " })
+        const zipInput = newElement('input', { type: "file", id: "zipInput", accept: ".zip" });
+        addElement(zipInput, zipLabel);
 
-        addElements([inputs], this.container);
+        addElements([actionLabel, runtimeLabel, entryPointLabel, timeoutLabel, zipLabel], inputs);
+        
+        const updateButton = newElement('button', { innerText: "Update" });
+        registerElement(updateButton, "click", () => {showLoading(runUpdate, [actionSelect.value])});
+
+        const logoutButton = newElement('button', { innerText: "Logout" });
+        registerElement(logoutButton, "click", logout);
+
+        addElements([inputs, updateButton, logoutButton], this.container);
         return this.container;
+    }
+}
+
+async function getActionInfo(actionId) {
+    const action = window.actionList.find((e) => e.id === actionId);
+    if (action.functionInfo) return action;
+    if (action.type === "draft") {
+        action.functionInfo = await getDraftFunctionSettings(actionId);
+    }
+    else {
+        action.functionInfo = await getPublishedFunctionSettings(actionId);
+    }
+    return action;
+}
+
+async function runUpdate(actionId) {
+    const action = window.actionList.find((e) => e.id === actionId);
+    console.log(action);
+    const runtimeSelection = eById("runtimeSelect")?.selectedOptions[0]?.value;
+    const zipFile = eById('zipInput')?.files[0];
+    const fileName = zipFile?.name;
+    const handlerName = eById('entryPointInput')?.value;
+    const timeoutSeconds = parseInt(eById('timeoutInput')?.value, 10);
+    if (!runtimeSelection || !handlerName || !timeoutSeconds) {
+        if (!runtimeSelection) console.log("No value for runtime selection found");
+        if (!handlerName) console.log("No value for handler name found");
+        if (!timeoutSeconds) console.log("No value for timeout seconds found");
+        return;
+    }
+
+    const settingsBody = {
+        "description": action?.functionInfo?.function?.description,
+        "handler": handlerName,
+        "runtime": runtimeSelection,
+        "timeoutSeconds": timeoutSeconds, 
+    }
+    
+    const currentFunctionDate = action?.functionInfo?.zip?.dateCreated;
+    if (!action?.functionInfo?.function || (
+        action.functionInfo.function.timeoutSeconds != timeoutSeconds ||
+        action.functionInfo.function.handler !== handlerName ||
+        action.functionInfo.function.runtime !== runtimeSelection
+    )) {
+        let updateResult;
+        let retries = 0;
+        let needsRetry = true;
+        while (needsRetry && retries < 3) {
+            updateResult = await updateDraftFunctionSettings(action.id, settingsBody);
+            if (updateResult.status === 504) {
+                retries++;
+                continue;
+            }
+            else needsRetry = false;
+        }
+        if (updateResult.errors) throw updateResult.message;
+        action.functionInfo = updateResult;
+    }
+
+    if (zipFile) {
+        if (!action.uploadInfo || action.uploadInfo.timestamp.valueOf() + (action.uploadInfo.signedUrlTimeoutSeconds * 1000) < new Date().valueOf()) {
+            action.uploadInfo = await createPackageUploadUrl(action.id, {fileName: fileName});
+            action.uploadInfo.timestamp = new Date();
+        }
+
+        const uploadHeaders = {
+            ...action.uploadInfo.headers,
+            "Content-Type": "application/zip"
+        }
+        await fetch(action.uploadInfo.url, { method: "PUT", headers: uploadHeaders, body: zipFile});
+
+        let retries = 0;
+        const limit = 10;
+        while((!action?.functionInfo?.zip?.dateCreated || action?.functionInfo?.zip?.dateCreated === currentFunctionDate) && retries < limit) {
+            retries++;
+            await wait(1);
+            action.functionInfo = await getDraftFunctionSettings(action.id);
+        }
     }
 }
 
@@ -91,6 +195,8 @@ class TestActionTab extends Tab {
             })
         })
         addElement(actionSelect, actionLabel);
+        showLoading(populateSelects, [actionSelect, populateActionDropdown]);
+        
         const testButton = newElement('button', { innerText: "Run Test" });
 
         registerElement(testButton, "click", () => {
@@ -99,11 +205,12 @@ class TestActionTab extends Tab {
             showLoading(testAction, [selectedAction, inputText.value]);
         })
 
-        showLoading(populateSelects, [actionSelect, populateActionDropdown]);
+        const logoutButton = newElement('button', { innerText: "Logout" });
+        registerElement(logoutButton, "click", logout);
 
-        addElements([actionLabel, inputLabel, testButton], inputs);
+        addElements([actionLabel, inputLabel], inputs);
         this.resultsContainer = newElement('div', { id: "results" });
-        addElements([inputs,this.resultsContainer], this.container);
+        addElements([inputs, testButton, logoutButton, this.resultsContainer], this.container);
         return this.container;
     }
 }
@@ -300,13 +407,15 @@ async function run() {
     const zipFile = eById('zipInput')?.files[0];
     const fileName = zipFile?.name;
     const handlerName = eById('entryPointInput')?.value;
-    if (!integrationSelection || !actionName || !zipFile || !runtimeSelection || !handlerName || !fileName) {
+    const timeout = eById("timeoutInput")?.value;
+    if (!integrationSelection || !actionName || !zipFile || !runtimeSelection || !handlerName || !fileName || !timeout) {
         if (!integrationSelection) console.log("No value for integration selection found");
         if (!actionName) console.log("No value for action name found");
         if (!zipFile) console.log("No value for file found");
         if (!runtimeSelection) console.log("No value for runtime selection found");
         if (!handlerName) console.log("No value for handler name found");
         if (!fileName) console.log("No value for file name found");
+        if (!timeout) console.log("No value for timeout found");
         return;
     }
 
@@ -316,29 +425,32 @@ async function run() {
         "integrationId": integrationSelection.value
     }
     const newAction = await createNewDraftAction(newActionBody);
+    newAction.type = "draft";
     const settingsBody = {
         "description": actionName,
         "handler": handlerName,
         "runtime": runtimeSelection,
+        "timeoutSeconds": timeout,
     }
     await updateDraftFunctionSettings(newAction.id, settingsBody);
-
-    const packageUploadUrl = await createPackageUploadUrl(newAction.id, {fileName: fileName});
+    newAction.uploadInfo = await createPackageUploadUrl(newAction.id, {fileName: fileName});
+    newAction.uploadInfo.timestamp = new Date();
 
     const uploadHeaders = {
-        ...packageUploadUrl.headers,
+        ...newAction.uploadInfo.headers,
         "Content-Type": "application/zip"
     }
-    await fetch(packageUploadUrl.url, { method: "PUT", headers: uploadHeaders, body: zipFile});
+    await fetch(newAction.uploadInfo.url, { method: "PUT", headers: uploadHeaders, body: zipFile});
 
-    let newDraftSettings = {}
+    newAction.functionInfo = {};
     let retries = 0;
     const limit = 5;
-    while(!newDraftSettings.zip && retries < limit) {
+    while(!newAction.functionInfo.zip && retries < limit) {
         retries++;
         await wait(1);
-        newDraftSettings = await getDraftFunctionSettings(newAction.id);
+        newAction.functionInfo = await getDraftFunctionSettings(newAction.id);
     }
+    if (window.actionList) window.actionList.push(newAction);
 }
 
 async function popupateIntegrationDropdown(select) {
@@ -442,6 +554,7 @@ function showMainMenu() {
 
     const tabContainer = new TabContainer([
         new NewActionTab(),
+        new UpdateActionTab(),
         new TestActionTab()
     ]);
     addElement(tabContainer.getTabContainer(), page);
