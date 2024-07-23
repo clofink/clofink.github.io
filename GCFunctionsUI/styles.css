@@ -186,3 +186,8 @@ table.sortable th span {
 pre {
     overflow-x: auto;
 }
+textarea {
+    min-width: 10em;
+    min-height: 3em;
+    field-sizing: content;
+}
