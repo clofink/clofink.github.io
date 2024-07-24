@@ -260,7 +260,7 @@ async function testAction(action, testBody) {
             addElement(errorList, errorResult);
         }
         else {
-            const errorItem = newElement("span", { innerText: result.error.errors[0].message.split("    ").join("\n") });
+            const errorItem = newElement("span", { innerText: result.error.errors[0]?.message?.split("    ")?.join("\n") || result.error.message });
             addElement(errorItem, errorResult);
         }
         addElement(errorResult, resultsContainer);
@@ -296,14 +296,14 @@ function formatInputSchema(schema) {
     for (let field in schema) {
         switch (schema[field].type) {
             case "string":
-                formattedSchema[field] = "";
+                formattedSchema[field] = schema[field]?.default || "";
                 break;
             case "number":
             case "integer":
-                formattedSchema[field] = 0;
+                formattedSchema[field] = parseInt(schema[field]?.default) || 0;
                 break;
             case "boolean":
-                formattedSchema[field] = true;
+                formattedSchema[field] = schema[field]?.default === "true" || true;
                 break;
             default:
                 break;
