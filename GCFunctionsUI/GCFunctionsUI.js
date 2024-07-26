@@ -9,36 +9,41 @@ class NewActionTab extends Tab {
 
         const integrationLabel = newElement('label', { innerText: "Integration: " })
         const integrationSelect = newElement('select', { id: "integrationSelect" });
-        addElement(integrationSelect, integrationLabel);
+        const refreshButton = newElement('button', { innerText: "Refresh" });
+        addElements([integrationSelect, refreshButton], integrationLabel);
+        registerElement(refreshButton, "click", ()=>{
+            window.integrationList = undefined;
+            showLoading(populateSelects, [integrationSelect, popupateIntegrationDropdown]);
+        })
         const runtimeLabel = newElement('label', { innerText: "Runtime: " })
         const runtimeSelect = newElement('select', { id: "runtimeSelect" });
         addElement(runtimeSelect, runtimeLabel);
         showLoading(populateSelects, [integrationSelect, popupateIntegrationDropdown, runtimeSelect, popupateRuntimeDropdown]);
-    
-        const actionNameLabel = newElement('label', {innerText: "Action Name: "});
+
+        const actionNameLabel = newElement('label', { innerText: "Action Name: " });
         const actionNameInput = newElement('input', { id: "actionNameInput" });
         addElement(actionNameInput, actionNameLabel);
-    
-        const entryPointLabel = newElement('label', {innerText: "Handler: "});
+
+        const entryPointLabel = newElement('label', { innerText: "Handler: " });
         const entryPointInput = newElement('input', { id: "entryPointInput", value: "src/index.handler" });
         addElement(entryPointInput, entryPointLabel);
-    
-        const timeoutLabel = newElement('label', {innerText: "Timeout Seconds: "});
+
+        const timeoutLabel = newElement('label', { innerText: "Timeout Seconds: " });
         const timeoutInput = newElement('input', { id: "timeoutInput", type: "number", max: 60, min: 1, value: 15 });
         addElement(timeoutInput, timeoutLabel);
 
         const zipLabel = newElement('label', { innerText: "Zip File: " })
         const zipInput = newElement('input', { type: "file", id: "zipInput", accept: ".zip" });
         addElement(zipInput, zipLabel);
-    
+
         addElements([integrationLabel, runtimeLabel, actionNameLabel, entryPointLabel, timeoutLabel, zipLabel], inputs);
-    
+
         const startButton = newElement('button', { innerText: "Start" });
-        registerElement(startButton, "click", () => {showLoading(run)});
-    
+        registerElement(startButton, "click", () => { showLoading(run) });
+
         const logoutButton = newElement('button', { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
-    
+
         addElements([inputs, startButton, logoutButton], this.container);
         return this.container;
     }
@@ -56,26 +61,31 @@ class UpdateActionTab extends Tab {
         addElement(runtimeSelect, runtimeLabel);
         const actionLabel = newElement('label', { innerText: "Action: " })
         const actionSelect = newElement('select', { id: "actionSelect" });
-        registerElement(actionSelect, "change", () => {showLoading(prefillUpdateFields, [actionSelect.value])});
-        addElement(actionSelect, actionLabel);
+        const refreshButton = newElement('button', { innerText: "Refresh" });
+        registerElement(actionSelect, "change", () => { showLoading(prefillUpdateFields, [actionSelect.value]) });
+        registerElement(refreshButton, "click", () => {
+            window.actionList = undefined;
+            showLoading(populateSelects, [actionSelect, getUpdatableActions]);
+        })
+        addElements([actionSelect, refreshButton], actionLabel);
         showLoading(populateSelects, [runtimeSelect, popupateRuntimeDropdown, actionSelect, getUpdatableActions]);
-    
-        const entryPointLabel = newElement('label', {innerText: "Handler: "});
+
+        const entryPointLabel = newElement('label', { innerText: "Handler: " });
         const entryPointInput = newElement('input', { id: "entryPointInput" });
         addElement(entryPointInput, entryPointLabel);
 
-        const timeoutLabel = newElement('label', {innerText: "Timeout Seconds: "});
+        const timeoutLabel = newElement('label', { innerText: "Timeout Seconds: " });
         const timeoutInput = newElement('input', { id: "timeoutInput", type: "number", max: 60, min: 1 });
         addElement(timeoutInput, timeoutLabel);
-    
+
         const zipLabel = newElement('label', { innerText: "Zip File: " })
         const zipInput = newElement('input', { type: "file", id: "zipInput", accept: ".zip" });
         addElement(zipInput, zipLabel);
 
         addElements([actionLabel, runtimeLabel, entryPointLabel, timeoutLabel, zipLabel], inputs);
-        
+
         const updateButton = newElement('button', { innerText: "Update" });
-        registerElement(updateButton, "click", () => {showLoading(runUpdate, [actionSelect.value])});
+        registerElement(updateButton, "click", () => { showLoading(runUpdate, [actionSelect.value]) });
 
         const logoutButton = newElement('button', { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
@@ -128,9 +138,9 @@ async function runUpdate(actionId) {
         "description": action?.functionInfo?.function?.description,
         "handler": handlerName,
         "runtime": runtimeSelection,
-        "timeoutSeconds": timeoutSeconds, 
+        "timeoutSeconds": timeoutSeconds,
     }
-    
+
     const currentFunctionDate = action?.functionInfo?.zip?.dateCreated;
     if (!action?.functionInfo?.function || (
         action.functionInfo.function.timeoutSeconds != timeoutSeconds ||
@@ -154,7 +164,7 @@ async function runUpdate(actionId) {
 
     if (zipFile) {
         if (!action.uploadInfo || action.uploadInfo.timestamp.valueOf() + (action.uploadInfo.signedUrlTimeoutSeconds * 1000) < new Date().valueOf()) {
-            action.uploadInfo = await createPackageUploadUrl(action.id, {fileName: fileName});
+            action.uploadInfo = await createPackageUploadUrl(action.id, { fileName: fileName });
             action.uploadInfo.timestamp = new Date();
         }
 
@@ -162,11 +172,11 @@ async function runUpdate(actionId) {
             ...action.uploadInfo.headers,
             "Content-Type": "application/zip"
         }
-        await fetch(action.uploadInfo.url, { method: "PUT", headers: uploadHeaders, body: zipFile});
+        await fetch(action.uploadInfo.url, { method: "PUT", headers: uploadHeaders, body: zipFile });
 
         let retries = 0;
         const limit = 10;
-        while((!action?.functionInfo?.zip?.dateCreated || action?.functionInfo?.zip?.dateCreated === currentFunctionDate) && retries < limit) {
+        while ((!action?.functionInfo?.zip?.dateCreated || action?.functionInfo?.zip?.dateCreated === currentFunctionDate) && retries < limit) {
             retries++;
             await wait(1);
             action.functionInfo = await getDraftFunctionSettings(action.id);
@@ -183,13 +193,18 @@ class TestActionTab extends Tab {
 
         const actionLabel = newElement('label', { innerText: "Action: " })
         const actionSelect = newElement('select', { id: "actionSelect" });
+        const refreshButton = newElement('button', { innerText: "Refresh" });
         const inputLabel = newElement('label', { innerText: "Input: " });
         const inputText = newElement('textarea', { id: "actionInput" });
         addElement(inputText, inputLabel);
-        registerElement(actionSelect, "change", () => {showLoading(populateInputTextArea, [actionSelect.value])})
-        addElement(actionSelect, actionLabel);
+        registerElement(actionSelect, "change", () => { showLoading(populateInputTextArea, [actionSelect.value]) });
+        addElements([actionSelect, refreshButton], actionLabel);
+        registerElement(refreshButton, "click", () => {
+            window.actionList = undefined;
+            showLoading(populateSelects, [actionSelect, getTestableActions]);
+        })
         showLoading(populateSelects, [actionSelect, getTestableActions]);
-        
+
         const testButton = newElement('button', { innerText: "Run Test" });
 
         registerElement(testButton, "click", () => {
@@ -270,15 +285,15 @@ async function testAction(action, testBody) {
 }
 
 function renderResults(results) {
-    const resultsList =  newElement("ol");
+    const resultsList = newElement("ol");
     for (let operation of results.operations) {
-        const operationItem = newElement("li", {class: ['resultListItem']});
+        const operationItem = newElement("li", { class: ['resultListItem'] });
         if (operation.success) operationItem.classList.add("success");
         else operationItem.classList.add("error");
         if (operation.result || operation.error) {
             const details = newElement('details');
-            const summary = newElement("summary", {innerText: operation.name });
-            const operationResult = newElement('pre', { innerText: JSON.stringify(operation.result || operation.error.errors, null, 2)});
+            const summary = newElement("summary", { innerText: operation.name });
+            const operationResult = newElement('pre', { innerText: JSON.stringify(operation.result || operation.error.errors, null, 2) });
             addElements([summary, operationResult], details);
             addElement(details, operationItem);
         }
@@ -314,9 +329,9 @@ function formatInputSchema(schema) {
 
 async function makeGenesysRequest(path, method, body, isEmptyResponse) {
     let needsRepeating = true;
-    while(needsRepeating) {
+    while (needsRepeating) {
         const url = `https://api.${window.localStorage.getItem('environment')}${path}`;
-        const result = await fetch(url, {method: method, body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
+        const result = await fetch(url, { method: method, body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
         if (result.status === 429) {
             const retryWait = result.headers.get("Retry-After");
             const waitSeconds = isNaN(parseInt(retryWait, 10)) ? 1 : parseInt(retryWait, 10);
@@ -328,7 +343,7 @@ async function makeGenesysRequest(path, method, body, isEmptyResponse) {
             if (result.ok && contentType === "application/json" && !isEmptyResponse) {
                 return await result.json();
             }
-            else if (!isEmptyResponse  && contentType === "application/json") {
+            else if (!isEmptyResponse && contentType === "application/json") {
                 return await result.json();
             }
             else {
@@ -358,7 +373,7 @@ async function getAvailableRuntimes() {
     const path = `/api/v2/integrations/actions/functions/runtimes`;
     return makeGenesysRequest(path);
 }
- async function getDraftFunctionSettings(actionId) {
+async function getDraftFunctionSettings(actionId) {
     const path = `/api/v2/integrations/actions/${actionId}/draft/function`;
     return makeGenesysRequest(path);
 }
@@ -384,12 +399,12 @@ async function createPackageUploadUrl(actionId, body) {
 }
 
 async function getFunctionIntegrations() {
-    const path =  `/api/v2/integrations`;
+    const path = `/api/v2/integrations`;
     return getAllGenesysItems(path);
 }
 
 async function getAllPublishedActions() {
-    const path =  `/api/v2/integrations/actions`;
+    const path = `/api/v2/integrations/actions`;
     return getAllGenesysItems(path);
 }
 
@@ -451,19 +466,19 @@ async function run() {
         "timeoutSeconds": timeout,
     }
     await updateDraftFunctionSettings(newAction.id, settingsBody);
-    newAction.uploadInfo = await createPackageUploadUrl(newAction.id, {fileName: fileName});
+    newAction.uploadInfo = await createPackageUploadUrl(newAction.id, { fileName: fileName });
     newAction.uploadInfo.timestamp = new Date();
 
     const uploadHeaders = {
         ...newAction.uploadInfo.headers,
         "Content-Type": "application/zip"
     }
-    await fetch(newAction.uploadInfo.url, { method: "PUT", headers: uploadHeaders, body: zipFile});
+    await fetch(newAction.uploadInfo.url, { method: "PUT", headers: uploadHeaders, body: zipFile });
 
     newAction.functionInfo = {};
     let retries = 0;
     const limit = 5;
-    while(!newAction.functionInfo.zip && retries < limit) {
+    while (!newAction.functionInfo.zip && retries < limit) {
         retries++;
         await wait(1);
         newAction.functionInfo = await getDraftFunctionSettings(newAction.id);
@@ -476,7 +491,7 @@ async function popupateIntegrationDropdown(select) {
     if (!window.integrationList) window.integrationList = await getFunctionIntegrations();
     for (let integration of window.integrationList) {
         if (integration.integrationType.id === "function-data-actions") {
-            const integrationOption = newElement("option", { innerText: integration.name, value: integration.id});
+            const integrationOption = newElement("option", { innerText: integration.name, value: integration.id });
             addElement(integrationOption, select);
         }
     }
@@ -487,7 +502,7 @@ async function popupateRuntimeDropdown(select) {
     if (!window.runtimeList) window.runtimeList = await getAvailableRuntimes();
     for (let runtime of window.runtimeList) {
         if (runtime.status === "Available") {
-            const runtimeOption = newElement("option", { innerText: runtime.description, value: runtime.name});
+            const runtimeOption = newElement("option", { innerText: runtime.description, value: runtime.name });
             addElement(runtimeOption, select);
         }
     }
@@ -497,8 +512,8 @@ async function populateActionDropdown(select, includePublished = true) {
     clearElement(select);
     if (!window.actionList) {
         window.actionList = [];
-        window.actionList.push(...(await getAllDraftActions()).map((e) => ({...e, type: "draft"})));
-        window.actionList.push(...(await getAllPublishedActions()).map((e) => ({...e, type: "published"})));
+        window.actionList.push(...(await getAllDraftActions()).map((e) => ({ ...e, type: "draft" })));
+        window.actionList.push(...(await getAllPublishedActions()).map((e) => ({ ...e, type: "published" })));
     }
     for (let action of window.actionList) {
         if (window.integrationList.some((e) => e.integrationType.id === "function-data-actions" && e.id === action.integrationId) && (includePublished || action.type === "draft")) {
@@ -509,9 +524,9 @@ async function populateActionDropdown(select, includePublished = true) {
 }
 
 async function populateSelects() {
-    for (let i = 0; i < arguments.length; i+=2) {
+    for (let i = 0; i < arguments.length; i += 2) {
         const field = arguments[i];
-        const handler = arguments[i+1];
+        const handler = arguments[i + 1];
         if (!field || !handler) return;
         await handler(field);
     }
@@ -521,7 +536,7 @@ function getFileFromInput(input, validateFunc) {
     return new Promise((resolve, reject) => {
         const file = resolve(input.files[0]);
         const reader = new FileReader();
-        reader.addEventListener('load', function(data) {
+        reader.addEventListener('load', function (data) {
             if (validateFunc && !validateFunc(data.target.result)) reject(`${file.name} failed to validate`);
             resolve(data.target.result);
         })
@@ -531,10 +546,10 @@ function getFileFromInput(input, validateFunc) {
 
 function addHelp(textList) {
     const details = newElement('details');
-    const summary = newElement("summary", {innerText: "Help"});
+    const summary = newElement("summary", { innerText: "Help" });
     const listContainer = newElement("ul");
     for (let text of textList) {
-        const listItem = newElement('li', {innerText: text});
+        const listItem = newElement('li', { innerText: text });
         addElement(listItem, listContainer);
     }
     addElements([summary, listContainer], details);
@@ -626,7 +641,7 @@ async function showLoading(loadingFunc, args = []) {
     try {
         await loadingFunc(...args);
     }
-    catch(error) {
+    catch (error) {
         console.error(error);
     }
     eById("loadIcon").classList.remove("shown");
@@ -656,7 +671,7 @@ async function login() {
     const clientId = storeAndReturnValue("clientId", qs('[name="clientId"]').value);
     const redirectUri = storeAndReturnValue("redirectUri", location.origin + location.pathname);
     const codeVerifier = storeAndReturnValue("codeVerifier", generateCodeVerifier());
-    const codeChallenge =  await generateCodeChallengeFromVerifier(codeVerifier);
+    const codeChallenge = await generateCodeChallengeFromVerifier(codeVerifier);
     window.localStorage.setItem('environment', environment);
     window.location.replace(`https://login.${environment}/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge_method=S256&code_challenge=${codeChallenge}`);
 
@@ -697,7 +712,7 @@ async function login() {
         return base64encoded;
     }
 
-    function storeAndReturnValue (key, value) {
+    function storeAndReturnValue(key, value) {
         if (window.localStorage.getItem(key)) return window.localStorage.getItem(key);
         window.localStorage.setItem(key, value);
         return value;
