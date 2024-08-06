@@ -86,3 +86,12 @@ button[disabled] {
     row-gap: 1em;
     align-items: center;
 }
+#inputs label {
+    display: block;
+    margin-bottom: .5em;
+    width: fit-content;
+    user-select: none;
+}
+#inputs {
+    display: block;
+}

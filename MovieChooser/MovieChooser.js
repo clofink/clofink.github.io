@@ -41,9 +41,11 @@ function loadFile(event) {
 }
 
 function getRandomMovie(movieList) {
+    const filterValue = eById('ratingMin').value ? parseInt(eById('ratingMin').value) : false;
+    
     let movieChoice = movieList[Math.floor(Math.random() * (movieList.length))];
     let tries = 0;
-    while ((movieChoice.Seen && movieChoice.Seen === "FALSE") && tries < MAX_RETRIES) {
+    while (((movieChoice.Seen && movieChoice.Seen === "FALSE") || (movieChoice.ELO && parseInt(movieChoice.ELO) < filterValue)) && tries < MAX_RETRIES) {
         tries++;
         movieChoice = movieList[Math.floor(Math.random() * (movieList.length))];
     }

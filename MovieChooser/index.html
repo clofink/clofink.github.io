@@ -15,6 +15,15 @@
             Import Movie List: 
             <input id="import" accept=".csv" type="file">
         </label>
+        <label>
+            Filter Movies At/Below: 
+            <select id="ratingMin">
+                <option value="">No Filter</option>
+                <option value="700">1 Star</option>
+                <option value="1100">2 Star</option>
+                <option value="1500">3 Star</option>
+            </select>
+        </label>
     </div>
     <div id="selections"></div>
     <script src="https://unpkg.com/papaparse@5.3.2/papaparse.min.js"></script>
