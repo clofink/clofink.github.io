@@ -7,6 +7,15 @@ class Building {
     ownerHistory = [];
     cost;
 
+    constructor(buildingInfo) {
+        this.buildingName = buildingInfo.name;
+        this.population = buildingInfo.population;
+        this.type = buildingInfo.type;
+        this.cost = getRandomNumberInRange(buildingInfo.minCost, buildingInfo.maxCost);
+
+        return this;
+    }
+
     getOwner() {
         // this will return a person
         return this.owner;
@@ -52,53 +61,4 @@ class Building {
             this.residents.splice(currentResidents.indexOf(residentToRemove), 1);
         }
     }
-}
-
-class Home extends Building {
-    buildingName = 'Home';
-    population;
-    type = 'residential';
-    cost = getRandomNumberInRange(10000,25000);
-}
-
-class Barracks extends Building {
-    buildingName = 'Barracks';
-    population = 10;
-    type = 'professional';
-}
-
-class Bar extends Building {
-    buildingName = 'Bar';
-    population = 3;
-    type = 'professional';
-}
-
-class Apothecary extends Building {
-    buildingName = 'Apothecary';
-    population = 1;
-    type = 'professional';
-}
-
-class Smithery extends Building {
-    buildingName = 'Smithery';
-    population = 2;
-    type = 'professional';
-}
-
-class Inn extends Building {
-    buildingName = 'Inn';
-    population = 2;
-    type = 'professional';
-}
-
-class Bakery extends Building {
-    buildingName = 'Bakery';
-    population = 5;
-    type = 'professional';
-}
-
-class Leatherworkers extends Building {
-    buildingName = 'Leatherworkers';
-    population = 2;
-    type = 'professional';
 }
