@@ -154,7 +154,7 @@ class Guard extends Job {
     }
     createBuilding() {
         // a building is not created when the job is, rather it is created for the job when the job is taken
-        this.building = new Barracks();
+        this.building = createBuilding('Barracks');
     }
     meetQualifications(personStats) {
         // guard must be strong (and not too smart)
@@ -214,7 +214,7 @@ class Barkeep extends Job {
         return false;
     }
     createBuilding() {
-        this.building = new Bar();
+        this.building = createBuilding('Bar');
     }
     meetQualifications(personStats) {
         // barkeep neesd charisma
@@ -247,7 +247,7 @@ class Healer extends Job {
         return false;
     }
     createBuilding() {
-        this.building = new Apothecary();
+        this.building = createBuilding('Apothecary');
     }
     meetQualifications(personStats) {
         // healer needs wisdom (medicine)
@@ -280,7 +280,7 @@ class Smith extends Job {
         return false;
     }
     createBuilding() {
-        this.building = new Smithery();
+        this.building = createBuilding('Smithery');
     }
     meetQualifications(personStats) {
         // smith needs strength and constitution and dexterity
@@ -312,7 +312,7 @@ class Innkeeper extends Job {
         return false;
     }
     createBuilding() {
-        this.building = new Inn();
+        this.building = createBuilding('Inn');
     }
     meetQualifications(personStats) {
         // innkeeper needs charisma?
@@ -344,7 +344,7 @@ class Baker extends Job {
         return false;
     }
     createBuilding() {
-        this.building = new Bakery();
+        this.building = createBuilding('Bakery');
     }
     meetQualifications(personStats) {
         // baker needs something? Wisdom?
@@ -404,7 +404,7 @@ class Leatherworker extends Job {
         return false;
     }
     createBuilding() {
-        this.building = new Leatherworkers();
+        this.building = createBuilding('Leatherworkers');
     }
     meetQualifications(personStats) {
         // leatherworker needs dexterity

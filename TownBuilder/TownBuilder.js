@@ -451,7 +451,7 @@ function processLifeEvents(person, town, currentYear) {
         }
         // check for house again after trying to get one from the existing houses
         if (!newHouse) {
-            newHouse = new Home();
+            newHouse = createBuilding('Home');
             town.addBuilding(newHouse);
             person.addLifeEvent(town.getCurrentYear(), "{P} built a house");
         }
@@ -1339,6 +1339,46 @@ class PersonTable extends PagedTable {
             return 0;
         }
     }
+}
+
+function createBuilding(buildingName) {
+    const buildingsInfo = {
+        "Home": {
+            type: 'residential',
+            minCost: 10000,
+            maxCost: 25000,
+        },
+        "Barracks": {
+            population: 10,
+            type: "professional",
+        },
+        "Bar": {
+            population: 3,
+            type: "professional",
+        },
+        "Apothecary": {
+            population: 1,
+            type: "professional",
+        },
+        "Smithery": {
+            population: 2,
+            type: "professional",
+        },
+        "Inn": {
+            population: 2,
+            type: "professional",
+        },
+        "Bakery": {
+            population: 5,
+            type: "professional",
+        },
+        "Leatherworkers": {
+            population: 2,
+            type: "professional",
+        }
+    }
+    if (!buildingsInfo.hasOwnProperty(buildingName)) throw `No building with name [${buildingName}]`;
+    return new Building({name: buildingName, ...buildingsInfo[buildingName]});
 }
 
 registerElement(eById('generate'), "click", generateNewTown);
