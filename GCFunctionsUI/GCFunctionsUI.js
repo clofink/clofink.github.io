@@ -713,7 +713,8 @@ async function login() {
     }
 
     function storeAndReturnValue(key, value) {
-        if (window.localStorage.getItem(key)) return window.localStorage.getItem(key);
+        const currentValue = window.localStorage.getItem(key);
+        if (currentValue && currentValue === value) return window.localStorage.getItem(key);
         window.localStorage.setItem(key, value);
         return value;
     }
