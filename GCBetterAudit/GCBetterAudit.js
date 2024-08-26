@@ -171,7 +171,10 @@ async function runAudit() {
     const orgInfoCacheKey = btoa(encodeURIComponent(window.orgId));
     if (window.orgInfoCacheKey !== orgInfoCacheKey) {
         const users = await getAllUsers();
+        const authTokens = await getAllOauthClients();
         window.usersMapping = mapProperty("id", "name", users);
+        window.tokensMapping = mapProperty("id", "name", authTokens);
+        window.orgInfoCacheKey = orgInfoCacheKey;
     }
 
     const startDate = eById('startDate').value + "T00:00:00.000Z";
@@ -322,7 +325,7 @@ async function getAllUsers() {
     while (pageNum < totalPages) {
         pageNum++;
         const body = {
-            "pageSize": 25,
+            "pageSize": 100,
             "pageNumber": pageNum,
             "query": [
                 {
@@ -349,6 +352,13 @@ async function getAllUsers() {
         totalPages = resultJson.pageCount;
     }
     return users;
+}
+
+async function getAllOauthClients() {
+    const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/oauth/clients?pageSize=99999`;
+    const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
+    const resultJson = await result.json();
+    return resultJson.entities;
 }
 
 async function showLoading(loadingFunc) {
