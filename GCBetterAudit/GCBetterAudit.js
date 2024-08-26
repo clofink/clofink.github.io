@@ -73,7 +73,7 @@ async function getJobResults(transactionId) {
     const results = [];
 
     while (truncated === true) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/audits/query/${transactionId}/results?pageSize=500&cursor=${cursor}`;
+        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/audits/query/${transactionId}/results?pageSize=250&cursor=${cursor}`;
         const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
         const resultJson = await result.json();
         if (!result.ok) {
