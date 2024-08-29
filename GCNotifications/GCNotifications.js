@@ -1447,7 +1447,7 @@ const form = {
 }
 
 async function getMessages(conversationId, messageIds) {
-    return makeGenesysRequest(`/api/v2/conversations/messages/${conversationId}/messages/bulk`, 'POST', JSON.stringify(messageIds));
+    return makeGenesysRequest(`/api/v2/conversations/messages/${conversationId}/messages/bulk`, 'POST', messageIds);
 }
 
 async function createChannel() {
@@ -1455,7 +1455,7 @@ async function createChannel() {
 }
 
 async function addSubscriptions(channelId, subscriptions) {
-    return makeGenesysRequest(`/api/v2/notifications/channels/${channelId}/subscriptions`, 'POST', JSON.stringify(subscriptions));
+    return makeGenesysRequest(`/api/v2/notifications/channels/${channelId}/subscriptions`, 'POST', subscriptions);
 }
 
 async function run() {
