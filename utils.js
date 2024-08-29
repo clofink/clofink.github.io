@@ -94,3 +94,14 @@ function replaceInArray(array, item, replacement) {
     if (indexToRemove < 0) return;
     array.splice(indexToRemove, 1, replacement);
 }
+async function showLoading(loadingFunc, args = [], spinnerSelector = "#loadIcon") {
+    const spinnerElement = qs(spinnerSelector);
+    spinnerElement.classList.add("shown");
+    try {
+        await loadingFunc(...args);
+    }
+    catch(error) {
+        console.error(error);
+    }
+    spinnerElement.classList.remove("shown");
+}
