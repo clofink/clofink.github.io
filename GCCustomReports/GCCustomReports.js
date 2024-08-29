@@ -234,14 +234,14 @@ async function conversationDetailsJob(startDate, endDate) {
     const newJob = await createJob(startDate, endDate);
     // Armed with your jobId, you should now periodically poll for the status of your job 
     // (HTTP GET /api/v2/analytics/conversations/details/jobs/{jobId}).
-    await getStatus(newJob.jobId);
+    await pollStatus(makeGenesysRequest, [`/api/v2/analytics/conversations/details/jobs/${newJob.jobId}`], "state", ["FULFILLED"], ["FAILED"], 2000);
 
     // Is your job still running? Did it fail? Has it successfully completed gathering all of your data? 
     // Depending on load and the volume of data being queried, it might be on the order of seconds to minutes before you see your job complete.
     // If and only if your job has successfully completed, is it time for you to retrieve the results. 
     // At this point, you can ask for the first page of data back 
     // (HTTP GET /api/v2/analytics/conversations/details/jobs/{jobId}/results). 
-    const results = await getJobResults(newJob.jobId);
+    const results = await getAllGenesysItems(`/api/v2/analytics/conversations/details/jobs/${newJob.jobId}/results`, 100, "conversations");
 
     // Alongside the results of your query, you will find a cursor. 
     // This is what you will use to advance to the next page of data (that is, this is an iterator and not random-access/numbered-page-style access). 
@@ -270,82 +270,15 @@ async function createJob(startDate, endDate) {
         "surveyFilters": [],
         "interval": `${startDate}/${endDate}`
     }
-    const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/analytics/conversations/details/jobs`;
-    const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-    const resultJson = await result.json();
-    if (!result.ok) {
-        throw resultJson.message;
-    }
-    return resultJson;
-}
-
-async function getStatus(jobId) {
-    // Armed with your jobId, you should now periodically poll for the status of your job 
-    // (HTTP GET /api/v2/analytics/conversations/details/jobs/{jobId}).
-    return new Promise((resolve, reject) => {
-        const repeater = setInterval(async () => {
-            const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/analytics/conversations/details/jobs/${jobId}`;
-            const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-            const resultJson = await result.json();
-            if (!result.ok) {
-                reject();
-            }
-            if (resultJson.state === "FULFILLED") {
-                clearInterval(repeater);
-                resolve();
-            }
-            else if (resultJson.state === "FAILED") {
-                clearInterval(repeater);
-                reject();
-            }
-        }, 2000);
-    })
-}
-
-async function getJobResults(jobId) {
-    let truncated = true;
-    let cursor = "";
-    const results = [];
-
-    while (truncated === true) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/analytics/conversations/details/jobs/${jobId}/results?cursor=${cursor}`;
-        const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        const resultJson = await result.json();
-        if (!result.ok) {
-            throw resultJson.message;
-        }
-        results.push(...resultJson.conversations);
-        if (resultJson.cursor) {
-            cursor = resultJson.cursor
-        }
-        else {
-            truncated = false;
-        }
-    }
-    return results;
-}
-
-async function getItem(path) {
-    const url = `https://api.${window.localStorage.getItem('environment')}${path}`;
-    const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-    const resultJson = await result.json();
-    if (result.ok) {
-        resultJson.status = 200;
-    }
-    else {
-        throw resultJson.message;
-    }
-    return resultJson;
+    return makeGenesysRequest(`/api/v2/analytics/conversations/details/jobs`, 'POST', body);
 }
 
 async function getBotTurns(botFlowId, start, end) {
-    const resultJson = await getItem(`/api/v2/analytics/botflows/${botFlowId}/reportingturns?interval=${start}/${end}`);
-    return resultJson;
+    return makeGenesysRequest(`/api/v2/analytics/botflows/${botFlowId}/reportingturns?interval=${start}/${end}`);
 }
 
 async function getRecording(conversationId) {
-    const resultJson = await getItem(`/api/v2/conversations/${conversationId}/recordings`);
-    return resultJson;
+    return makeGenesysRequest(`/api/v2/conversations/${conversationId}/recordings`);
 }
 
 function addIfProperty(object, path, orValue, mapping) {
@@ -504,15 +437,15 @@ async function run() {
     const endDate = end + "T23:59:59.999Z";
 
     if (window.orgInfoCacheKey !== orgInfoCacheKey) {
-        const users = await getAllUsers();
+        const users = await getAllGenesysItems(`/api/v2/users?state=active`, 100, "entities");
         window.usersMapping = mapProperty("id", "name", users);
-        const queues = await getAll("/api/v2/routing/queues?sortOrder=asc&sortBy=name&name=**&divisionId", "entities", 25);
+        const queues = await getAllGenesysItems("/api/v2/routing/queues?sortOrder=asc&sortBy=name&name=**&divisionId", 50, "entities");
         window.queueMapping = mapProperty("id", "name", queues);
-        const wrapupCodes = await getAll("/api/v2/routing/wrapupcodes?sortBy=name&sortOrder=ascending", "entities", 25);
+        const wrapupCodes = await getAllGenesysItems("/api/v2/routing/wrapupcodes?sortBy=name&sortOrder=ascending", 50, "entities");
         window.wrapupCodeMapping = mapProperty("id", "name", wrapupCodes);
-        const divisions = await getAll("/api/v2/authorization/divisions?", "entities", 200);
+        const divisions = await getAllGenesysItems("/api/v2/authorization/divisions?", 200, "entities");
         window.divisionMapping = mapProperty("id", "name", divisions);
-        const knowledgeBases = await getAll("/api/v2/knowledge/knowledgeBases?sortOrder=ASC&sortBy=name", "entities", 25);
+        const knowledgeBases = await getAllGenesysItems("/api/v2/knowledge/knowledgeBases?sortOrder=ASC&sortBy=name", 50, "entities");
         window.knowledgeBaseMapping = mapProperty("id", "name", knowledgeBases);
         window.orgInfoCacheKey = orgInfoCacheKey;
     }
@@ -566,65 +499,6 @@ function mapProperty(propA, propB, objects) {
         mapping[object[propA]] = object[propB]
     }
     return mapping;
-}
-
-async function getAllUsers() {
-    const users = [];
-    let pageNum = 0;
-    let totalPages = 1;
-
-    while (pageNum < totalPages) {
-        pageNum++;
-        const body = {
-            "pageSize": 25,
-            "pageNumber": pageNum,
-            "query": [
-                {
-                    "type": "EXACT",
-                    "fields": ["state"],
-                    "values": ["active"]
-                }
-            ],
-            "sortOrder": "ASC",
-            "sortBy": "name",
-            "expand": [],
-            "enforcePermissions": false
-        }
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/users/search`;
-        const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        const resultJson = await result.json();
-        if (result.ok) {
-            resultJson.status = 200;
-        }
-        else {
-            throw resultJson.message;
-        }
-        users.push(...resultJson.results);
-        totalPages = resultJson.pageCount;
-    }
-    return users;
-}
-
-async function getAll(path, resultsKey, pageSize) {
-    const items = [];
-    let pageNum = 0;
-    let totalPages = 1;
-
-    while (pageNum < totalPages) {
-        pageNum++;
-        const url = `https://api.${window.localStorage.getItem('environment')}${path}&pageNumber=${pageNum}&pageSize=${pageSize}`;
-        const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        const resultJson = await result.json();
-        if (result.ok) {
-            resultJson.status = 200;
-        }
-        else {
-            throw resultJson.message;
-        }
-        items.push(...resultJson[resultsKey]);
-        totalPages = resultJson.pageCount;
-    }
-    return items;
 }
 
 function sortByKey(key) {
@@ -702,60 +576,15 @@ function showMainMenu() {
     }).catch(function (error) { log(error, "error"); logout(); });
 }
 
-function login() {
-    window.localStorage.setItem('environment', qs('[name="environment"]').value);
-    window.location.replace(`https://login.${window.localStorage.getItem('environment')}/oauth/authorize?response_type=token&client_id=${qs('[name="clientId"]').value}&redirect_uri=${encodeURIComponent(location.origin + location.pathname)}`);
-}
-
-function logout() {
-    window.localStorage.removeItem('auth');
-    window.localStorage.removeItem('environment');
-    eById('header').innerText = `Current Org Name: \nCurrent Org ID:`;
-    showLoginPage();
-}
-
-function getParameterByName(name) {
-    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-    var regex = new RegExp("[\\#&]" + name + "=([^&#]*)"),
-        results = regex.exec(location.hash);
-    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-}
-
-function storeToken(token) {
-    window.localStorage.setItem('auth', token);
-}
-
-function getToken() {
-    if (window.localStorage.getItem('auth')) {
-        return window.localStorage.getItem('auth');
-    }
-    return '';
-}
 
 async function getOrgDetails() {
-    const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/organizations/me`;
-    const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-    const resultJson = await result.json();
-    resultJson.status = result.status;
-    return resultJson;
+    return makeGenesysRequest(`/api/v2/organizations/me`);
 }
 
 var tabs = [];
 var fileContents;
 
-if (window.location.hash) {
-    storeToken(getParameterByName('access_token'));
-    let now = new Date().valueOf();
-    let expireTime = parseInt(getParameterByName('expires_in')) * 1000;
-    log(new Date(now + expireTime));
-    location.hash = ''
-}
-if (!getToken()) {
-    showLoginPage();
-}
-else {
-    showMainMenu();
-}
+runLoginProcess(showLoginPage, showMainMenu);
 
 function timeDiff(firstTime, secondTime) {
     firstTime = new Date(firstTime);
@@ -811,17 +640,6 @@ function createDownloadLink(fileName, fileContents, fileType) {
     const fileData = new Blob([fileContents], { type: fileType });
     const fileURL = window.URL.createObjectURL(fileData);
     return newElement('a', { href: fileURL, download: fileName });
-}
-
-async function showLoading(loadingFunc) {
-    eById("loadIcon").classList.add("shown");
-    try {
-        await loadingFunc();
-    }
-    catch (error) {
-        console.error(error);
-    }
-    eById("loadIcon").classList.remove("shown");
 }
 
 function createFilterUI() {
