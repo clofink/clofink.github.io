@@ -211,6 +211,16 @@ function showLoginPage() {
     addElement(inputsWrapper, parent);
 }
 
+async function populateBotSelect(botSelect) {
+    const digitalBots = await getAllGenesysItems(`/api/v2/flows?sortBy=name&sortOrder=asc&type=digitalbot`, 50, "entities");
+    const bots = await getAllGenesysItems(`/api/v2/flows?sortBy=name&sortOrder=asc&type=bot`, 50, "entities");
+    const sortFunc = sortByKey("name");
+    for (let flow of [...digitalBots, ...bots].sort(sortFunc)) {
+        const botOption = newElement("option", { innerText: flow.name, value: flow.id });
+        addElement(botOption, botSelect);
+    }
+}
+
 function showMainMenu() {
     const page = eById('page');
     clearElement(page);
@@ -221,9 +231,10 @@ function showMainMenu() {
     const endLabel = newElement('label', { innerText: "End Date: " });
     const endDate = newElement('input', { type: "date", id: "endDate", value: "2024-04-30" });
     addElement(endDate, endLabel);
-    const botFlowLabel = newElement('label', { innerText: "Bot Flow ID: " })
-    const botFlowInput = newElement('input', { id: "botFlowId" });
-    addElement(botFlowInput, botFlowLabel);
+    const botFlowLabel = newElement('label', { innerText: "Bot Flow: " })
+    const botSelect = newElement('select', { id: "botFlowId" });
+    showLoading(populateBotSelect, [botSelect]);
+    addElement(botSelect, botFlowLabel);
     const fieldContainer = newElement('div', { id: "fieldContainer" });
     addElement(createFieldOptions(), fieldContainer);
 
