@@ -10,7 +10,6 @@ class BotSession {
     }
 
     async createSession() {
-        // /api/v2/textbots/botflows/sessions POST
         const body = {
             "channel": {
                 "inputModes": ["Text"],
@@ -27,16 +26,12 @@ class BotSession {
             },
             "language": ""
         }
-
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/textbots/botflows/sessions`;
-        const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        const resultJson = await result.json();
-        this.sessionId = resultJson.id;
-        return resultJson;
+        const session = await makeGenesysRequest(`/api/v2/textbots/botflows/sessions`, "POST", body);
+        this.sessionId = session.id;
+        return this.sessionId;
     }
 
     async sendTurnEvent(message, inputEventType) {
-        // /api/v2/textbots/botflows/sessions/{sessionId}/turns POST
         if (!this.sessionId) throw `Session not created`;
         const body = {
             "inputEventUserInput": {
@@ -52,11 +47,9 @@ class BotSession {
             "previousTurn": this.previousTurnId ? { "id": this.previousTurnId } : null,
             "inputEventType": inputEventType
         }
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/textbots/botflows/sessions/${this.sessionId}/turns`;
-        const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        const resultJson = await result.json();
-        this.previousTurnId = resultJson.id;
-        return resultJson;
+        const turn = await makeGenesysRequest(`/api/v2/textbots/botflows/sessions/${this.sessionId}/turns`, 'POST', body);
+        this.previousTurnId = turn.id;
+        return turn;
     }
 }
 
@@ -81,7 +74,7 @@ class TestBotTab extends Tab {
             this.run();
         }
         registerElement(startButton, "click", startFunc.bind(this));
-        showLoading(async () => { await populateBotList(botSelect) });
+        showLoading(populateBotList, [botSelect]);
 
         const logoutButton = newElement('button', { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
@@ -194,6 +187,7 @@ class TestBotTab extends Tab {
         const messageRow = newElement('div', { class: ["message-row"] });
         const messageBubble = newElement('div', { class: ["message-bubble", sender] });
         const messageContent = this.createMessageContent(message, sender);
+        if (!messageContent.innerText) return;
         addElement(messageContent, messageBubble);
         addElement(messageBubble, messageRow);
         addElement(messageRow, this.messagesContainer);
@@ -207,7 +201,7 @@ class TestBotTab extends Tab {
             for (let prompt of message.prompts.textPrompts.segments) {
                 switch (prompt.type) {
                     case "Text":
-                        this.currentItem.expects.push({ "type": "message", "content": prompt.text })
+                        this.currentItem.expects.push({ "type": "message", "content": prompt.text });
                         addElement(this.createMessage(prompt), messageContent);
                         break;
                     case "RichMedia":
@@ -308,7 +302,7 @@ class TestBotTab extends Tab {
     }
 
     async sendTurnEvent(message, inputEventType) {
-        if (message) {
+        if (inputEventType !== "NoOp") {
             qs(".button-container")?.remove();
             this.createMessageRow({ text: message }, "visitor");
         }
@@ -502,17 +496,16 @@ class TestCreationTab extends Tab {
 }
 
 async function getDigitalBotFlows() {
-    // https://api.usw2.pure.cloud/api/v2/flows?includeSchemas=true&nameOrDescription=&sortBy=name&sortOrder=asc&pageNumber=1&pageSize=50&type=digitalbot
-    return getAll("/api/v2/flows?type=digitalbot&includeSchemas=true", "entities", 50);
+    return getAllGenesysItems("/api/v2/flows?type=digitalbot&includeSchemas=true", 50, "entities");
 }
 
 async function getByobIntegrations() {
-    const integrations = await getAll("/api/v2/integrations?pageNumber=1&pageSize=100&sortBy=name&sortOrder=ASC", "entities", 50);
+    const integrations = await getAllGenesysItems("/api/v2/integrations?pageNumber=1&pageSize=100&sortBy=name&sortOrder=ASC", 50, "entities");
     return integrations.filter((e) => e.integrationType.id === "genesys-byob");
 }
 
 async function getBotFlows() {
-    return getAll("/api/v2/flows?type=bot&includeSchemas=true", "entities", 50);
+    return getAllGenesysItems("/api/v2/flows?type=bot&includeSchemas=true", 50, "entities");
 }
 
 function showLoginPage() {
@@ -572,177 +565,8 @@ async function populateBotList(select) {
     }
 }
 
-// GENERATING CODE VERIFIER
-function dec2hex(dec) {
-    return ("0" + dec.toString(16)).substr(-2);
-}
-
-function generateCodeVerifier() {
-    var array = new Uint32Array(56 / 2);
-    window.crypto.getRandomValues(array);
-    return Array.from(array, dec2hex).join("");
-}
-
-function sha256(plain) {
-    // returns promise ArrayBuffer
-    const encoder = new TextEncoder();
-    const data = encoder.encode(plain);
-    return window.crypto.subtle.digest("SHA-256", data);
-}
-
-function base64urlencode(a) {
-    var str = "";
-    var bytes = new Uint8Array(a);
-    var len = bytes.byteLength;
-    for (var i = 0; i < len; i++) {
-        str += String.fromCharCode(bytes[i]);
-    }
-    return btoa(str)
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=+$/, "");
-}
-
-async function generateCodeChallengeFromVerifier(v) {
-    var hashed = await sha256(v);
-    var base64encoded = base64urlencode(hashed);
-    return base64encoded;
-}
-
-function logout() {
-    window.flows = undefined;
-    window.localStorage.removeItem('auth');
-    window.localStorage.removeItem('code');
-    window.localStorage.removeItem('environment');
-    window.localStorage.removeItem("clientId");
-    window.localStorage.removeItem("redirectUri");
-    window.localStorage.removeItem("codeVerifier");
-    eById('header').innerText = `Current Org Name: \nCurrent Org ID:`;
-    showLoginPage();
-}
-
-function storeToken(token) {
-    window.localStorage.setItem('auth', token);
-}
-
-function canGetToken() {
-    if (window.localStorage.getItem('auth')) return true;
-
-    if (window.localStorage.getItem('code') &&
-        window.localStorage.getItem('redirectUri') &&
-        window.localStorage.getItem('clientId') &&
-        window.localStorage.getItem('codeVerifier') &&
-        window.localStorage.getItem('environment')
-    ) {
-        return true;
-    }
-    return false
-}
-
-function getToken() {
-    const authToken = window.localStorage.getItem('auth');
-    if (authToken) {
-        return authToken;
-    }
-    return "";
-}
-
 async function getOrgDetails() {
-    const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/organizations/me`;
-    const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-    const resultJson = await result.json();
-    resultJson.status = result.status;
-    return resultJson;
+    return makeGenesysRequest(`/api/v2/organizations/me`);
 }
 
-async function login() {
-    const environment = storeAndReturnValue("environment", qs('[name="environment"]').value);
-    const clientId = storeAndReturnValue("clientId", qs('[name="clientId"]').value);
-    const redirectUri = storeAndReturnValue("redirectUri", location.origin + location.pathname);
-    const codeVerifier = storeAndReturnValue("codeVerifier", generateCodeVerifier());
-    const codeChallenge =  await generateCodeChallengeFromVerifier(codeVerifier);
-    window.localStorage.setItem('environment', environment);
-    window.location.replace(`https://login.${environment}/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge_method=S256&code_challenge=${codeChallenge}`);
-}
-
-function storeAndReturnValue (key, value) {
-    if (window.localStorage.getItem(key)) return window.localStorage.getItem(key);
-    window.localStorage.setItem(key, value);
-    return value;
-}
-
-async function getAuthToken() {
-    const url = `https://login.${window.localStorage.getItem('environment')}/oauth/token`;
-    const formData = new URLSearchParams();
-    formData.append("grant_type", "authorization_code");
-    formData.append("code", window.localStorage.getItem("code"));
-    formData.append("redirect_uri", window.localStorage.getItem("redirectUri"));
-    formData.append("client_id", window.localStorage.getItem("clientId"));
-    formData.append("code_verifier", window.localStorage.getItem("codeVerifier"));
-    formData.append("code_challenge_method", "S256");
-    const result = await fetch(url, { method: "POST", body: formData });
-    const resultJson = await result.json();
-    return resultJson;
-}
-
-function createUrlEncodedFormBody(obj) {
-    var formBody = [];
-    for (var property in obj) {
-        var encodedKey = encodeURIComponent(property);
-        var encodedValue = encodeURIComponent(details[property]);
-        formBody.push(encodedKey + "=" + encodedValue);
-    }
-    return formBody.join("&");
-}
-
-async function showLoading(loadingFunc) {
-    eById("loadIcon").classList.add("shown");
-    try {
-        await loadingFunc();
-    }
-    catch (error) {
-        console.error(error);
-    }
-    eById("loadIcon").classList.remove("shown");
-}
-
-async function getAll(path, resultsKey, pageSize) {
-    const items = [];
-    let pageNum = 0;
-    let totalPages = 1;
-
-    while (pageNum < totalPages) {
-        pageNum++;
-        const url = `https://api.${window.localStorage.getItem('environment')}${path}&pageNumber=${pageNum}&pageSize=${pageSize}`;
-        const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        const resultJson = await result.json();
-        if (result.ok) {
-            resultJson.status = 200;
-        }
-        else {
-            throw resultJson.message;
-        }
-        items.push(...resultJson[resultsKey]);
-        totalPages = resultJson.pageCount;
-    }
-    return items;
-}
-
-async function loginAndShowPage() {
-    if (!window.localStorage.getItem('auth')) {
-        const auth = await getAuthToken();
-        window.localStorage.setItem("auth", auth.access_token);
-    }
-    showMainMenu();
-}
-
-if (window.location.search) {
-    const searchParams = new URLSearchParams(window.location.search);
-    window.localStorage.setItem("code", (searchParams.get("code")));
-}
-if (window.localStorage.getItem('auth') || canGetToken()) {
-    loginAndShowPage();
-}
-else {
-    showLoginPage();
-}
+runLoginProcess(showLoginPage, showMainMenu);
