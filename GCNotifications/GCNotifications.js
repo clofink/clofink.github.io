@@ -1,3 +1,15 @@
+const formData = [
+    {
+        key: "flowId",
+        name: "Flow ID",
+        dependentValues: [
+            "v2.analytics.flow.{flowId}.aggregates",
+            "v2.flows.instances.flow.{flowId}",
+            "v2.flows.{flowId}"
+        ]
+    }
+]
+
 const form = {
     children: [],
     fields: [
@@ -1435,44 +1447,20 @@ const form = {
 }
 
 async function getMessages(conversationId, messageIds) {
-    const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/conversations/messages/${conversationId}/messages/bulk`;
-    const result = await fetch(url, { method: "POST", body: JSON.stringify(messageIds), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-    if (!result.ok) {
-        throw resultJson.message;
-    }
-    const resultJson = await result.json();
-    log(resultJson);
-    return resultJson;
+    return makeGenesysRequest(`/api/v2/conversations/messages/${conversationId}/messages/bulk`, 'POST', JSON.stringify(messageIds));
 }
 
 async function createChannel() {
-    const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/notifications/channels`;
-    const result = await fetch(url, { method: "POST", headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-    if (!result.ok) {
-        throw resultJson.message;
-    }
-    const resultJson = await result.json();
-    return resultJson;
+    return makeGenesysRequest(`/api/v2/notifications/channels`, 'POST');
 }
 
 async function addSubscriptions(channelId, subscriptions) {
-    // api/v2/notifications/channels/{channelId}/subscriptions
-    const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/notifications/channels/${channelId}/subscriptions`;
-    const result = await fetch(url, { method: "POST", body: JSON.stringify(subscriptions), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-    if (!result.ok) {
-        throw resultJson.message;
-    }
-    const resultJson = await result.json();
-    return resultJson;
+    return makeGenesysRequest(`/api/v2/notifications/channels/${channelId}/subscriptions`, 'POST', JSON.stringify(subscriptions));
 }
-
-window.allMessageIds = [];
-window.conversationId;
 
 async function run() {
     const newChannel = await createChannel();
     const socketConnection = new WebSocket(newChannel.connectUri);
-
 
     socketConnection.onopen = (event) => {
         log(event.data || "");
@@ -1480,7 +1468,7 @@ async function run() {
     socketConnection.onmessage = (event) => {
         const message = JSON.parse(event.data);
         if (message.topicName !== topic) return;
-        log(message || "");
+        log(message.eventBody || "");
     }
     socketConnection.onerror = (event) => {
         log(event.data || "");
@@ -1546,70 +1534,43 @@ function showMainMenu() {
     }).catch(function (error) { log(error, "error"); logout(); });
 }
 
-function login() {
-    window.localStorage.setItem('environment', qs('[name="environment"]').value);
-    window.location.replace(`https://login.${window.localStorage.getItem('environment')}/oauth/authorize?response_type=token&client_id=${qs('[name="clientId"]').value}&redirect_uri=${encodeURIComponent(location.origin + location.pathname)}`);
-}
-
-function logout() {
-    window.localStorage.removeItem('auth');
-    window.localStorage.removeItem('environment');
-    eById('header').innerText = `Current Org Name: \nCurrent Org ID:`;
-    showLoginPage();
-}
-
-function getParameterByName(name) {
-    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-    var regex = new RegExp("[\\#&]" + name + "=([^&#]*)"),
-        results = regex.exec(location.hash);
-    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-}
-
-function storeToken(token) {
-    window.localStorage.setItem('auth', token);
-}
-
-function getToken() {
-    if (window.localStorage.getItem('auth')) {
-        return window.localStorage.getItem('auth');
+async function getFlowOptions() {
+    const options = [];
+    if (!window.flowMapping) await populateSelects();
+    for (let flow in window.flowMapping) {
+        const option = {};
+        option.name = flow;
+        option.value = window.flowMapping[flow];
     }
-    return '';
+    return options;
+}
+
+async function populateSelects() {
+    const orgInfoCacheKey = window.orgId;
+
+    if (window.orgInfoCacheKey !== orgInfoCacheKey) {
+        const users = await getAllGenesysItems(`/api/v2/users?state=active`, 100, "entities");
+        window.usersMapping = mapProperty("id", "name", users);
+        const queues = await getAllGenesysItems("/api/v2/routing/queues?sortOrder=asc&sortBy=name&name=**&divisionId", 100, "entities");
+        window.queueMapping = mapProperty("id", "name", queues);
+        const wrapupCodes = await getAllGenesysItems("/api/v2/routing/wrapupcodes?sortBy=name&sortOrder=ascending", 100, "entities");
+        window.wrapupCodeMapping = mapProperty("id", "name", wrapupCodes);
+        const flows = await getAllGenesysItems("/api/v2/flows?sortBy=name&sortOrder=asc", 100, "entities");
+        window.flowMapping = mapProperty("id", "name", flows);
+        window.orgInfoCacheKey = orgInfoCacheKey;
+    }
+}
+
+function mapProperty(propA, propB, objects) {
+    const mapping = {};
+    for (let object of objects) {
+        mapping[object[propA]] = object[propB]
+    }
+    return mapping;
 }
 
 async function getOrgDetails() {
-    const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/organizations/me`;
-    const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-    const resultJson = await result.json();
-    resultJson.status = result.status;
-    return resultJson;
-}
-
-var tabs = [];
-var fileContents;
-
-if (window.location.hash) {
-    storeToken(getParameterByName('access_token'));
-    let now = new Date().valueOf();
-    let expireTime = parseInt(getParameterByName('expires_in')) * 1000;
-    log(new Date(now + expireTime));
-    location.hash = ''
-}
-if (!getToken()) {
-    showLoginPage();
-}
-else {
-    showMainMenu();
-}
-
-async function showLoading(loadingFunc) {
-    eById("loadIcon").classList.add("shown");
-    try {
-        await loadingFunc();
-    }
-    catch(error) {
-        console.error(error);
-    }
-    eById("loadIcon").classList.remove("shown");
+    return makeGenesysRequest(`/api/v2/organizations/me`);
 }
 
 function getParams(topic) {
@@ -1623,3 +1584,45 @@ function getParams(topic) {
     }
     return formattedResults;
 }
+
+function generateForm() {
+    // {
+    //     "name": "flowId",
+    //     "label": "Flow ID: ",
+    //     "type": "input",
+    //     "properties": {
+    //         "id": "flowId"
+    //     },
+    //     "dependsOn": {
+    //         "fieldName": "topic",
+    //         "fieldValues": [
+    //             "v2.analytics.flow.{flowId}.aggregates",
+    //             "v2.flows.instances.flow.{flowId}",
+    //             "v2.flows.{flowId}"
+    //         ]
+    //     }
+    // },
+
+
+}
+
+function generateField(field) {
+    // {
+    //     key: "flowId",
+    //     name: "Flow ID",
+    //     dependentValues: [
+    //         "v2.analytics.flow.{flowId}.aggregates",
+    //         "v2.flows.instances.flow.{flowId}",
+    //         "v2.flows.{flowId}"
+    //     ]
+    // }
+    const newField = {};
+
+}
+
+var allMessageIds = [];
+var conversationId;
+var tabs = [];
+var fileContents;
+
+runLoginProcess(showLoginPage, showMainMenu);
