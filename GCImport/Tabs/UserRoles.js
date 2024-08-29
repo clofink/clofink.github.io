@@ -33,73 +33,26 @@ class UserRolesTab extends Tab {
         showLoading(boundFunc, this.container);
     }
 
-    async getAllUsers() {
-        const users = [];
-        let pageNum = 0;
-        let totalPages = 1;
-
-        while (pageNum < totalPages) {
-            pageNum++;
-            const body = {
-                "pageSize": 25,
-                "pageNumber": pageNum,
-                "query": [
-                    {
-                        "type": "EXACT",
-                        "fields": ["state"],
-                        "values": ["active"]
-                    }
-                ],
-                "sortOrder": "ASC",
-                "sortBy": "name",
-                "expand": [],
-                "enforcePermissions": false
-            }
-            const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/users/search`;
-            const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-            const resultJson = await result.json();
-            if (result.ok) {
-                resultJson.status = 200;
-            }
-            else {
-                throw resultJson.message;
-            }    
-            users.push(...resultJson.results);
-            totalPages = resultJson.pageCount;
-        }
-        return users;
-    }
-
     async updateRoles(userId, roles) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/authorization/subjects/${userId}/bulkadd`;
-        const result = await fetch(url, { method: "POST", body: JSON.stringify(roles), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        const resultJson = {};
-        if (result.ok) {
-            resultJson.status = 200;
-        }
-        else {
-            resultJson.status = result.status;
-            resultJson.message = `Request to update user roles failed with status ${result.status}`;
-        }
-        return resultJson;
+        return makeGenesysRequest(`/api/v2/authorization/subjects/${userId}/bulkadd`, "POST", roles);
     }
 
     async bulkUpdateRoles() {
         if (!fileContents) throw "No valid file selected";
 
-        const allUsers = await this.getAllUsers();
+        const allUsers = await getAllGenesysItems(`/api/v2/users?state=active`, 100, "entities");
         const userInfo = {};
         for (let user of allUsers) {
             userInfo[user.email.toLowerCase()] = user.id;
         }
 
-        const allRoles = await getAll("/api/v2/authorization/roles?", "entities", 200); 
+        const allRoles = await getAllGenesysItems("/api/v2/authorization/roles?", 200, "entities");
         const rolesInfo = {};
         for (let role of allRoles) {
             rolesInfo[role.name.toLowerCase()] = role.id;
         }
 
-        const allDivisions = await getAll("/api/v2/authorization/divisions?", "entities", 200);
+        const allDivisions = await getAllGenesysItems("/api/v2/authorization/divisions?", 200, "entities");
         const divisionInfo = {};
         for (let division of allDivisions) {
             divisionInfo[division.name.toLowerCase()] = division.id;
@@ -134,7 +87,7 @@ class UserRolesTab extends Tab {
                 }
                 newRoles.push(newRole);
             }
-            await makeCallAndHandleErrors(this.updateRoles, [userInfo[user.Email.toLowerCase()], {grants: newRoles}], results, user.Email, "User Role")
+            await makeCallAndHandleErrors(this.updateRoles, [userInfo[user.Email.toLowerCase()], {grants: newRoles}], results, user.Email, "User Role");
         }
         return results;
     }

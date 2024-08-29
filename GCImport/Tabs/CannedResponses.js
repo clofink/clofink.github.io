@@ -33,7 +33,7 @@ class CannedResponsesTab extends Tab {
     async importCannedResponses() {
         if (!fileContents) throw "No valid file selected";
     
-        const libraries = await getAll("/api/v2/responsemanagement/libraries?", "entities", 500);
+        const libraries = await getAllGenesysItems("/api/v2/responsemanagement/libraries?", 500, "entities");
         const libraryInfo = {};
         const results = [];
         for (let library of libraries) {
@@ -44,7 +44,7 @@ class CannedResponsesTab extends Tab {
             if (Object.keys(response).length != 3) continue;
             let libraryId;
             if (response.Library && !libraryInfo[response.Library]) {
-                const newLibrary = await makeCallAndHandleErrors(createItem, ["/api/v2/responsemanagement/libraries", {name: response.Library}], results, response.Library, "Response Library");
+                const newLibrary = await makeCallAndHandleErrors(makeGenesysRequest, ["/api/v2/responsemanagement/libraries", "POST", {name: response.Library}], results, response.Library, "Response Library");
                 if (newLibrary) libraryInfo[response.Library] = newLibrary.id;
             }
             libraryId = libraryInfo[response.Library];
@@ -54,7 +54,7 @@ class CannedResponsesTab extends Tab {
                 if (matches && matches.length >= 0) {
                     for (let match of matches) {
                         substitutions.push({id: match.substring(2, match.length - 2)});
-                        response.Content = response.Content.replace(match, `<span class="rm-placeholder" data-placeholder="true">${match}</span>`)
+                        response.Content = response.Content.replace(match, `<span class="rm-placeholder" data-placeholder="true">${match}</span>`);
                     }
                 }
                 const body = {
@@ -73,7 +73,7 @@ class CannedResponsesTab extends Tab {
                         }
                     ],
                 }
-                await makeCallAndHandleErrors(createItem, ["/api/v2/responsemanagement/responses", body], results, response.Name, "Canned Response");
+                await makeCallAndHandleErrors(makeGenesysRequest, ["/api/v2/responsemanagement/responses", "POST", body], results, response.Name, "Canned Response");
             }
         }
         return results;

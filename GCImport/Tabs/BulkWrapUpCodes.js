@@ -26,15 +26,6 @@ class WrapUpCodesTab extends Tab {
         addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
         return this.container;
     }
-    async addWrapUpCodes(queueId, codes) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/routing/queues/${queueId}/wrapupcodes`;
-        const result = await fetch(url, {method: "POST", body: JSON.stringify(codes), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-        const resultsJson = await result.json();
-        if (result.ok) {
-            resultsJson.status = 200;
-        }
-        return resultsJson;
-    }
     
     importWrapUpCodesWrapper() {
         const boundFunc = this.importWrapUpCodes.bind(this);
@@ -44,13 +35,13 @@ class WrapUpCodesTab extends Tab {
     async importWrapUpCodes() {
         if (!fileContents) throw "No valid file selected";
     
-        const queues = await getAll("/api/v2/routing/queues?sortOrder=asc&sortBy=name&name=**&divisionId", "entities", 25);
+        const queues = await getAllGenesysItems("/api/v2/routing/queues?sortOrder=asc&sortBy=name&name=**&divisionId", 50, "entities");
         const queueMapping = {};
         for (let queue of queues) {
             queueMapping[queue.name] = queue.id;
         }
     
-        const wrapUpCodes = await getAll("/api/v2/routing/wrapupcodes?sortBy=name&sortOrder=ascending", "entities", 25);
+        const wrapUpCodes = await getAllGenesysItems("/api/v2/routing/wrapupcodes?sortBy=name&sortOrder=ascending", 50, "entities");
         const wrapupCodeMapping = {};
         for (let wrapUpCode of wrapUpCodes) {
             wrapupCodeMapping[wrapUpCode.name] = wrapUpCode.id;
@@ -68,12 +59,12 @@ class WrapUpCodesTab extends Tab {
                     const trimmedCode = wrapUpCode.trim();
                     if (!trimmedCode) continue;
                     if (!wrapupCodeMapping[trimmedCode]) {
-                        const newWrapUpCode = await makeCallAndHandleErrors(createItem, ["/api/v2/routing/wrapupcodes", {"name": trimmedCode, "division":{"id":"*"}}], results, trimmedCode, "Wrap Up Code");
+                        const newWrapUpCode = await makeCallAndHandleErrors(makeGenesysRequest, ["/api/v2/routing/wrapupcodes", "POST", {"name": trimmedCode, "division":{"id":"*"}}], results, trimmedCode, "Wrap Up Code");
                         if (newWrapUpCode) wrapupCodeMapping[trimmedCode] = newWrapUpCode.id;
                     }
                     codesToAdd.push({id: wrapupCodeMapping[trimmedCode]});
                 }
-                await makeCallAndHandleErrors(this.addWrapUpCodes, [queueMapping[item["Queue Name"]], codesToAdd], results, item["Queue Name"], "Code Mapping");
+                await makeCallAndHandleErrors(makeGenesysRequest, [`/api/v2/routing/queues/${queueMapping[item["Queue Name"]]}/wrapupcodes`, "POST", codesToAdd], results, item["Queue Name"], "Code Mapping");
             }
         }
         return results;

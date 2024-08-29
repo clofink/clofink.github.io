@@ -32,7 +32,7 @@ class UserPromptsTab extends Tab {
     async importPrompts() {
         if (!fileContents) throw "No valid file selected";
 
-        const allPrompts = await getAll("/api/v2/architect/prompts?sortBy=name&sortOrder=asc", "entities", 200);
+        const allPrompts = await getAllGenesysItems("/api/v2/architect/prompts?sortBy=name&sortOrder=asc", 200, "entities");
         const promptMapping = {};
         for (let prompt of allPrompts) {
             promptMapping[prompt.name] = prompt.id;
@@ -46,7 +46,7 @@ class UserPromptsTab extends Tab {
             }
 
             const promptBody = { "name": prompt["Name"], "description": prompt["Description"] || "" };
-            const newPrompt = await makeCallAndHandleErrors(createItem, ["/api/v2/architect/prompts", promptBody], results, prompt["Name"], "Prompt");
+            const newPrompt = await makeCallAndHandleErrors(makeGenesysRequest, ["/api/v2/architect/prompts", 'POST', promptBody], results, prompt["Name"], "Prompt");
             if (!newPrompt) continue;
 
             for (let field in prompt) {
@@ -55,7 +55,7 @@ class UserPromptsTab extends Tab {
                     continue;
                 }
                 const resourceBody = { "language": fieldParts[0].toLowerCase(), "ttsString": prompt[field], "text": prompt[field] };
-                const newResource = await makeCallAndHandleErrors(createItem, [`/api/v2/architect/prompts/${newPrompt.id}/resources`, resourceBody], results, field, "Prompt Resource");
+                const newResource = await makeCallAndHandleErrors(makeGenesysRequest, [`/api/v2/architect/prompts/${newPrompt.id}/resources`, 'POST', resourceBody], results, field, "Prompt Resource");
             }
         }
         return results;

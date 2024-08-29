@@ -60,42 +60,8 @@ function showMainMenu() {
     }).catch(function(error) {log(error, "error"); logout();});
 }
 
-function login() {
-    window.localStorage.setItem('environment', qs('[name="environment"]').value);
-    window.location.replace(`https://login.${window.localStorage.getItem('environment')}/oauth/authorize?response_type=token&client_id=${qs('[name="clientId"]').value}&redirect_uri=${encodeURIComponent(location.origin + location.pathname)}`);
-}
-
-function logout() {
-    window.localStorage.removeItem('auth');
-    window.localStorage.removeItem('environment');
-    eById('header').innerText = "Current Org Name: Current Org ID:";
-    showLoginPage();
-}
-
-function getParameterByName(name) {
-    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-    var regex = new RegExp("[\\#&]" + name + "=([^&#]*)"),
-    results = regex.exec(location.hash);
-    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-}
-
-function storeToken(token) {
-    window.localStorage.setItem('auth', token);
-}
-
-function getToken() {
-    if (window.localStorage.getItem('auth')) {
-        return window.localStorage.getItem('auth');
-    }
-    return '';
-}
-
 async function getOrgDetails() {
-    const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/organizations/me`;
-    const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-    const resultJson = await result.json(); 
-    resultJson.status = result.status;
-    return resultJson;
+    return makeGenesysRequest(`/api/v2/organizations/me`);
 }
 
 function loadFile(event) {
@@ -135,16 +101,6 @@ function loadFile(event) {
     }
 }
 
-function showTabs() {
-    const tabList = eById('tabList');
-    clearElement(tabList);
-
-    for (let i = 0; i < window.tabs.length; i++) {
-        addElement(tabs[i], tabList);
-        if (i === 0) tabs[i].click();
-    }
-}
-
 function addHelp(textList) {
     const details = newElement('details');
     const summary = newElement("summary", {innerText: "Help"});
@@ -155,43 +111,6 @@ function addHelp(textList) {
     }
     addElements([summary, listContainer], details);
     return details;
-}
-
-async function waitFor(seconds) {
-    return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
-}
-
-async function getAll(path, resultsKey, pageSize) {
-    const items = [];
-    let pageNum = 0;
-    let totalPages = 1;
-
-    while (pageNum < totalPages) {
-        let unsuccessful = true;
-        while(unsuccessful) {
-            pageNum++;
-            const url = `https://api.${window.localStorage.getItem('environment')}${path}&pageNumber=${pageNum}&pageSize=${pageSize}`;
-            const result = await fetch(url, {headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-            if (result.status === 429) {
-                const retryWait = result.headers.get("Retry-After");
-                const waitSeconds = isNaN(parseInt(retryWait, 10)) ? 1 : parseInt(retryWait, 10);
-                await waitFor(waitSeconds);
-            }
-            else {
-                unsuccessful = false;
-                const resultJson = await result.json();
-                if (result.ok) {
-                    resultJson.status = 200;
-                }
-                else {
-                    throw resultJson.message;
-                }
-                items.push(...resultJson[resultsKey]);
-                totalPages = resultJson.pageCount;
-            }
-        }
-    }
-    return items;
 }
 
 async function getAllPost(path, body, pageSize) {
@@ -216,32 +135,6 @@ async function getAllPost(path, body, pageSize) {
         totalPages = resultJson.pageCount;
     }
     return items;
-}
-
-async function createItem(path, body) {
-    const url = `https://api.${window.localStorage.getItem('environment')}${path}`;
-    const result = await fetch(url, {method: "POST", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-    const resultJson = await result.json();
-    if (result.ok) {
-        resultJson.status = 200;
-    }
-    return resultJson;
-}
-
-function addTab(tabName, renderCallback) {
-    const tabSelected = function() {
-        for (let tab of qsa(".tabHeader")) {
-            tab.classList.remove("selected");
-        }
-        newTab.classList.add("selected");
-        const tabContainer = eById("tabContent");
-        clearElement(tabContainer);
-        addElement(renderCallback(), tabContainer);
-    }
-    const newTab = newElement("div", {class: ["tabHeader"], innerText: tabName});
-    registerElement(newTab, "click", tabSelected);
-    tabs.push(newTab);
-    if (eById("tabList")) showTabs();
 }
 
 async function showLoading(loadingFunc, containerElement) {
@@ -302,16 +195,4 @@ async function makeCallAndHandleErrors(callFunc, args, results, itemName, itemTy
 var tabs = [];
 var fileContents;
 
-if (window.location.hash) {
-    storeToken(getParameterByName('access_token'));
-    let now = new Date().valueOf();
-    let expireTime = parseInt(getParameterByName('expires_in')) * 1000;
-    log(new Date(now + expireTime));
-    location.hash = ''
-}
-if (!getToken()) {
-    showLoginPage();
-}
-else {
-    showMainMenu();
-}
+runLoginProcess(showLoginPage, showMainMenu);

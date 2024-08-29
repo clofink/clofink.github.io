@@ -33,62 +33,15 @@ class UserSkillsTab extends Tab {
         showLoading(boundFunc, this.container);
     }
 
-    async getAllUsers() {
-        const users= [];
-        let pageNum = 0;
-        let totalPages = 1;
-    
-        while (pageNum < totalPages) {
-            pageNum++;
-            const body = {
-                "pageSize": 25,
-                "pageNumber": pageNum,
-                "query": [
-                    {
-                        "type":"EXACT",
-                        "fields":["state"],
-                        "values":["active"]
-                    }
-                ],
-                "sortOrder":"ASC",
-                "sortBy":"name",
-                "expand":[],
-                "enforcePermissions":false
-            }
-            const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/users/search`;
-            const result = await fetch(url, {method: "POST", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-            const resultJson = await result.json();
-            if (result.ok) {
-                resultJson.status = 200;
-            }
-            else {
-                throw resultJson.message;
-            }
-            users.push(...resultJson.results);
-            totalPages = resultJson.pageCount;
-        }
-        return users;
-    }
-
-    async bulkAddSkills(userId, skills) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/users/${userId}/routingskills/bulk`;
-        const result = await fetch(url, {method: "PATCH", body: JSON.stringify(skills), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
-        const resultJson = await result.json();
-        if (result.ok) {
-            resultJson.status = 200;
-        }
-        return resultJson;
-    }
-    
     async addUserSkills() {
         if (!fileContents) throw "No valid file selected";
 
-        const allSkills = await getAll("/api/v2/routing/skills?", "entities", 200);
+        const allSkills = await getAllGenesysItems("/api/v2/routing/skills?", 200, "entities");
         const skillsInfo = {};
         for (let skill of allSkills) {
             skillsInfo[skill.name.toLowerCase()] = skill.id;
         }
-        const allUsers = await this.getAllUsers();
+        const allUsers = await getAllGenesysItems(`/api/v2/users?state=active`, 100, "entities");
         const userInfo = {};
         for (let user of allUsers) {
             userInfo[user.email.toLowerCase()] = user.id;
@@ -106,10 +59,10 @@ class UserSkillsTab extends Tab {
                 const parts = value.split(":"); 
                 const skillName = parts[0].toLowerCase().trim();
                 if (!skillsInfo[skillName]) {
-                    const newSkill = await makeCallAndHandleErrors(createItem, ["/api/v2/routing/skills", {name: parts[0]}], results, parts[0], "Skill");
+                    const newSkill = await makeCallAndHandleErrors(makeGenesysRequest, ["/api/v2/routing/skills", "POST", {name: parts[0]}], results, parts[0], "Skill");
                     skillsInfo[skillName] = newSkill.id;
                 }
-                const skillVal = parseInt(parts[1])
+                const skillVal = parseInt(parts[1]);
                 if (parts[1] && (isNaN(skillVal) || ![0,1,2,3,4,5].includes(skillVal))) {
                     results.push({name: parts[0], type: "User Skill", status: "failed", error: `Invalid proficiency ${parts[1]} for skill ${parts[0]}`})
                     continue;
@@ -121,7 +74,7 @@ class UserSkillsTab extends Tab {
                 skills.push(skill);
             }
             if (skills.length < 1) continue;
-            await makeCallAndHandleErrors(this.bulkAddSkills, [userInfo[user.Email.toLowerCase()], skills], results, user.Email, "User Skills")
+            await makeCallAndHandleErrors(makeGenesysRequest, [userInfo[user.Email.toLowerCase()], 'POST', skills], results, user.Email, "User Skills")
         }
         return results;
     }

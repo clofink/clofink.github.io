@@ -30,14 +30,8 @@ class WidgetsTab extends Tab {
         addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
         return this.container;
     }
-    async getAllWidgetConfigs() {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/webdeployments/configurations/?showOnlyPublished=true`;
-        const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        return await result.json();
-    }
-    
+
     async createInitialVersion(flowId) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/flows/${flowId}/versions/`;
         const body = {
             "nextTrackingNumber": 12,
             "defaultLanguage": "en-US",
@@ -108,12 +102,7 @@ class WidgetsTab extends Tab {
         //     "flow": "31,139,8,0,0,0,0,0,0,3,149,84,203,110,219,48,16,252,149,128,103,171,16,109,203,174,125,107,225,2,53,144,38,1,228,246,18,4,1,37,173,28,34,34,169,146,203,164,129,161,127,239,210,122,248,81,183,104,78,54,103,151,156,225,206,80,59,166,225,23,110,172,200,159,165,222,222,120,149,129,101,75,62,30,177,2,74,225,43,188,22,122,235,197,22,216,146,129,142,190,167,44,84,92,110,101,141,210,104,66,9,144,90,162,20,85,10,63,61,232,60,180,198,28,38,48,155,20,81,194,139,113,52,157,0,143,50,49,77,162,184,204,63,38,83,62,78,230,243,146,54,106,161,66,247,103,43,116,113,117,3,175,87,95,54,14,9,247,242,27,160,88,9,20,108,185,99,153,149,197,22,82,176,47,96,63,229,129,214,177,229,253,195,136,145,12,0,125,103,234,253,186,33,192,215,181,177,8,69,175,58,20,58,221,212,175,132,150,37,16,3,29,90,13,247,186,223,49,89,12,215,107,168,207,59,176,119,214,168,26,59,158,55,135,160,14,8,49,225,91,29,148,75,157,25,175,11,247,68,172,10,156,11,7,134,1,101,126,155,2,34,141,148,20,236,168,31,172,53,246,43,93,179,34,44,240,211,168,60,132,63,185,209,165,220,67,160,234,240,83,27,218,195,137,130,140,105,231,219,145,209,22,214,52,127,41,156,15,77,153,130,74,156,218,213,1,165,21,205,208,237,141,35,139,141,199,219,50,204,85,6,211,208,122,160,134,167,78,228,166,61,123,37,29,41,212,144,35,107,134,80,156,222,173,172,204,235,49,117,88,175,76,238,21,104,252,209,211,49,254,33,38,145,138,178,162,188,106,205,60,47,34,186,112,198,41,220,17,244,225,90,147,19,215,50,120,72,190,57,20,22,219,72,80,119,9,124,186,24,207,39,209,124,60,91,80,232,98,30,137,89,188,136,98,200,120,178,72,166,73,86,204,2,75,23,246,53,153,206,227,81,107,254,251,2,187,110,3,127,149,162,192,48,250,199,199,206,137,30,16,123,77,131,206,19,74,222,81,254,167,220,142,242,200,135,115,171,115,83,85,162,118,64,135,150,162,114,193,196,65,208,97,91,55,166,144,239,23,97,165,200,42,104,159,205,195,133,119,115,91,247,207,236,248,165,12,95,128,30,74,159,101,85,189,47,196,149,200,47,135,56,20,46,135,120,242,143,16,55,127,222,231,55,236,189,24,34,211,4,0,0",
         //     "flowMetaData": { "flowDocumentVersion": "2.0" }
         // };
-        const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        const resultJson = await result.json();
-        if (result.ok) {
-            resultJson.status = 200;
-        }
-        return resultJson;
+        return makeGenesysRequest(`/api/v2/flows/${flowId}/versions`, "POST", body);
     }
     
     importWidgetsWrapper() {
@@ -125,14 +114,14 @@ class WidgetsTab extends Tab {
         if (!fileContents) throw "No valid file selected";
 
         // get list of inbound flows
-        const inboundFlows = await getAll("/api/v2/flows?sortBy=name&sortOrder=asc&type=inboundshortmessage", "entities", 50);
+        const inboundFlows = await getAllGenesysItems("/api/v2/flows?sortBy=name&sortOrder=asc&type=inboundshortmessage", 50, "entities");
         const inboundFlowsMapping = {};
         for (let flow of inboundFlows) {
             inboundFlowsMapping[flow.name] = flow.id;
         }
 
         // get list of configurations
-        const widgetConfigs = await this.getAllWidgetConfigs();
+        const widgetConfigs = await getAllGenesysItems(`/api/v2/webdeployments/configurations/?showOnlyPublished=true`, 100, "entities");
         const widgetConfigMapping = {};
         for (let config of widgetConfigs.entities) {
             widgetConfigMapping[config.name] = { id: config.id, version: config.version };
@@ -142,13 +131,13 @@ class WidgetsTab extends Tab {
         for (let initial of fileContents.data) {
             // create the inbound message flow
             if (!inboundFlowsMapping[initial["Inbound Flow Name"]]) {
-                const inboundFlow = await makeCallAndHandleErrors(createItem, ["/api/v2/flows/", { "type": "inboundshortmessage", "name": initial["Inbound Flow Name"], "description": "" }], results, initial["Inbound Flow Name"], "Inbound Message Flow");
+                const inboundFlow = await makeCallAndHandleErrors(makeGenesysRequest, ["/api/v2/flows/", "POST", { "type": "inboundshortmessage", "name": initial["Inbound Flow Name"], "description": "" }], results, initial["Inbound Flow Name"], "Inbound Message Flow");
                 if (!inboundFlow) continue;
 
                 const initialFlowVersion = await makeCallAndHandleErrors(this.createInitialVersion, [inboundFlow.id], results, initial["Inbound Flow Name"], "Initial Flow Version");
                 if (!initialFlowVersion) continue;
 
-                const publishedFlow = await makeCallAndHandleErrors(createItem, [`/api/v2/flows/actions/publish?flow=${inboundFlow.id}`, {}], results, initial["Inbound Flow Name"], "Flow Publish");
+                const publishedFlow = await makeCallAndHandleErrors(makeGenesysRequest, [`/api/v2/flows/actions/publish?flow=${inboundFlow.id}`, "POST", {}], results, initial["Inbound Flow Name"], "Flow Publish");
                 if (!publishedFlow) continue;
 
                 inboundFlowsMapping[initial["Inbound Flow Name"]] = inboundFlow.id;
@@ -157,10 +146,10 @@ class WidgetsTab extends Tab {
 
             // create the messenger config
             if (!widgetConfigMapping[initial["Configuration Name"]]) {
-                const newConfig = await makeCallAndHandleErrors(createItem, ["/api/v2/webdeployments/configurations/", this.parseInput(this.resolveMapping(initial))], results, initial["Configuration Name"], "Create Messenger Configuration");
+                const newConfig = await makeCallAndHandleErrors(makeGenesysRequest, ["/api/v2/webdeployments/configurations/", 'POST', this.parseInput(this.resolveMapping(initial))], results, initial["Configuration Name"], "Create Messenger Configuration");
                 if (!newConfig) continue;
 
-                const publishedConfig = await makeCallAndHandleErrors(createItem, [`/api/v2/webdeployments/configurations/${newConfig.id}/versions/draft/publish`, {}], results, initial["Configuration Name"], "Publish Messenger Configuration");
+                const publishedConfig = await makeCallAndHandleErrors(makeGenesysRequest, [`/api/v2/webdeployments/configurations/${newConfig.id}/versions/draft/publish`, 'POST', {}], results, initial["Configuration Name"], "Publish Messenger Configuration");
                 if (!publishedConfig) continue;
 
                 widgetConfigMapping[initial["Configuration Name"]] = { id: publishedConfig.id, version: publishedConfig.version };
@@ -176,7 +165,7 @@ class WidgetsTab extends Tab {
                 "flow": { "id": flowId },
                 "status": "Active"
             }
-            const deployment = await makeCallAndHandleErrors(createItem, ["/api/v2/webdeployments/deployments/", body], results, initial["Deployment Name"], "Messenger Deployment");
+            await makeCallAndHandleErrors(makeGenesysRequest, ["/api/v2/webdeployments/deployments/", 'POST', body], results, initial["Deployment Name"], "Messenger Deployment");
         }
         return results;
     }

@@ -50,7 +50,7 @@ class QueuesTab extends Tab {
                 const newFields = {}
                 if (queue["Script"]) {
                     if (!scriptsAdded) {
-                        const allScripts = await getAll("/api/v2/scripts?sortBy=name&sortOrder=ascending&scriptDataVersion=0&pageDataVersion=0&divisionIds=", "entities", 25);
+                        const allScripts = await getAllGenesysItems("/api/v2/scripts?sortBy=name&sortOrder=ascending&scriptDataVersion=0&pageDataVersion=0&divisionIds=", 50, "entities");
                         for (let script of allScripts) {
                             scripts[script.name] = script.id;
                         }
@@ -65,7 +65,7 @@ class QueuesTab extends Tab {
                 }
                 if (queue["In-Queue Flow"]) {
                     if (!inQueueFlowsAdded) {
-                        const allInqueueFlows = await getAll("/api/v2/flows?sortBy=name&sortOrder=asc&type=inqueueshortmessage", "entities", 50);
+                        const allInqueueFlows = await getAllGenesysItems("/api/v2/flows?sortBy=name&sortOrder=asc&type=inqueueshortmessage", 50, "entities");
                         for (let flow of allInqueueFlows) {
                             inQueueFlows[flow.name] = flow.id;
                         }
@@ -79,7 +79,7 @@ class QueuesTab extends Tab {
                     }
                 }
                 const mappedQueue = this.resolveMapping(queue);
-                await makeCallAndHandleErrors(createItem, ["/api/v2/routing/queues", this.parseInput({...mappedQueue, ...newFields})], results, mappedQueue.name, "Queue");
+                await makeCallAndHandleErrors(makeGenesysRequest, ["/api/v2/routing/queues", 'POST', this.parseInput({...mappedQueue, ...newFields})], results, mappedQueue.name, "Queue");
             }
         }
         return Promise.all(results);

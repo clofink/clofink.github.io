@@ -34,7 +34,7 @@ class SkillsTab extends Tab {
         const results = [];
         for (let skill of fileContents.data) {
             if (skill.Name) {
-                await makeCallAndHandleErrors(createItem, ["/api/v2/routing/skills", {name: skill.Name}], results, skill.Name, "Skill");
+                await makeCallAndHandleErrors(makeGenesysRequest, ["/api/v2/routing/skills", 'POST', {name: skill.Name}], results, skill.Name, "Skill");
             }
         }
         return results;
