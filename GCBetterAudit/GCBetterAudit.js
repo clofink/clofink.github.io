@@ -200,17 +200,6 @@ async function getOrgDetails() {
 
 runLoginProcess(showLoginPage, showMainMenu);
 
-async function showLoading(loadingFunc) {
-    eById("loadIcon").classList.add("shown");
-    try {
-        await loadingFunc();
-    }
-    catch (error) {
-        console.error(error);
-    }
-    eById("loadIcon").classList.remove("shown");
-}
-
 function mapProperty(propA, propB, objects) {
     const mapping = {};
     for (let object of objects) {
@@ -225,15 +214,4 @@ async function getAllUsers() {
 
 async function getAllOauthClients() {
     return getAllGenesysItems(`/api/v2/oauth/clients`, 100, "entities");
-}
-
-async function showLoading(loadingFunc) {
-    eById("loadIcon").classList.add("shown");
-    try {
-        await loadingFunc();
-    }
-    catch(error) {
-        console.error(error);
-    }
-    eById("loadIcon").classList.remove("shown");
 }
