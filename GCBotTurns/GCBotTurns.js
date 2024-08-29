@@ -43,34 +43,8 @@ window.fields = [
     { name: "Conversation ID", path: "conversation.id" },
 ]
 
-async function getItem(path) {
-    const url = `https://api.${window.localStorage.getItem('environment')}${path}`;
-    const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-    const resultJson = await result.json();
-    if (result.ok) {
-        resultJson.status = 200;
-    }
-    else {
-        throw resultJson.message;
-    }
-    return resultJson;
-}
-
 async function getBotTurns(botFlowId, start, end) {
-    const allResults = [];
-    let truncated = true;
-    let path = `/api/v2/analytics/botflows/${botFlowId}/reportingturns?interval=${start}/${end}`;
-    while (truncated) {
-        const resultJson = await getItem(path);
-        allResults.push(...resultJson.entities)
-        if (resultJson.nextUri) {
-            path = resultJson.nextUri;
-        }
-        else {
-            truncated = false;
-        }
-    }
-    return allResults;
+    return getAllGenesysItems(`/api/v2/analytics/botflows/${botFlowId}/reportingturns?interval=${start}/${end}`, 50, "entities");
 }
 
 function addIfProperty(object, path, orValue, mapping) {
@@ -205,62 +179,7 @@ function mapProperty(propA, propB, objects) {
 }
 
 async function getAllUsers() {
-    const users = [];
-    let pageNum = 0;
-    let totalPages = 1;
-
-    while (pageNum < totalPages) {
-        pageNum++;
-        const body = {
-            "pageSize": 25,
-            "pageNumber": pageNum,
-            "query": [
-                {
-                    "type": "EXACT",
-                    "fields": ["state"],
-                    "values": ["active"]
-                }
-            ],
-            "sortOrder": "ASC",
-            "sortBy": "name",
-            "expand": [],
-            "enforcePermissions": false
-        }
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/users/search`;
-        const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        const resultJson = await result.json();
-        if (result.ok) {
-            resultJson.status = 200;
-        }
-        else {
-            throw resultJson.message;
-        }
-        users.push(...resultJson.results);
-        totalPages = resultJson.pageCount;
-    }
-    return users;
-}
-
-async function getAll(path, resultsKey, pageSize) {
-    const items = [];
-    let pageNum = 0;
-    let totalPages = 1;
-
-    while (pageNum < totalPages) {
-        pageNum++;
-        const url = `https://api.${window.localStorage.getItem('environment')}${path}&pageNumber=${pageNum}&pageSize=${pageSize}`;
-        const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        const resultJson = await result.json();
-        if (result.ok) {
-            resultJson.status = 200;
-        }
-        else {
-            throw resultJson.message;
-        }
-        items.push(...resultJson[resultsKey]);
-        totalPages = resultJson.pageCount;
-    }
-    return items;
+    return getAllGenesysItems(`/api/v2/users?state=active`, 100, "entities");
 }
 
 function sortByKey(key) {
@@ -331,60 +250,14 @@ function showMainMenu() {
     }).catch(function (error) { log(error, "error"); logout(); });
 }
 
-function login() {
-    window.localStorage.setItem('environment', qs('[name="environment"]').value);
-    window.location.replace(`https://login.${window.localStorage.getItem('environment')}/oauth/authorize?response_type=token&client_id=${qs('[name="clientId"]').value}&redirect_uri=${encodeURIComponent(location.origin + location.pathname)}`);
-}
-
-function logout() {
-    window.localStorage.removeItem('auth');
-    window.localStorage.removeItem('environment');
-    eById('header').innerText = `Current Org Name: \nCurrent Org ID:`;
-    showLoginPage();
-}
-
-function getParameterByName(name) {
-    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-    var regex = new RegExp("[\\#&]" + name + "=([^&#]*)"),
-        results = regex.exec(location.hash);
-    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-}
-
-function storeToken(token) {
-    window.localStorage.setItem('auth', token);
-}
-
-function getToken() {
-    if (window.localStorage.getItem('auth')) {
-        return window.localStorage.getItem('auth');
-    }
-    return '';
-}
-
 async function getOrgDetails() {
-    const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/organizations/me`;
-    const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-    const resultJson = await result.json();
-    resultJson.status = result.status;
-    return resultJson;
+    return makeGenesysRequest(`/api/v2/organizations/me`);
 }
 
 var tabs = [];
 var fileContents;
 
-if (window.location.hash) {
-    storeToken(getParameterByName('access_token'));
-    let now = new Date().valueOf();
-    let expireTime = parseInt(getParameterByName('expires_in')) * 1000;
-    log(new Date(now + expireTime));
-    location.hash = ''
-}
-if (!getToken()) {
-    showLoginPage();
-}
-else {
-    showMainMenu();
-}
+runLoginProcess(showLoginPage, showMainMenu);
 
 function timeDiff(firstTime, secondTime) {
     firstTime = new Date(firstTime);
@@ -434,15 +307,4 @@ function createDownloadLink(fileName, fileContents, fileType) {
     const fileData = new Blob([fileContents], { type: fileType });
     const fileURL = window.URL.createObjectURL(fileData);
     return newElement('a', { href: fileURL, download: fileName });
-}
-
-async function showLoading(loadingFunc) {
-    eById("loadIcon").classList.add("shown");
-    try {
-        await loadingFunc();
-    }
-    catch(error) {
-        console.error(error);
-    }
-    eById("loadIcon").classList.remove("shown");
 }
