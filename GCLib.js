@@ -41,6 +41,22 @@ async function getAllGenesysItems(path, pageSize = 100, entitiesKey = "entities"
     return items;
 }
 
+async function pollStatus(getFunc, getFuncArgs, resultKey, successes, failures, interval) {
+    return new Promise((resolve, reject) => {
+        const repeater = setInterval(async () => {
+            const result = await getFunc(...getFuncArgs);
+            if (successes.includes(result[resultKey])) {
+                clearInterval(repeater);
+                resolve();
+            }
+            else if (failures.includes(result[resultKey])) {
+                clearInterval(repeater);
+                reject();
+            }
+        }, interval);
+    })
+}
+
 async function wait(seconds) {
     return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 }
