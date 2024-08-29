@@ -224,12 +224,14 @@ async function populateBotSelect(botSelect) {
 function showMainMenu() {
     const page = eById('page');
     clearElement(page);
+    const currentDate = new Date().toISOString().split("T")[0];
+    const date10DaysAgo = new Date(new Date().valueOf() - (86400000 * 10)).toISOString().split("T")[0];
     const inputs = newElement("div", { id: "inputs" });
     const startLabel = newElement('label', { innerText: "Start Date: " });
-    const startDate = newElement('input', { type: "date", id: "startDate", value: "2024-04-01" });
+    const startDate = newElement('input', { type: "date", id: "startDate", value: date10DaysAgo });
     addElement(startDate, startLabel);
     const endLabel = newElement('label', { innerText: "End Date: " });
-    const endDate = newElement('input', { type: "date", id: "endDate", value: "2024-04-30" });
+    const endDate = newElement('input', { type: "date", id: "endDate", value: currentDate });
     addElement(endDate, endLabel);
     const botFlowLabel = newElement('label', { innerText: "Bot Flow: " })
     const botSelect = newElement('select', { id: "botFlowId" });
