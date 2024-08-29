@@ -591,17 +591,6 @@ function createFieldOptions() {
     return fieldOptionContainer;
 }
 
-async function showLoading(loadingFunc, args = []) {
-    eById("loadIcon").classList.add("shown");
-    try {
-        await loadingFunc(...args);
-    }
-    catch (error) {
-        console.error(error);
-    }
-    eById("loadIcon").classList.remove("shown");
-}
-
 async function getDetailsForAllActions() {
     const allIntegrations = await getFunctionIntegrations();
     const allFunctionIntegrations = allIntegrations.filter((e) => e.integrationType.id === "function-data-actions");
