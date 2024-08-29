@@ -8,14 +8,14 @@ async function auditJob(serviceName, startDate, endDate) {
     const newJob = await createJob(serviceName, startDate, endDate);
     // Armed with your jobId, you should now periodically poll for the status of your job 
     // (HTTP GET /api/v2/analytics/conversations/details/jobs/{jobId}).
-    await getStatus(newJob.id);
+    await pollStatus(makeGenesysRequest, [`/api/v2/audits/query/${newJob.id}`], "state", ["Succeeded"], ["Failed"], 2000);
 
     // Is your job still running? Did it fail? Has it successfully completed gathering all of your data? 
     // Depending on load and the volume of data being queried, it might be on the order of seconds to minutes before you see your job complete.
     // If and only if your job has successfully completed, is it time for you to retrieve the results. 
     // At this point, you can ask for the first page of data back 
     // (HTTP GET /api/v2/analytics/conversations/details/jobs/{jobId}/results). 
-    const results = await getJobResults(newJob.id);
+    const results = await getAllGenesysItems(`/api/v2/audits/query/${newJob.id}/results`, 100, "entities");
 
     // Alongside the results of your query, you will find a cursor. 
     // This is what you will use to advance to the next page of data (that is, this is an iterator and not random-access/numbered-page-style access). 
@@ -35,59 +35,8 @@ async function createJob(serviceName, startDate, endDate) {
             }
         ]
     }
-    const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/audits/query`;
-    const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-    const resultJson = await result.json();
-    if (!result.ok) {
-        throw resultJson.message;
-    }
-    return resultJson;
-}
-
-async function getStatus(transactionId) {
-    // Armed with your jobId, you should now periodically poll for the status of your job 
-    // (HTTP GET /api/v2/analytics/conversations/details/jobs/{jobId}).
-    return new Promise((resolve, reject) => {
-        const repeater = setInterval(async () => {
-            const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/audits/query/${transactionId}`;
-            const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-            const resultJson = await result.json();
-            if (!result.ok) {
-                reject();
-            }
-            if (resultJson.state === "Succeeded") {
-                clearInterval(repeater);
-                resolve();
-            }
-            else if (resultJson.state === "Failed") {
-                clearInterval(repeater);
-                reject();
-            }
-        }, 2000);
-    })
-}
-
-async function getJobResults(transactionId) {
-    let truncated = true;
-    let cursor = "";
-    const results = [];
-
-    while (truncated === true) {
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/audits/query/${transactionId}/results?pageSize=100&cursor=${cursor}`;
-        const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        const resultJson = await result.json();
-        if (!result.ok) {
-            throw resultJson.message;
-        }
-        if(resultJson.entities) results.push(...resultJson.entities);
-        if (resultJson.cursor) {
-            cursor = encodeURIComponent(resultJson.cursor)
-        }
-        else {
-            truncated = false;
-        }
-    }
-    return results;
+    const url = `/api/v2/audits/query`;
+    return makeGenesysRequest(url, "POST", body);
 }
 
 function showLoginPage() {
@@ -245,58 +194,11 @@ function showMainMenu() {
     }).catch(function (error) { log(error, "error"); logout(); });
 }
 
-function login() {
-    window.localStorage.setItem('environment', qs('[name="environment"]').value);
-    window.location.replace(`https://login.${window.localStorage.getItem('environment')}/oauth/authorize?response_type=token&client_id=${qs('[name="clientId"]').value}&redirect_uri=${encodeURIComponent(location.origin + location.pathname)}`);
-}
-
-function logout() {
-    window.flows = undefined;
-    window.localStorage.removeItem('auth');
-    window.localStorage.removeItem('environment');
-    eById('header').innerText = `Current Org Name: \nCurrent Org ID:`;
-    showLoginPage();
-}
-
-function getParameterByName(name) {
-    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-    var regex = new RegExp("[\\#&]" + name + "=([^&#]*)"),
-        results = regex.exec(location.hash);
-    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-}
-
-function storeToken(token) {
-    window.localStorage.setItem('auth', token);
-}
-
-function getToken() {
-    if (window.localStorage.getItem('auth')) {
-        return window.localStorage.getItem('auth');
-    }
-    return '';
-}
-
 async function getOrgDetails() {
-    const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/organizations/me`;
-    const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-    const resultJson = await result.json();
-    resultJson.status = result.status;
-    return resultJson;
+    return makeGenesysRequest(`/api/v2/organizations/me`)
 }
 
-if (window.location.hash) {
-    storeToken(getParameterByName('access_token'));
-    let now = new Date().valueOf();
-    let expireTime = parseInt(getParameterByName('expires_in')) * 1000;
-    log(new Date(now + expireTime));
-    location.hash = ''
-}
-if (!getToken()) {
-    showLoginPage();
-}
-else {
-    showMainMenu();
-}
+runLoginProcess(showLoginPage, showMainMenu);
 
 async function showLoading(loadingFunc) {
     eById("loadIcon").classList.add("shown");
@@ -318,47 +220,11 @@ function mapProperty(propA, propB, objects) {
 }
 
 async function getAllUsers() {
-    const users = [];
-    let pageNum = 0;
-    let totalPages = 1;
-
-    while (pageNum < totalPages) {
-        pageNum++;
-        const body = {
-            "pageSize": 100,
-            "pageNumber": pageNum,
-            "query": [
-                {
-                    "type": "EXACT",
-                    "fields": ["state"],
-                    "values": ["active"]
-                }
-            ],
-            "sortOrder": "ASC",
-            "sortBy": "name",
-            "expand": [],
-            "enforcePermissions": false
-        }
-        const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/users/search`;
-        const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-        const resultJson = await result.json();
-        if (result.ok) {
-            resultJson.status = 200;
-        }
-        else {
-            throw resultJson.message;
-        }
-        users.push(...resultJson.results);
-        totalPages = resultJson.pageCount;
-    }
-    return users;
+    return getAllGenesysItems(`/api/v2/users?state=active`, 100, "entities");
 }
 
 async function getAllOauthClients() {
-    const url = `https://api.${window.localStorage.getItem('environment')}/api/v2/oauth/clients?pageSize=99999`;
-    const result = await fetch(url, { headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
-    const resultJson = await result.json();
-    return resultJson.entities;
+    return getAllGenesysItems(`/api/v2/oauth/clients`, 100, "entities");
 }
 
 async function showLoading(loadingFunc) {
