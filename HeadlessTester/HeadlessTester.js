@@ -1,74 +1,190 @@
 window.storedValues = {};
 window.listenedEvents = [];
 
+var allEvents = [
+    "Auth.ready",
+    "Auth.authenticating",
+    "Auth.authenticated",
+    "Auth.loggedOut",
+    "Auth.authError",
+    "Auth.tokenError",
+    "Auth.authProviderError",
+    "Auth.error",
+    "Auth.logoutError",
+    "Auth.signInAvailable",
+    "Auth.signedIn",
+    "Auth.signingIn",
+    "Auth.signInFailed",
+    "AuthProvider.signedIn",
+    "AuthProvider.signInFailed",
+    "CobrowseService.ready",
+    "CobrowseService.sessionStarted",
+    "CobrowseService.sessionEnded",
+    "CobrowseService.controlRequested",
+    "CobrowseService.controlGranted",
+    "CobrowseService.controlRevoked",
+    "CobrowseService.navigationRequested",
+    "CobrowseService.navigationGranted",
+    "CobrowseService.navigationDeclined",
+    "CobrowseVoice.error",
+    "CobrowseVoice.sessionStarted",
+    "CobrowseVoice.sessionEnded",
+    "Conversations.ready",
+    "Conversations.opened",
+    "Conversations.started",
+    "Conversations.closed",
+    "Conversations.error",
+    "Database.ready",
+    "Database.updated",
+    "Database.removed",
+    "Engage.ready",
+    "Engage.inviteAccepted",
+    "Engage.inviteRejected",
+    "Engage.inviteIgnored",
+    "Engage.inviteOffered",
+    "Engage.inviteError",
+    "Journey.ready",
+    "Journey.qualifiedWebMessagingOffer",
+    "Journey.qualifiedContentOffer",
+    "Journey.qualifiedOpenAction",
+    "Knowledge.ready",
+    "Knowledge.error",
+    "KnowledgeService.ready",
+    "KnowledgeService.error",
+    "KnowledgeService.searchResults",
+    "KnowledgeService.noSearchResultsFound",
+    "KnowledgeService.suggestions",
+    "KnowledgeService.noSuggestionsFound",
+    "KnowledgeService.categories",
+    "KnowledgeService.noCategoriesFound",
+    "KnowledgeService.article",
+    "KnowledgeService.noArticleFound",
+    "KnowledgeService.articlesByCategory",
+    "KnowledgeService.noArticlesByCategoryFound",
+    "KnowledgeService.topViewedArticles",
+    "KnowledgeService.noTopViewedArticlesFound",
+    "KnowledgeService.feedbackSent",
+    "Launcher.ready",
+    "Launcher.visible",
+    "Launcher.hidden",
+    "MessagingService.ready",
+    "MessagingService.started",
+    "MessagingService.sendingMessage",
+    "MessagingService.messagesReceived",
+    "MessagingService.uploading",
+    "MessagingService.uploadApproved",
+    "MessagingService.fileUploaded",
+    "MessagingService.fileUploadError",
+    "MessagingService.fileUploadCancelled",
+    "MessagingService.fileReceived",
+    "MessagingService.messagesUpdated",
+    "MessagingService.fileDownloaded",
+    "MessagingService.fileDownloadError",
+    "MessagingService.fileDeleted",
+    "MessagingService.oldMessages",
+    "MessagingService.historyComplete",
+    "MessagingService.typingReceived",
+    "MessagingService.typingTimeout",
+    "MessagingService.clientTypingStarted",
+    "MessagingService.restored",
+    "MessagingService.sessionCleared",
+    "MessagingService.offline",
+    "MessagingService.reconnecting",
+    "MessagingService.reconnected",
+    "MessagingService.conversationDisconnected",
+    "MessagingService.readOnlyConversation",
+    "MessagingService.conversationReset",
+    "MessagingService.conversationCleared",
+    "MessagingService.error",
+    "MessagingService.cobrowseOffer",
+    "MessagingService.cobrowseOfferAccepted",
+    "MessagingService.cobrowseOfferRejected",
+    "MessagingService.cobrowseOfferExpired",
+    "MessagingService.allowedFileTypes",
+    "MessagingService.steppedUpConversation",
+    "Messenger.ready",
+    "Messenger.opened",
+    "Messenger.closed",
+    "Messenger.cleared",
+    "Toaster.ready",
+    "Toaster.opened",
+    "Toaster.accepted",
+    "Toaster.declined",
+    "Toaster.closed",
+    "Toaster.error",
+]
+
+var commandMapping = {
+    "Auth.logout": {},
+    "Auth.getTokens": {},
+    "Auth.refreshToken": {},
+    "Auth.reAuthenticate": {},
+    "AuthProvider.getAuthCode": {},
+    "AuthProvider.reAuthenticate": {},
+    "AuthProvider.signIn": {},
+    "CobrowseService.acceptSession": {joinCode: ""},
+    "CobrowseService.declineSession": {joinCode: "", "session-uuid": ""},
+    "CobrowseService.offerState": {joinCode: "", "session-uuid": ""},
+    "CobrowseService.stopSession": {},
+    "CobrowseService.acceptControl": {},
+    "CobrowseService.declineControl": {},
+    "CobrowseService.startDrawing": {},
+    "CobrowseService.stopDrawing": {},
+    "CobrowseService.acceptNavigation": {},
+    "CobrowseService.declineNavigation": {},
+    "Database.set": {messaging: {customAttributes: {key: "value"}}},
+    "Database.update": {messaging: {customAttributes: {key: "value"}}},
+    "Database.get": {name: "messaging.customAttributes"},
+    "Database.remove": {name: "messaging.customAttributes"},
+    "Engage.invite": {engageContent: {offerText: ""}},
+    "Engage.accept": {},
+    "Engage.reject": {},
+    "Journey.pageview": {pageTitle: "", pageLocation: "custom-page-location", customAttributes: {visitorPreferredLang: "en"}, traitsMapper: []},
+    "Journey.record": {eventName: "product_added", customAttributes: {price: 15.99, code: "CDE-123", name: "Product", hasBatteries: false}, traitsMapper: []},
+    "Journey.formsTrack": {selector: "#registration-form", formName: "user registration", captureFormDataOnAbandon: true, customAttributes: { isVip: true }, traitsMapper: [{ fieldName: "firstName", traitName: "givenName" }, { fieldName: "lastName", traitName: "familyName" }]},
+    "Journey.trackClickEvents": {clickEvents: [{selector: "button.green-background", eventName: "green_button_clicked" }, {selector: ".close", eventName: "close_button_clicked" }, {selector: "#sign-up", eventName: "signup_button_clicked", customAttributes: {signUpValue: 2000}}]},
+    "Journey.trackIdleEvents": {idleEvents: [{idleAfterSeconds: 30, eventName: "idle_30_seconds" }, {idleAfterSeconds: 90, eventName: "idle_90_seconds", customAttributes: {currentCartValue: 129.99}}]},
+    "Journey.trackInViewport": {inViewportEvents: [{selector: ".close-button", eventName: "close_button_shown" }, {selector: "#sign-up", eventName: "signup_button_visible", customAttributes: {signUpValue: 2000}}]},
+    "Journey.trackScrollDepth": {scrollDepthEvents: [{percentage: 60, eventName: "scrolled_60_percent" }, {percentage: 90, eventName: "bottom_of_page_reached", customAttributes: {scrollValue: 600}}]},
+    "Journey.recordActionStateChange": {actionId: "e74846b2-e74a-4f40-b237-3c197a737994", actionState: "errored", errorCode: "00045", errorMessage: "Configuration not available."},
+    "KnowledgeService.search": {"pageSize": 3, "query": "", "queryType": "ManualSearch"},
+    "KnowledgeService.getSuggestions": {"pageSize": 3, "query": ""},
+    "KnowledgeService.getCategories": {},
+    "KnowledgeService.getArticle": {"articleId": "123abcd4-e567-890f-g123-456h789abc0d", "searchId": "123abcd4-e567-890f-g123-456h789abc0d", "queryType": "ManualSearch"},
+    "KnowledgeService.getArticlesByCategory": {"categoryId": "123abcd4-e567-890f-g123-456h789abc0d"},
+    "KnowledgeService.getTopViewedArticles": {"pageSize": 3},
+    "KnowledgeService.sendFeedback": {"documentId": "123abcd4-e567-890f-g123-456h789abc0d", "documentVersionId": "123abcd4-e567-890f-g123-456h789abc0d", "documentVariationId": "123abcd4-e567-890f-g123-456h789abc0d", "rating": "Positive", "searchId": "123abcd4-e567-890f-g123-456h789abc0d", "reason": "SearchResults", "comment": "My comment", "queryType": "ManualSearch"},
+    "KnowledgeService.getSession": {},
+    "Launcher.show": {},
+    "Launcher.hide": {},
+    "MessagingService.startConversation": {},
+    "MessagingService.sendMessage": {message: ""},
+    "MessagingService.requestUpload": {file: []},
+    "MessagingService.getFile": {id: ""},
+    "MessagingService.refreshFiles": {files: [{id: ""}]},
+    "MessagingService.downloadFile": {downloadUrl: "", name: ""},
+    "MessagingService.deleteFile": {id: ""},
+    "MessagingService.sendTyping": {},
+    "MessagingService.clearTypingTimeout": {},
+    "MessagingService.clearSession": {},
+    "MessagingService.fetchHistory": {},
+    "MessagingService.resetConversation": {},
+    "MessagingService.clearConversation": {},
+    "MessagingService.stepUpConversation": {},
+    "Messenger.open": {},
+    "Messenger.openConversation": {},
+    "Messenger.openSearch": {},
+    "Messenger.openCobrowse": {},
+    "Messenger.clear": {},
+    "Messenger.close": {},
+    "Toaster.open": {title: "Welcome to Genesys Cloud", body: "Encountering issues? Our support team is ready to troubleshoot and assist you.", buttons: {type: "binary", primary: "Get Support", secondary: "Maybe Later"}},
+    "Toaster.accept": {},
+    "Toaster.decline": {},
+    "Toaster.close": {}
+}
+
 function getSampleCommandInput(command) {
-    const commandMapping = {
-        "Auth.logout": {},
-        "Auth.getTokens": {},
-        "Auth.refreshToken": {},
-        "Auth.reAuthenticate": {},
-        "AuthProvider.getAuthCode": {},
-        "AuthProvider.reAuthenticate": {},
-        "CobrowseService.acceptSession": {joinCode: ""},
-        "CobrowseService.declineSession": {joinCode: "", "session-uuid": ""},
-        "CobrowseService.offerState": {joinCode: "", "session-uuid": ""},
-        "CobrowseService.stopSession": {},
-        "CobrowseService.acceptControl": {},
-        "CobrowseService.declineControl": {},
-        "CobrowseService.startDrawing": {},
-        "CobrowseService.stopDrawing": {},
-        "CobrowseService.acceptNavigation": {},
-        "CobrowseService.declineNavigation": {},
-        "Database.set": {messaging: {customAttributes: {key: "value"}}},
-        "Database.update": {messaging: {customAttributes: {key: "value"}}},
-        "Database.get": {name: "messaging.customAttributes"},
-        "Database.remove": {name: "messaging.customAttributes"},
-        "Engage.invite": {engageContent: {offerText: ""}},
-        "Engage.accept": {},
-        "Engage.reject": {},
-        "Journey.pageview": {pageTitle: "", pageLocation: "custom-page-location", customAttributes: {visitorPreferredLang: "en"}, traitsMapper: []},
-        "Journey.record": {eventName: "product_added", customAttributes: {price: 15.99, code: "CDE-123", name: "Product", hasBatteries: false}, traitsMapper: []},
-        "Journey.formsTrack": {selector: "#registration-form", formName: "user registration", captureFormDataOnAbandon: true, customAttributes: { isVip: true }, traitsMapper: [{ fieldName: "firstName", traitName: "givenName" }, { fieldName: "lastName", traitName: "familyName" }]},
-        "Journey.trackClickEvents": {clickEvents: [{selector: "button.green-background", eventName: "green_button_clicked" }, {selector: ".close", eventName: "close_button_clicked" }, {selector: "#sign-up", eventName: "signup_button_clicked", customAttributes: {signUpValue: 2000}}]},
-        "Journey.trackIdleEvents": {idleEvents: [{idleAfterSeconds: 30, eventName: "idle_30_seconds" }, {idleAfterSeconds: 90, eventName: "idle_90_seconds", customAttributes: {currentCartValue: 129.99}}]},
-        "Journey.trackInViewport": {inViewportEvents: [{selector: ".close-button", eventName: "close_button_shown" }, {selector: "#sign-up", eventName: "signup_button_visible", customAttributes: {signUpValue: 2000}}]},
-        "Journey.trackScrollDepth": {scrollDepthEvents: [{percentage: 60, eventName: "scrolled_60_percent" }, {percentage: 90, eventName: "bottom_of_page_reached", customAttributes: {scrollValue: 600}}]},
-        "Journey.recordActionStateChange": {actionId: "e74846b2-e74a-4f40-b237-3c197a737994", actionState: "errored", errorCode: "00045", errorMessage: "Configuration not available."},
-        "KnowledgeService.search": {"pageSize": 3, "query": "", "queryType": "ManualSearch"},
-        "KnowledgeService.getSuggestions": {"pageSize": 3, "query": ""},
-        "KnowledgeService.getCategories": {},
-        "KnowledgeService.getArticle": {"articleId": "123abcd4-e567-890f-g123-456h789abc0d", "searchId": "123abcd4-e567-890f-g123-456h789abc0d", "queryType": "ManualSearch"},
-        "KnowledgeService.getArticlesByCategory": {"categoryId": "123abcd4-e567-890f-g123-456h789abc0d"},
-        "KnowledgeService.getTopViewedArticles": {"pageSize": 3},
-        "KnowledgeService.sendFeedback": {"documentId": "123abcd4-e567-890f-g123-456h789abc0d", "documentVersionId": "123abcd4-e567-890f-g123-456h789abc0d", "documentVariationId": "123abcd4-e567-890f-g123-456h789abc0d", "rating": "Positive", "searchId": "123abcd4-e567-890f-g123-456h789abc0d", "reason": "SearchResults", "comment": "My comment", "queryType": "ManualSearch"},
-        "KnowledgeService.getSession": {},
-        "Launcher.show": {},
-        "Launcher.hide": {},
-        "MessagingService.startConversation": {},
-        "MessagingService.sendMessage": {message: ""},
-        "MessagingService.requestUpload": {file: []},
-        "MessagingService.getFile": {id: ""},
-        "MessagingService.refreshFiles": {files: [{id: ""}]},
-        "MessagingService.downloadFile": {downloadUrl: "", name: ""},
-        "MessagingService.deleteFile": {id: ""},
-        "MessagingService.sendTyping": {},
-        "MessagingService.clearTypingTimeout": {},
-        "MessagingService.clearSession": {},
-        "MessagingService.fetchHistory": {},
-        "MessagingService.resetConversation": {},
-        "MessagingService.clearConversation": {},
-        "Messenger.open": {},
-        "Messenger.openConversation": {},
-        "Messenger.openSearch": {},
-        "Messenger.openCobrowse": {},
-        "Messenger.clear": {},
-        "Messenger.close": {},
-        "Toaster.open": {title: "Welcome to Genesys Cloud", body: "Encountering issues? Our support team is ready to troubleshoot and assist you.", buttons: {type: "binary", primary: "Get Support", secondary: "Maybe Later"}},
-        "Toaster.accept": {},
-        "Toaster.decline": {},
-        "Toaster.close": {}
-    }
-    return commandMapping[command];
+    return window.commandMapping[command];
 }
 
 function loadGenesys(region, deployId) {
@@ -94,7 +210,8 @@ function loadGenesys(region, deployId) {
     window['Genesys'].t = 1 * new Date();
     window['Genesys'].c = {
         environment: region,
-        deploymentId: deployId
+        deploymentId: deployId,
+        debug: true
     };
     element = newElement('script', {
         async: 1,
@@ -243,6 +360,48 @@ async function runCommand() {
     addElement(logItem, eById("dataLog"));
     logItem.scrollIntoView({behavior: "smooth"});
 }
+
+function createEventRow(fullEventName) {
+    const eventParts = fullEventName.split(".");
+
+    const eventSection = eById("events");
+    const eventItems = eventSection.dataset?.dependsValue?.split(",") || [];
+    if (!eventItems.includes(eventParts[0])) {
+        eventItems.push(eventParts[0]);
+        eventSection.dataset.dependsValue = eventItems.join(",");
+    }
+
+    const eventLabel = newElement('label', {"data-depends-on": "plugin", "data-depends-value": eventParts[0], innerText: splitCamelCase(eventParts[1])});
+    const input = newElement('input', { id: fullEventName, type: "checkbox"});
+    addElement(input, eventLabel, "afterbegin");
+    return eventLabel;
+}
+
+function splitCamelCase(camelCaseWord) {
+    return camelCaseWord.split("").map((e, i) => e.toUpperCase() === e || i === 0 ? " " + e.toUpperCase() : e).join("").trim();
+}
+
+function populateList(parent, createFunc, list) {
+    for (let item of list) {
+        addElement(createFunc(item), parent);
+    }
+}
+
+function createCommandRow(command) {
+    const commandParts = command.split(".");
+
+    const commandSection = eById('commands');
+    const commandItems = commandSection.dataset?.dependsValue?.split(",") || [];
+    if (!commandItems.includes(commandParts[0])) {
+        commandItems.push(commandParts[0]);
+        commandSection.dataset.dependsValue = commandItems.join(",");
+    }
+    
+    return newElement("option", { 'data-depends-on': "plugin", "data-depends-value": commandParts[0], innerText: command });
+}
+
+populateList(eById('eventList'), createEventRow, window.allEvents);
+populateList(eById('command'), createCommandRow, Object.keys(window.commandMapping));
 
 registerElements(qsa("select"), "change", updateDependants, true);
 registerElements(qsa("input,select,textarea"), "change", updateGlobal, true);
