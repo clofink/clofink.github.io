@@ -1,5 +1,6 @@
 window.storedValues = {};
 window.listenedEvents = [];
+window.readyPlugins = [];
 
 var allEvents = [
     "Auth.ready",
@@ -210,8 +211,7 @@ function loadGenesys(region, deployId) {
     window['Genesys'].t = 1 * new Date();
     window['Genesys'].c = {
         environment: region,
-        deploymentId: deployId,
-        debug: true
+        deploymentId: deployId
     };
     element = newElement('script', {
         async: 1,
@@ -228,6 +228,7 @@ function reloadPage() {
 
 async function runCommandAsync(command, args) {
     return new Promise((resolve, reject) => {
+        if (!window.readyPlugins.includes(command.split('.')[0])) reject("Plugin is not ready");
         try {
             Genesys("command", command, args,
                 function (result) {
@@ -289,13 +290,17 @@ function registerAllEvents() {
 }
 
 function handleEvent(event) {
-    const eventName = event.publisher && event.eventName ? `${event.publisher}.${event.eventName}` : event.event;
-    if (!window.listenedEvents.includes(eventName)) {
-        console.log(`Skipping [${eventName}] because it is not listened to`);
+    const fullEventName = event.publisher && event.eventName ? `${event.publisher}.${event.eventName}` : event.event;
+    const eventParts = fullEventName.split(".");
+    const plugin = eventParts[0];
+    const eventName = eventParts[1];
+    if (eventName.toLowerCase() === "ready" && !window.readyPlugins.includes(plugin)) window.readyPlugins.push(plugin);
+    if (!window.listenedEvents.includes(fullEventName)) {
+        console.log(`Skipping [${fullEventName}] because it is not listened to`);
         return;
     }
     log(event);
-    const logItem = createLogItem(eventName, event.data)
+    const logItem = createLogItem(fullEventName, event.data)
 
     addElement(logItem, eById("dataLog"));
     logItem.scrollIntoView({behavior: "smooth"});
@@ -326,6 +331,7 @@ function createLogItem(eventName, eventBody, type) {
 
 function load() {
     if (!window.storedValues.deployId || !window.storedValues.region) return;
+    window.readyPlugins = [];
     loadGenesys(window.storedValues.region, window.storedValues.deployId);
     registerAllEvents();
     qs("#account").removeAttribute("open");
