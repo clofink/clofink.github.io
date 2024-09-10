@@ -163,22 +163,34 @@ function updateGlobal(element) {
     window.storedValues[element.id] = storedValue;
 }
 
-function registerEvents() {
+function registerAllEvents() {
     for (let item in window.storedValues) {
-        if (item.split('.').length > 1 && window.storedValues[item] && window.listenedEvents.indexOf(item) < 0) {
-            window.listenedEvents.push(item);
+        if (item.split('.').length > 1) {
             Genesys("subscribe", item, handleEvent);
         }
     }
 }
 
 function handleEvent(event) {
+    const eventName = event.publisher && event.eventName ? `${event.publisher}.${event.eventName}` : event.event;
+    if (!window.listenedEvents.includes(eventName)) {
+        console.log(`Skipping [${eventName}] because it is not listened to`);
+        return;
+    }
     log(event);
-    let eventName = event.publisher && event.eventName ? `${event.publisher}.${event.eventName}` : event.event;
     const logItem = createLogItem(eventName, event.data)
 
     addElement(logItem, eById("dataLog"));
     logItem.scrollIntoView({behavior: "smooth"});
+}
+
+function updateListenedEvents() {
+    window.listenedEvents = [];
+    for (let item in window.storedValues) {
+        if (item.split('.').length > 1 && window.storedValues[item]) {
+            window.listenedEvents.push(item);
+        }
+    }
 }
 
 function createLogItem(eventName, eventBody, type) {
@@ -198,7 +210,7 @@ function createLogItem(eventName, eventBody, type) {
 function load() {
     if (!window.storedValues.deployId || !window.storedValues.region) return;
     loadGenesys(window.storedValues.region, window.storedValues.deployId);
-    registerEvents();
+    registerAllEvents();
     qs("#account").removeAttribute("open");
     qs("#events").setAttribute("open", true);
     qs("#commands").setAttribute("open", true);
@@ -238,5 +250,5 @@ registerElement(eById("command"), "change", updateSampleCommand);
 registerElement(eById("loadWidget"), "click", load);
 registerElement(eById("selectAll"), "click", selectAllEvents);
 registerElement(eById("runCommand"), "click", runCommand);
-registerElement(eById("addEvents"), "click", registerEvents);
+registerElements(qsa("#events input"), "change", updateListenedEvents);
 registerElement(eById("reload"), "click", reloadPage);
