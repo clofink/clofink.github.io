@@ -72,27 +72,25 @@ class TestBotTab extends Tab {
         const messageContainer = newElement('div', { id: "messageContainer" });
 
         const startButton = newElement('button', { innerText: "Start" });
-        function startFunc() {
+        registerElement(startButton, "click", ()=>{
             this.currentTest = [];
             clearElement(messageContainer);
             this.run();
-        }
-        registerElement(startButton, "click", startFunc.bind(this));
+        });
         showLoading(populateBotList, [botSelect]);
 
         const logoutButton = newElement('button', { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
 
         const showTestButton = newElement('button', { innerText: "Save Test" });
-        function saveTestFunc() {
+        registerElement(showTestButton, "click", ()=>{
             if (this.currentItem) this.currentTest.push(this.currentItem);
             window.tests.push({ name: "", commands: this.currentTest });
             this.currentTest = [];
-        }
-        registerElement(showTestButton, "click", saveTestFunc.bind(this));
+        });
 
         const runTestsButton = newElement('button', { innerText: "Run Tests" });
-        registerElement(runTestsButton, "click", this.runTests.bind(this));
+        registerElement(runTestsButton, "click", ()=>{this.runTests()});
 
         addElements([inputs, startButton, logoutButton, showTestButton, runTestsButton, messageContainer], this.container);
 
@@ -259,20 +257,18 @@ class TestBotTab extends Tab {
 
         this.inputField = newElement('input');
         this.button = newElement('button', { innerText: "Send", id: "sendButton" });
-        function keyPressFunc(event) {
+        this.inputField.addEventListener("keyup", (event)=>{
             if (event.keyCode === 13) {
                 event.preventDefault();
                 this.button.click();
             }
-        }
-        this.inputField.addEventListener("keyup", keyPressFunc.bind(this));
-        function sendFunc() {
+        });
+        registerElement(this.button, 'click', () => {
             this.currentTest.push(this.currentItem);
             this.currentItem = { "action": "sendMessage", "message": this.inputField.value, "expects": [] };
             this.sendTurnEvent(this.inputField.value, "UserInput");
             this.inputField.value = "";
-        }
-        registerElement(this.button, 'click', sendFunc.bind(this));
+        });
         addElements([this.messagesContainer, this.inputField, this.button], messageContainer);
 
         this.sendTurnEvent("", "NoOp"); // to start the session
@@ -293,12 +289,11 @@ class TestBotTab extends Tab {
             }
             const quickButton = newElement("button", { innerText: option.quickReply.text, class: ["quickReply"] });
             buttonTexts.push(option.quickReply.text);
-            function buttonFunc() {
+            registerElement(quickButton, "click", ()=>{
                 this.currentTest.push(this.currentItem);
                 this.currentItem = { "action": "sendMessage", "message": option.quickReply.payload, "expects": [] };
                 this.sendTurnEvent(option.quickReply.payload, "UserInput");
-            }
-            registerElement(quickButton, "click", buttonFunc.bind(this));
+            });
             addElement(quickButton, buttonContainer);
         }
         if (buttonTexts.length > 0) this.currentItem.expects.push({ "type": "quickReplies", "content": buttonTexts })
@@ -441,7 +436,7 @@ class TestCreationTab extends Tab {
             addElement(expectationOption, expectationSelect);
         }
         if (expects.type) expectationSelect.value = expects.type;
-        function selectChange() {
+        registerElement(expectationSelect, 'change', ()=>{
             qs(".expectation-message-input", expectationContainer)?.remove();
             qs(".buttons-container", expectationContainer)?.remove();
             if (expectationSelect.value === "message") {
@@ -468,8 +463,7 @@ class TestCreationTab extends Tab {
                 }
                 addElement(buttonsContainer, expectationSelect, "afterend");
             }
-        }
-        registerElement(expectationSelect, 'change', selectChange.bind(this));
+        });
 
         const removeButton = this.createRemoveButton(expectationContainer, ".expectations-container");
         const addExpectationBelowButton = this.createAddBelowButton(expectationContainer, this.addExpectation);
@@ -491,10 +485,9 @@ class TestCreationTab extends Tab {
     }
     createAddBelowButton(container, addFunc) {
         const addBelowButton = newElement('button', { innerText: "+" });
-        function addBelowFunc() {
+        registerElement(addBelowButton, "click", ()=>{
             addElement(addFunc.bind(this)(), container, "afterend")
-        }
-        registerElement(addBelowButton, "click", addBelowFunc.bind(this));
+        });
         return addBelowButton;
     }
 }
