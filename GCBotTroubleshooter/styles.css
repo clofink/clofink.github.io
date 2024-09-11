@@ -228,12 +228,15 @@ table.sortable th span {
 #messageContainer input {
     width: 80%;
 }
-#messageContainer button {
+#sendButton {
     width: 18%;
 }
 .button-container {
     word-break: normal;
     overflow-wrap: normal;
+}
+.quickReply {
+    width: fit-content;
 }
 .message-content img {
     width: 100%;

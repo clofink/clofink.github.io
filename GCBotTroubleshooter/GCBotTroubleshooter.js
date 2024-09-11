@@ -64,12 +64,16 @@ class TestBotTab extends Tab {
         const botSelectLabel = newElement('label', { innerText: "Bot Flow: " });
         const botSelect = newElement('select', { id: "botFlow" });
         addElement(botSelect, botSelectLabel);
-        addElement(botSelectLabel, inputs);
+        
+        const refreshButton = newElement('button', {innerText: "Refresh"});
+        registerElement(refreshButton, "click", ()=>{window.flows = undefined; clearElement(botSelect); showLoading(populateBotList, [botSelect]);})
+        addElements([botSelectLabel, refreshButton], inputs);
 
         const messageContainer = newElement('div', { id: "messageContainer" });
 
         const startButton = newElement('button', { innerText: "Start" });
         function startFunc() {
+            this.currentTest = [];
             clearElement(messageContainer);
             this.run();
         }
@@ -254,7 +258,7 @@ class TestBotTab extends Tab {
         addElement(this.messagesContainer, messageContainer);
 
         this.inputField = newElement('input');
-        this.button = newElement('button', { innerText: "Send" });
+        this.button = newElement('button', { innerText: "Send", id: "sendButton" });
         function keyPressFunc(event) {
             if (event.keyCode === 13) {
                 event.preventDefault();
@@ -558,7 +562,6 @@ async function populateBotList(select) {
         window.flows = [...digitalBots, ...bots, ...byobs];
         window.flows.sort((a, b) => a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1);
     }
-    console.log(window.flows);
     for (let bot of window.flows) {
         const botOption = newElement("option", { innerText: bot.name, value: bot.id });
         addElement(botOption, select);
