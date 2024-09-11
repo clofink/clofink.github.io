@@ -347,7 +347,7 @@ function selectAllEvents() {
 }
 
 function updateSampleCommand() {
-    const sample = getSampleCommandInput(window.storedValues.command);
+    const sample = window.commandMapping[window.storedValues.command];
     eById("commandBody").value = JSON.stringify(sample, null, 2);
 }
 
