@@ -4,19 +4,20 @@ class AgentAliasTab extends Tab {
     render() {
         window.requiredFields = ["Email", "Alias"];
         window.allValidFields = ["Email", "Alias"];
-    
-        this.container = newElement('div', {id: "userInputs"});
-        const label = newElement('label', {innerText: "Agent Aliases CSV: "});
-        const fileInput = newElement('input', {type: "file", accept: ".csv"});
+
+        this.container = newElement('div', { id: "userInputs" });
+        const label = newElement('label', { innerText: "Agent Aliases CSV: " });
+        const fileInput = newElement('input', { type: "file", accept: ".csv" });
         addElement(fileInput, label);
         registerElement(fileInput, "change", loadFile);
-        const startButton = newElement('button', {innerText: "Start"});
-        const buttonClickHandler = this.importAgentAliasesWrapper.bind(this);
-        registerElement(startButton, "click", buttonClickHandler);
-        const logoutButton = newElement("button", {innerText: "Logout"});
+        const startButton = newElement('button', { innerText: "Start" });
+        registerElement(startButton, "click", () => {
+            showLoading(async () => { await this.importAgentAliases() }, this.container);
+        });
+        const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
-            `Must have "users" scope`, 
+            `Must have "users" scope`,
             `Required CSV columns "Email" and "Alias"`
         ]);
         const exampleLink = createDownloadLink("Agent Aliases Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
@@ -24,28 +25,23 @@ class AgentAliasTab extends Tab {
         return this.container;
     }
 
-    importAgentAliasesWrapper() {
-        const boundFunc = this.importAgentAliases.bind(this);
-        showLoading(boundFunc, this.container);
-    }
-    
     async importAgentAliases() {
         if (!fileContents) throw "No valid file selected";
-    
+
         const users = await getAllGenesysItems(`/api/v2/users?state=active`, 100, 'entities');
         const userInfo = {};
         for (let user of users) {
-            userInfo[user.email.toLowerCase()] = {id: user.id, version: user.version};
+            userInfo[user.email.toLowerCase()] = { id: user.id, version: user.version };
         }
-    
+
         const results = [];
         for (let user of fileContents.data) {
             const currentUser = userInfo[user.Email.toLowerCase()];
             if (!currentUser) {
-                results.push({name: user.Email, type: "Agent Alias", status: "failed", error: `No active user matching email ${user.Email}`});
+                results.push({ name: user.Email, type: "Agent Alias", status: "failed", error: `No active user matching email ${user.Email}` });
                 continue;
             }
-            await makeCallAndHandleErrors(makeGenesysRequest, [`/api/v2/users/${currentUser.id}`, "PATCH", {version: currentUser.version, perferredName: user.Alias}], results, user.Email, "Agent Alias");
+            await makeCallAndHandleErrors(makeGenesysRequest, [`/api/v2/users/${currentUser.id}`, "PATCH", { version: currentUser.version, perferredName: user.Alias }], results, user.Email, "Agent Alias");
         }
         return results;
     }
