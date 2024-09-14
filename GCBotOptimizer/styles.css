@@ -4,23 +4,6 @@
     width: fit-content;
     user-select: none;
 }
-table, th, td {
-    padding: 5px;
-    border: 1px solid black;
-    border-collapse: collapse;
-}
-table {
-    margin: .5em;
-}
-td, th {
-    text-align: center;
-}
-th {
-    user-select: none;
-}
-.raceSelector {
-    padding-top: .5em;
-}
 dialog {
     position: fixed;
     top: 10vh;
@@ -47,40 +30,16 @@ body:has(dialog[open]) {
 #page {
     margin-top: .5em;
 }
-.tableContainer {
-    width: fit-content;
+#results {
+    margin-top: .5em;
+    max-height: 60vh;
+    overflow-y: scroll;
 }
-.pageButtons {
-    text-align: center;
-}
-.pageButtons button {
-    margin-left: .5em;
-    margin-right: .5em;
+.utterance {
     margin-bottom: .5em;
 }
-th * {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-}
-.nameField {
-    cursor: pointer;
-}
-
-[data-current-sort="true"][data-sort-direction="asc"]::after {
-    content: " ▲";
-    font-size: .75em;
-}
-[data-current-sort="true"][data-sort-direction="desc"]::after {
-    content: " ▼";
-    font-size: .75em;
-}
-th span {
-    padding-top: .5em;
-    padding-bottom: .5em;
-}
-table.sortable th span {
-    cursor: pointer;
+.utterance * {
+    margin-right: .5em;
 }
 .fieldOption {
     margin-top: .5em;

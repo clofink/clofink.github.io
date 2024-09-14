@@ -90,8 +90,8 @@ async function getBotFromFile() {
     const reader = new FileReader();
 
     return new Promise((resolve, reject) => {
-    
-        reader.addEventListener('load', function(data) {
+
+        reader.addEventListener('load', function (data) {
             try {
                 resolve(decodeDigitalBotFlow(data.target.result));
             }
@@ -170,14 +170,14 @@ function showMainMenu() {
     addElements([botSelect, refreshButton], botFlowLabel);
     registerElement(refreshButton, "click", () => { clearElement(botSelect); showLoading(populateBotSelect) });
     showLoading(populateBotSelect, [botSelect]);
-    
+
     const fileInputLabel = newElement('label', { innerText: "File: " });
     const fileInput = newElement('input', { type: "file", accept: ".i3DigitalBotFlow", id: "flowInput" });
     addElement(fileInput, fileInputLabel);
     registerElement(botSelect, "change", () => { fileInput.value = ""; clearElement(intentSelect); showLoading(populateIntentList, [botSelect.value]) });
     registerElement(fileInput, "change", () => { clearElement(intentSelect); showLoading(populateIntentList, [botSelect.value]) });
 
-    registerElement(intentSelect, "change", () => {updateUtterances(botSelect.value, intentSelect.value)});
+    registerElement(intentSelect, "change", () => { updateUtterances(botSelect.value, intentSelect.value) });
 
     const startButton = newElement('button', { innerText: "Start" });
     registerElement(startButton, "click", () => { showLoading(run, [botSelect.value]) });
@@ -223,16 +223,49 @@ async function updateUtterances(flowId, intentName) {
         for (let segment of utterance.segments) {
             fullUtterance += segment.text;
         }
-        const utteranceElem = newElement("div", {innerText: fullUtterance})
-        addElement(utteranceElem, container);
+        addElement(createUtteranceItem(fullUtterance), container);
     }
 }
 
 async function createUtteranceList(flowId, intentName) {
     const botflow = await getBotFromFile() || await getBotVersion(flowId);
     const intents = JSON.parse(botflow?.nluMetaData?.rawNlu || "{\"intents\":[]}").intents;
-    const intent = intents.find((e)=>e.name === intentName);
+    const intent = intents.find((e) => e.name === intentName);
     return intent?.utterances || [];
+}
+
+function createUtteranceItem(utterance) {
+    const utteranceContainer = newElement('div', { class: ["utterance"] });
+    const utteranceInput = newElement('input', { value: utterance || "" });
+    const addAfterButton = newElement('button', { innerText: "+", title: "Add Below" });
+    registerElement(addAfterButton, "click", () => {
+        const newUtterance = createUtteranceItem();
+        addElement(newUtterance, utteranceContainer, "afterend");
+    })
+    const removeButton = newElement('button', { innerText: "x", title: "Remove" });
+    registerElement(removeButton, "click", () => {
+        utteranceContainer.remove();
+    })
+    const moveUpButton = newElement('button', { innerText: "▲", title: "Move Up" });
+    registerElement(moveUpButton, "click", ()=>{
+        const allUtteranceContainters = Array.from(qsa(".utterance"));
+        const currentIndex = allUtteranceContainters.indexOf(utteranceContainer);
+        if (currentIndex === 0) return;
+        const prevUtteranceContainer = allUtteranceContainters[currentIndex - 1];
+        utteranceContainer.remove();
+        addElement(utteranceContainer, prevUtteranceContainer, "beforebegin");
+    })
+    const moveDownButton = newElement('button', { innerText: "▼", title: "Move Down" });
+    registerElement(moveDownButton, "click", ()=>{
+        const allUtteranceContainters = Array.from(qsa(".utterance"));
+        const currentIndex = allUtteranceContainters.indexOf(utteranceContainer);
+        if (currentIndex === allUtteranceContainters.length - 1) return;
+        const nextUtteranceContainer = allUtteranceContainters[currentIndex + 1];
+        utteranceContainer.remove();
+        addElement(utteranceContainer, nextUtteranceContainer, "afterend");
+    })
+    addElements([utteranceInput, moveUpButton, moveDownButton, addAfterButton, removeButton], utteranceContainer);
+    return utteranceContainer;
 }
 
 async function getOrgDetails() {
@@ -245,17 +278,6 @@ function encodeFlow(flow) {
 
 function updateFlow() {
 
-}
-
-function copyUtterancesFromAToB(sourceFile, targetFile, intentName) {
-    let sourceNLU = JSON.parse(sourceFile.nluMetaData.rawNlu);
-    let targetNLU = JSON.parse(targetFile.nluMetaData.rawNlu);
-    for (let intent of sourceNLU.intents) {
-        if (intent.name === intentName) {
-            targetNLU.intents.push(intent);
-        }
-    }
-    targetNLU.nluMetaData.rawNlu = JSON.stringify(targetNLU);
 }
 
 function createTaskAction(name) {
