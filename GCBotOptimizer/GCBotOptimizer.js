@@ -1,11 +1,43 @@
-var queryConfidences = {}
+var queryConfidences = {};
+var botFlowCache = {};
 
 async function run(flowId) {
     window.queryConfidences = {};
-    const flowVersion = await makeGenesysRequest(`/api/v2/flows/${flowId}/latestconfiguration`);
-    console.log(flowVersion)
+    const flowVersion = await getBotFromFile() || await getBotVersion(flowId);
 
-    const copiedFlow = await createFlow(flowVersion);
+    const newFlowName = `${flowVersion.name} Copy - NLU Optimization`
+    const createFlowBody = { "type": "digitalbot", "name": newFlowName, "description": `Flow with a copy of the intents from ${flowVersion.name} used for automated NLU testing and optimization`, "division": { "id": "235a0cf9-7d53-43e1-928e-520327a7e38f" }, "worktypeId": null }
+    const newFlow = await makeGenesysRequest(`/api/v2/flows?language=en-us`, "POST", createFlowBody);
+
+    const disconnectAction = createDisconnectAction()
+    const initialSequenceId = crypto.randomUUID();
+    const flowVersionBody = createInitialFlow(initialSequenceId, newFlow.nluInfo.domain.id, disconnectAction);
+
+    for (let intent in flowVersion.nluMetaData.intents) {
+        flowVersionBody.nluMetaData.intents[intent] = {
+            confirmation: {
+                text: `ToCommunication("I think you want to ${intent}, is that correct?")`,
+                type: "com"
+            }
+        };
+    }
+    flowVersionBody.nluMetaData.rawNlu = JSON.stringify({ intents: JSON.parse(flowVersion.nluMetaData.rawNlu).intents });
+    flowVersionBody.userInputSettings = flowVersion.userInputSettings;
+
+    for (let key in flowVersion.nluMetaData.mappings.intentsToReusableTasks) {
+        const newTask = createTaskAction(key);
+        flowVersionBody.flowSequenceItemList.push(newTask);
+        flowVersionBody.nluMetaData.mappings.intentsToReusableTasks[key] = { id: newTask.id }
+    }
+
+    const publishedVersion = await makeGenesysRequest(`/api/v2/flows/${newFlow.id}/versions`, "POST", flowVersionBody);
+    try {
+        await publishFlow(newFlow.id);
+    }
+    catch (error) {
+        console.log("Deleting the flow");
+        await deleteFlow(newFlow.id);
+    }
 
     const currentDate = new Date().toISOString().split("T")[0] + "T23:59:59Z";
     const date10DaysAgo = new Date(new Date().valueOf() - (86400000 * 10)).toISOString().split("T")[0] + "T00:00:00Z";
@@ -22,21 +54,62 @@ async function run(flowId) {
     const results = {
         "up": [],
         "down": [],
-        "noChange": []
-    }
+        "even": [],
+        "change": []
+    };
     for (let query in window.queryConfidences) {
-        testFlow(copiedFlow.mainifest.nluDomain[0].id, copiedFlow.mainifest.nluDomain[0].version, query)
+        const testResult = await testFlow(publishedVersion.nluInfo.domain.id, publishedVersion.nluInfo.version.id, query);
+        const newResult = testResult?.output?.intents[0];
+        const currentResult = window.queryConfidences[query];
+        if (newResult.name === currentResult.intent) {
+            if (currentResult.confidence === newResult.probability) {
+                results.even.push({ query: query, old: currentResult.confidence, new: newResult.probability, newIntent: newResult.name, oldIntent: currentResult.intent })
+            }
+            else if (currentResult.confidence < newResult.probability) {
+                results.up.push({ query: query, old: currentResult.confidence, new: newResult.probability, newIntent: newResult.name, oldIntent: currentResult.intent })
+            }
+            else {
+                results.down.push({ query: query, old: currentResult.confidence, new: newResult.probability, newIntent: newResult.name, oldIntent: currentResult.intent })
+            }
+        }
+        else {
+            results.change.push({ query: query, old: currentResult.confidence, new: newResult.probability, newIntent: newResult.name, oldIntent: currentResult.intent })
+        }
     }
+    console.log(results);
+
+    await deleteFlow(newFlow.id);
     return;
 }
 
-async function deleteFlow(flowId) {
-    return makeGenesysRequest(`/api/v2/flows?id=${flowId}`, "DELETE");
+async function getBotFromFile() {
+    const flowInputFiles = eById('flowInput').files;
+    if (flowInputFiles.length < 1) return;
+
+    const file = flowInputFiles[0];
+    const reader = new FileReader();
+
+    return new Promise((resolve, reject) => {
+    
+        reader.addEventListener('load', function(data) {
+            try {
+                resolve(decodeDigitalBotFlow(data.target.result));
+            }
+            catch (error) {
+                reject(error);
+            }
+        })
+        reader.readAsText(file);
+    })
 }
 
-async function testFlow(flowId, versionId, query) {
-    const body = {"input":{"text":query}}
-    return makeGenesysRequest(`/api/v2/languageunderstanding/domains/b53ad8f6-285e-4cf4-9c50-70df0abccc93/versions/62ba4963-755b-47ae-80ac-eae59ba5f981/detect`)
+function decodeDigitalBotFlow(fileContents) {
+    return JSON.parse(decodeURIComponent(atob(fileContents)));
+}
+
+async function testFlow(nluDomainId, nluVersionId, query) {
+    const body = { "input": { "text": query } }
+    return makeGenesysRequest(`/api/v2/languageunderstanding/domains/${nluDomainId}/versions/${nluVersionId}/detect`, "POST", body);
 }
 
 function showLoginPage() {
@@ -61,28 +134,17 @@ function showLoginPage() {
 }
 
 async function populateBotSelect(botSelect) {
+    botSelect = botSelect || eById('botFlowId');
     const digitalBots = await getAllGenesysItems(`/api/v2/flows?sortBy=name&sortOrder=asc&type=digitalbot`, 50, "entities");
     for (const flow of digitalBots) {
+        if (!flow.hasOwnProperty("publishedVersion")) continue;
         const botOption = newElement("option", { innerText: flow.name, value: flow.id });
         addElement(botOption, botSelect);
     }
+    await populateIntentList(digitalBots[0].id);
 }
 
 function showMainMenu() {
-    const page = eById('page');
-    clearElement(page);
-    const inputs = newElement("div", { id: "inputs" });
-    const botFlowLabel = newElement('label', { innerText: "Bot Flow: " })
-    const botSelect = newElement('select', { id: "botFlowId" });
-    showLoading(populateBotSelect, [botSelect]);
-    addElement(botSelect, botFlowLabel);
-    const startButton = newElement('button', { innerText: "Start" });
-    registerElement(startButton, "click", () => { showLoading(run, [botSelect.value]) });
-    const logoutButton = newElement('button', { innerText: "Logout" });
-    registerElement(logoutButton, "click", logout);
-    const results = newElement('div', { id: "results" })
-    addElement(botFlowLabel, inputs);
-    addElements([inputs, startButton, logoutButton, results], page);
     getOrgDetails().then(function (result) {
         if (result.status !== 200) {
             log(result.message, "error");
@@ -93,60 +155,213 @@ function showMainMenu() {
         window.orgId = result.id;
         eById("header").innerText = `Current Org Name: ${result.name} (${result.thirdPartyOrgName})\nCurrent Org ID: ${result.id}`
     }).catch(function (error) { log(error, "error"); logout(); });
+
+    const page = eById('page');
+    clearElement(page);
+    const inputs = newElement("div", { id: "inputs" });
+
+    const intentLabel = newElement('label', { innerText: "Intent: " });
+    const intentSelect = newElement('select', { id: "intent" });
+    addElement(intentSelect, intentLabel);
+
+    const botFlowLabel = newElement('label', { innerText: "Bot Flow: " })
+    const botSelect = newElement('select', { id: "botFlowId" });
+    const refreshButton = newElement('button', { innerText: "Refresh" });
+    addElements([botSelect, refreshButton], botFlowLabel);
+    registerElement(refreshButton, "click", () => { clearElement(botSelect); showLoading(populateBotSelect) });
+    showLoading(populateBotSelect, [botSelect]);
+    
+    const fileInputLabel = newElement('label', { innerText: "File: " });
+    const fileInput = newElement('input', { type: "file", accept: ".i3DigitalBotFlow", id: "flowInput" });
+    addElement(fileInput, fileInputLabel);
+    registerElement(botSelect, "change", () => { fileInput.value = ""; clearElement(intentSelect); showLoading(populateIntentList, [botSelect.value]) });
+    registerElement(fileInput, "change", () => { clearElement(intentSelect); showLoading(populateIntentList, [botSelect.value]) });
+
+    registerElement(intentSelect, "change", () => {updateUtterances(botSelect.value, intentSelect.value)});
+
+    const startButton = newElement('button', { innerText: "Start" });
+    registerElement(startButton, "click", () => { showLoading(run, [botSelect.value]) });
+    const logoutButton = newElement('button', { innerText: "Logout" });
+    registerElement(logoutButton, "click", logout);
+    const results = newElement('div', { id: "results" })
+    addElements([botFlowLabel, fileInputLabel, intentLabel], inputs);
+    addElements([inputs, startButton, logoutButton, results], page);
+}
+
+async function getBotVersion(flowId) {
+    if (!window.botFlowCache[flowId]) {
+        window.botFlowCache[flowId] = await makeGenesysRequest(`/api/v2/flows/${flowId}/latestconfiguration`);
+    }
+    return window.botFlowCache[flowId];
+}
+
+function sortByKey(key) {
+    return function (a, b) {
+        if (a[key] > b[key]) return 1;
+        if (a[key] < b[key]) return -1;
+        return 0;
+    }
+}
+
+async function populateIntentList(flowId) {
+    const intentSelect = eById("intent");
+    const botflow = await getBotFromFile() || await getBotVersion(flowId);
+    const intents = Object.keys(botflow.nluMetaData.intents).sort();
+    for (let intent of intents) {
+        const intentOption = newElement('option', { innerText: intent });
+        addElement(intentOption, intentSelect);
+    }
+    await updateUtterances(flowId, intents[0]);
+}
+
+async function updateUtterances(flowId, intentName) {
+    const utterances = await createUtteranceList(flowId, intentName);
+    const container = eById("results");
+    clearElement(container);
+    for (let utterance of utterances) {
+        let fullUtterance = "";
+        for (let segment of utterance.segments) {
+            fullUtterance += segment.text;
+        }
+        const utteranceElem = newElement("div", {innerText: fullUtterance})
+        addElement(utteranceElem, container);
+    }
+}
+
+async function createUtteranceList(flowId, intentName) {
+    const botflow = await getBotFromFile() || await getBotVersion(flowId);
+    const intents = JSON.parse(botflow?.nluMetaData?.rawNlu || "{\"intents\":[]}").intents;
+    const intent = intents.find((e)=>e.name === intentName);
+    return intent?.utterances || [];
 }
 
 async function getOrgDetails() {
     return makeGenesysRequest(`/api/v2/organizations/me`);
 }
 
-async function createFlow(originalFlow) {
-    const newFlowName = `${originalFlow.name} Copy - NLU Optimization`
-    const createFlowBody = { "type": "digitalbot", "name": newFlowName, "description": `Flow with a copy of the intents from ${originalFlow.name} used for automated NLU testing and optimization`, "division": { "id": "235a0cf9-7d53-43e1-928e-520327a7e38f" }, "worktypeId": null }
-    const newFlow = await makeGenesysRequest(`/api/v2/flows?language=en-us`, "POST", createFlowBody);
+function encodeFlow(flow) {
+    return btoa(encodeURIComponent(JSON.stringify(flow)))
+}
 
-    const disconnectAction = createDisconnectAction()
-    const initialSequenceId = crypto.randomUUID();
-    const flowVersionBody = {
+function updateFlow() {
+
+}
+
+function copyUtterancesFromAToB(sourceFile, targetFile, intentName) {
+    let sourceNLU = JSON.parse(sourceFile.nluMetaData.rawNlu);
+    let targetNLU = JSON.parse(targetFile.nluMetaData.rawNlu);
+    for (let intent of sourceNLU.intents) {
+        if (intent.name === intentName) {
+            targetNLU.intents.push(intent);
+        }
+    }
+    targetNLU.nluMetaData.rawNlu = JSON.stringify(targetNLU);
+}
+
+function createTaskAction(name) {
+    const disconnectAction = createDisconnectAction();
+    return {
+        actionList: [disconnectAction],
+        name: name,
+        id: crypto.randomUUID(),
+        startAction: disconnectAction.id,
+        variables: [],
+        "__type": "Task"
+    }
+}
+
+function createDisconnectAction() {
+    return {
+        id: crypto.randomUUID(),
+        name: "Disconnect",
+        "__type": "DisconnectAction"
+    }
+}
+async function publishFlow(flowId) {
+    const channel = await createChannel();
+    await addSubscription(flowId, channel.id);
+    const socketConnection = new WebSocket(channel.connectUri);
+    await makeGenesysRequest(`/api/v2/flows/actions/publish?flow=${flowId}`, "POST");
+
+    return new Promise((resolve, reject) => {
+        socketConnection.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            if (message?.eventBody?.currentOperation?.actionName === "PUBLISH" && message?.eventBody?.currentOperation?.complete) {
+                socketConnection.close();
+                if (message?.eventBody?.currentOperation?.actionStatus === "SUCCESS") {
+                    resolve(message);
+                }
+                else {
+                    reject(message);
+                }
+            }
+        }
+        socketConnection.onerror = (event) => {
+            reject(event)
+        }
+    });
+}
+
+async function deleteFlow(flowId) {
+    return await makeGenesysRequest(`/api/v2/flows?id=${flowId}`, "DELETE");
+    const channel = await createChannel();
+    await addSubscription(flowId, channel.id);
+    const socketConnection = new WebSocket(channel.connectUri);
+    await makeGenesysRequest(`/api/v2/flows?id=${flowId}`, "DELETE");
+
+    return new Promise((resolve, reject) => {
+        socketConnection.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            if (message?.eventBody?.currentOperation?.actionName === "DELETE" && message?.eventBody?.currentOperation?.complete) {
+                socketConnection.close();
+                if (message?.eventBody?.currentOperation?.actionStatus === "SUCCESS") {
+                    resolve(message);
+                }
+                else {
+                    reject(message);
+                }
+            }
+        }
+        socketConnection.onerror = (event) => {
+            reject(event)
+        }
+    });
+}
+
+async function createChannel() {
+    return makeGenesysRequest(`/api/v2/notifications/channels`, "POST");
+}
+
+async function addSubscription(flowId, channelId) {
+    const body = [{ "id": `flows.${flowId}` }]
+    return makeGenesysRequest(`/api/v2/notifications/channels/${channelId}/subscriptions`, "POST", body);
+}
+
+function createInitialFlow(initialSequenceId, nluDomainId, disconnectAction) {
+    return {
         "nextTrackingNumber": 12,
         "defaultLanguage": "en-US",
+        "description": "",
         "initialSequence": initialSequenceId,
-        "name": newFlowName,
+        "name": "Brand New Test",
         "uiMetaData": {
             "bridgeServerActions": [],
-            "screenPops": [],
-            "flowViewFilterOptions": {
-                "outputMode": "text",
-                "language": "en-US",
-                "enabled": false
-            }
+            "screenPops": []
         },
         "supportedLanguages": [
             "en-US"
         ],
         "manifest": {
-            "nluDomain": [
-                {
-                    "name": "Nlu4BotFlow_526eaeb6-0249-4f2d-82e4-3b41d54d4c77",
-                    "id": "c5a9e724-9bcb-441b-b618-87d8e4670d69",
-                    "context": [
-                        {
-                            "id": "botFlowSettings"
-                        }
-                    ]
-                }
-            ],
-            "language": [
-                {
-                    "id": "en-US"
-                }
-            ],
+            "nluDomain": [{ "id": nluDomainId, "context": [{ "id": "botFlowSettings" }] }],
+            "language": [{ "id": "en-US" }],
             "userPrompt": [],
             "systemPrompt": []
         },
         "type": "digitalbot",
         "botFlowSettings": {
             "engineVersion": "3.0",
-            "nluDomainId": "c5a9e724-9bcb-441b-b618-87d8e4670d69",
+            "nluDomainId": nluDomainId,
+            "nluDomainVersionId": null,
             "virtualAgentEnabled": false
         },
         "userInputSettings": {
@@ -247,12 +462,12 @@ async function createFlow(originalFlow) {
                     "mode": 4,
                     "builder": {
                         "builderDefId": "__BUILDER_MARKDOWN_COMMUNICATION__",
-                        "id": "a46ee3e0-ebb4-4bef-afc2-48f6cb86166b",
+                        "id": "56ad768d-cb86-454e-a22c-5d97610cee24",
                         "version": 1,
                         "builderParts": [
                             {
                                 "builderPartDefId": "__BUILDER_PART_COMMUNICATION_MARKDOWN__",
-                                "id": "6aadad9d-94ca-4f32-be22-1c35c81f4496",
+                                "id": "15279dd5-0383-4a66-98af-5780598dbaf7",
                                 "outOfService": false,
                                 "version": 1,
                                 "builderPartExpressions": [
@@ -487,12 +702,12 @@ async function createFlow(originalFlow) {
                         "mode": 4,
                         "builder": {
                             "builderDefId": "__BUILDER_MARKDOWN_COMMUNICATION__",
-                            "id": "ee9b54e0-bb63-45bf-85b1-4667f3e777ea",
+                            "id": "f1edb484-4c01-4bc1-b23c-4431daa9885e",
                             "version": 1,
                             "builderParts": [
                                 {
                                     "builderPartDefId": "__BUILDER_PART_COMMUNICATION_MARKDOWN__",
-                                    "id": "0687d855-eeb6-4bcf-b70e-bdf905b3aadf",
+                                    "id": "042d4223-7176-4042-9d2c-9036c69b15e9",
                                     "outOfService": false,
                                     "version": 1,
                                     "builderPartExpressions": [
@@ -563,12 +778,12 @@ async function createFlow(originalFlow) {
                         "mode": 4,
                         "builder": {
                             "builderDefId": "__BUILDER_MARKDOWN_COMMUNICATION__",
-                            "id": "b7f42b94-23c8-4aac-adeb-a4a1997ea4a8",
+                            "id": "0ab4be25-cbdb-4e37-b46d-3f4ee9690ea6",
                             "version": 1,
                             "builderParts": [
                                 {
                                     "builderPartDefId": "__BUILDER_PART_COMMUNICATION_MARKDOWN__",
-                                    "id": "228f9c4f-cc1a-4e8b-90f1-ab5a61ffc065",
+                                    "id": "f287b97a-c74f-4e48-98f2-632f0af0e533",
                                     "outOfService": false,
                                     "version": 1,
                                     "builderPartExpressions": [
@@ -639,12 +854,12 @@ async function createFlow(originalFlow) {
                         "mode": 4,
                         "builder": {
                             "builderDefId": "__BUILDER_MARKDOWN_COMMUNICATION__",
-                            "id": "7497b2a2-b56d-4278-b220-be0319635f8b",
+                            "id": "c02f478a-74ca-47e9-ab19-d6148840d7ca",
                             "version": 1,
                             "builderParts": [
                                 {
                                     "builderPartDefId": "__BUILDER_PART_COMMUNICATION_MARKDOWN__",
-                                    "id": "fbd30d9f-cc2a-4f3d-b578-1357f4c13872",
+                                    "id": "8ec24c2c-92e9-4cd5-b204-e3dc7db5b838",
                                     "outOfService": false,
                                     "version": 1,
                                     "builderPartExpressions": [
@@ -715,12 +930,12 @@ async function createFlow(originalFlow) {
                         "mode": 4,
                         "builder": {
                             "builderDefId": "__BUILDER_MARKDOWN_COMMUNICATION__",
-                            "id": "ffb521a6-b48c-4215-b5e9-4bf76838354a",
+                            "id": "8eee188c-72c2-462e-b894-b2d77dda20f9",
                             "version": 1,
                             "builderParts": [
                                 {
                                     "builderPartDefId": "__BUILDER_PART_COMMUNICATION_MARKDOWN__",
-                                    "id": "621fbd60-3d09-4971-9643-5d5509110f5c",
+                                    "id": "bc6574a5-ae13-4f2d-ae63-87e12f29e822",
                                     "outOfService": false,
                                     "version": 1,
                                     "builderPartExpressions": [
@@ -791,12 +1006,12 @@ async function createFlow(originalFlow) {
                         "mode": 4,
                         "builder": {
                             "builderDefId": "__BUILDER_MARKDOWN_COMMUNICATION__",
-                            "id": "6847426e-528b-41d0-a31b-d7c14208770a",
+                            "id": "bec2b623-ff35-421a-a9f4-022eb1c749d0",
                             "version": 1,
                             "builderParts": [
                                 {
                                     "builderPartDefId": "__BUILDER_PART_COMMUNICATION_MARKDOWN__",
-                                    "id": "d6d652a4-67b8-40a2-bad3-de74fde38865",
+                                    "id": "409700ce-69bd-41ad-8af6-17f5b932c7e3",
                                     "outOfService": false,
                                     "version": 1,
                                     "builderPartExpressions": [
@@ -877,12 +1092,12 @@ async function createFlow(originalFlow) {
                     "mode": 4,
                     "builder": {
                         "builderDefId": "__BUILDER_MARKDOWN_COMMUNICATION__",
-                        "id": "8d59f027-2560-4a26-b157-82db4746d088",
+                        "id": "e592b846-15b1-4d0c-b461-3f4d11fde8b9",
                         "version": 1,
                         "builderParts": [
                             {
                                 "builderPartDefId": "__BUILDER_PART_COMMUNICATION_MARKDOWN__",
-                                "id": "7ebc8637-9a5b-4714-b00d-078c20613830",
+                                "id": "b281a684-9f7c-4fc4-863d-d3b2cb4002c2",
                                 "outOfService": false,
                                 "version": 1,
                                 "builderPartExpressions": [
@@ -959,12 +1174,12 @@ async function createFlow(originalFlow) {
                     "mode": 4,
                     "builder": {
                         "builderDefId": "__BUILDER_MARKDOWN_COMMUNICATION__",
-                        "id": "f35d07ce-8dbb-4c00-ba60-bf83d1f54e78",
+                        "id": "9bd4d3b8-4bf8-492e-a8e4-a8bc52a7ab3a",
                         "version": 1,
                         "builderParts": [
                             {
                                 "builderPartDefId": "__BUILDER_PART_COMMUNICATION_MARKDOWN__",
-                                "id": "8d194f23-d752-40df-ba60-7c893602ae76",
+                                "id": "37362ab6-8aec-4932-a8e6-b6105f385b09",
                                 "outOfService": false,
                                 "version": 1,
                                 "builderPartExpressions": [
@@ -1057,12 +1272,12 @@ async function createFlow(originalFlow) {
                     "mode": 4,
                     "builder": {
                         "builderDefId": "__BUILDER_MARKDOWN_COMMUNICATION__",
-                        "id": "d660a50d-6248-4b47-99e3-07ef920a0c46",
+                        "id": "b6d16419-6a2f-4b22-9f1e-cf07102a874c",
                         "version": 1,
                         "builderParts": [
                             {
                                 "builderPartDefId": "__BUILDER_PART_COMMUNICATION_MARKDOWN__",
-                                "id": "9844fcb7-10ea-4101-9bba-35dc779f23db",
+                                "id": "53522c5e-0f6a-4afa-80f3-baf4d203b8d8",
                                 "outOfService": false,
                                 "version": 1,
                                 "builderPartExpressions": [
@@ -1139,12 +1354,12 @@ async function createFlow(originalFlow) {
                     "mode": 4,
                     "builder": {
                         "builderDefId": "__BUILDER_MARKDOWN_COMMUNICATION__",
-                        "id": "f9030cf1-b026-4e02-b8a2-d4c9aefa298b",
+                        "id": "b04d43c6-5cb8-4ea9-a13c-dd04a9f916df",
                         "version": 1,
                         "builderParts": [
                             {
                                 "builderPartDefId": "__BUILDER_PART_COMMUNICATION_MARKDOWN__",
-                                "id": "51aa7092-9927-4976-b9a5-3c34fbb2b776",
+                                "id": "ac277e8d-55d3-4d98-8316-72bab0e25350",
                                 "outOfService": false,
                                 "version": 1,
                                 "builderPartExpressions": [
@@ -1190,7 +1405,7 @@ async function createFlow(originalFlow) {
             "slots": {},
             "rawNlu": null,
             "intentHealthInfo": null,
-            "rawNluCompressionFormat": "none",
+            "rawNluCompressionFormat": null,
             "nluGeneratedInputInfo": {},
             "mappings": {
                 "intentsToReusableTasks": {},
@@ -1242,12 +1457,12 @@ async function createFlow(originalFlow) {
                     "mode": 4,
                     "builder": {
                         "builderDefId": "__BUILDER_MARKDOWN_COMMUNICATION__",
-                        "id": "9e933f5b-fd53-425a-8a3f-2b0d90eb70a3",
+                        "id": "9793db06-bca0-4152-b55d-6a22e4fbca1a",
                         "version": 1,
                         "builderParts": [
                             {
                                 "builderPartDefId": "__BUILDER_PART_COMMUNICATION_MARKDOWN__",
-                                "id": "09a0e689-141f-4a00-a8b2-c28d66d2c18c",
+                                "id": "7411a2bd-b7d5-45aa-8df1-8ec12f904c45",
                                 "outOfService": false,
                                 "version": 1,
                                 "builderPartExpressions": [
@@ -1325,12 +1540,12 @@ async function createFlow(originalFlow) {
                     "mode": 4,
                     "builder": {
                         "builderDefId": "__BUILDER_MARKDOWN_COMMUNICATION__",
-                        "id": "2f39d2dc-4496-4a20-9ba0-dc161309f91b",
+                        "id": "51c610d0-b10e-4885-9d8a-812a2bf34d42",
                         "version": 1,
                         "builderParts": [
                             {
                                 "builderPartDefId": "__BUILDER_PART_COMMUNICATION_MARKDOWN__",
-                                "id": "40d47ad3-4e00-47c7-8e9b-c548f4e9f41e",
+                                "id": "b3142f88-305f-4b40-b655-215b388bb84a",
                                 "outOfService": false,
                                 "version": 1,
                                 "builderPartExpressions": [
@@ -1408,12 +1623,12 @@ async function createFlow(originalFlow) {
                     "mode": 4,
                     "builder": {
                         "builderDefId": "__BUILDER_MARKDOWN_COMMUNICATION__",
-                        "id": "cf5a258b-c095-4f42-aba1-d9c917897634",
+                        "id": "f7a8b814-2668-4316-b6fa-80de64af3a32",
                         "version": 1,
                         "builderParts": [
                             {
                                 "builderPartDefId": "__BUILDER_PART_COMMUNICATION_MARKDOWN__",
-                                "id": "822461c7-6661-4143-a27e-4020620e1f12",
+                                "id": "d5b96145-fab1-4a5c-89fd-a776653f2807",
                                 "outOfService": false,
                                 "version": 1,
                                 "builderPartExpressions": [
@@ -1491,12 +1706,12 @@ async function createFlow(originalFlow) {
                     "mode": 4,
                     "builder": {
                         "builderDefId": "__BUILDER_MARKDOWN_COMMUNICATION__",
-                        "id": "87d07607-6c6d-463a-925b-4cb8f11d75cc",
+                        "id": "fe1de92f-35c0-417e-863f-cb122894e795",
                         "version": 1,
                         "builderParts": [
                             {
                                 "builderPartDefId": "__BUILDER_PART_COMMUNICATION_MARKDOWN__",
-                                "id": "ddad746d-32d5-40ee-918e-dfdfa6ee76ec",
+                                "id": "cd89ee69-2848-4c29-bde5-e8ccf3bbac10",
                                 "outOfService": false,
                                 "version": 1,
                                 "builderPartExpressions": [
@@ -1642,12 +1857,12 @@ async function createFlow(originalFlow) {
                     "mode": 4,
                     "builder": {
                         "builderDefId": "__BUILDER_MARKDOWN_COMMUNICATION__",
-                        "id": "6804e0b7-335a-4183-9827-e24522bf62ba",
+                        "id": "666ad582-dfea-4b5d-97dd-411bb3d2b835",
                         "version": 1,
                         "builderParts": [
                             {
                                 "builderPartDefId": "__BUILDER_PART_COMMUNICATION_MARKDOWN__",
-                                "id": "6007b723-9363-4895-8e23-d9158e0f73fd",
+                                "id": "10cfff8e-8666-4946-ab3d-1e61a990bae8",
                                 "outOfService": false,
                                 "version": 1,
                                 "builderPartExpressions": [
@@ -1870,78 +2085,8 @@ async function createFlow(originalFlow) {
         ],
         "variables": []
     }
-
-    for (let intent in originalFlow.nluMetaData.intents) {
-        flowVersionBody.nluMetaData.intents[intent] = {confirmation: {
-            text: `ToCommunication("I think you want to ${intent}, is that correct?")`,
-            type: "com"
-        }};
-    }
-    flowVersionBody.nluMetaData.rawNlu = JSON.stringify({ intents: JSON.parse(originalFlow.nluMetaData.rawNlu).intents });
-    flowVersionBody.userInputSettings = originalFlow.userInputSettings;
-
-    for (let key in originalFlow.nluMetaData.mappings.intentsToReusableTasks) {
-        const newTask = createTaskAction(key);
-        flowVersionBody.flowSequenceItemList.push(newTask);
-        flowVersionBody.nluMetaData.mappings.intentsToReusableTasks[key] = { id: newTask.id }
-    }
-
-    await makeGenesysRequest(`/api/v2/flows/${newFlow.id}/versions`, "POST", flowVersionBody);
-
-    return await makeGenesysRequest(`/api/v2/flows/actions/publish?flow=${newFlow.id}`, "POST");
 }
 
-function encodeFlow(flow) {
-    return btoa(encodeURIComponent(JSON.stringify(flow)))
-}
-
-function updateFlow() {
-
-}
-
-function copyUtterancesFromAToB(sourceFile, targetFile, intentName) {
-    let sourceNLU = JSON.parse(sourceFile.nluMetaData.rawNlu);
-    let targetNLU = JSON.parse(targetFile.nluMetaData.rawNlu);
-    for (let intent of sourceNLU.intents) {
-        if (intent.name === intentName) {
-            targetNLU.intents.push(intent);
-        }
-    }
-    targetNLU.nluMetaData.rawNlu = JSON.stringify(targetNLU);
-}
-
-function createTaskAction(name) {
-    const disconnectAction = createDisconnectAction();
-    return {
-        actionList: [disconnectAction],
-        name: name,
-        id: crypto.randomUUID(),
-        startAction: disconnectAction.id,
-        variables: [],
-        "__type": "Task"
-    }
-}
-
-function createDisconnectAction() {
-    return {
-        id: crypto.randomUUID(),
-        name: "Disconnect",
-        "__type": "DisconnectAction"
-    }
-}
-
-// should start a subscription when publishing
-// then wait until I get the completed result
-// and then end the subscription
-// need to use notificaitons for it
-// https://developer.genesys.cloud/notificationsalerts/notifications/notifications-apis
-
-// POST
-// /api/v2/notifications/channels
-// return {"connectUri": "", "id": "", "expires": ""}
-
-// POST
-// https://api.usw2.pure.cloud/api/v2/notifications/channels/${channelId}/subscriptions
-// [{"id": `flow.${flowId}` }]
+// window.doNotCompressFlow = true;
 
 runLoginProcess(showLoginPage, showMainMenu);
