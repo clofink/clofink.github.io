@@ -109,6 +109,47 @@ async function run(flowId) {
     return;
 }
 
+async function getUtteranceStats() {
+    const intents = [];
+    const utterances = await loadCsvFile();
+    for (let turn of utterances.data) {
+        if (turn["Ask Action Type"] === "WaitForInputAction" || turn["Ask Action Type"] === "DigitalMenuAction") {
+            const intent = turn['Intent'];
+            const utterance = turn['Utterance'];
+            if (intent && turn["Intent Confidence"]) {
+                let matchedIntent = intents.find((e) => e.name === intent);
+                if (!matchedIntent) {
+                    matchedIntent = {name: intent, words: [], utterances: []}
+                    intents.push(matchedIntent);
+                }
+                
+                let matchedUtterance = matchedIntent.utterances.find((e) => e.utterance === utterance);
+                if (!matchedUtterance) {
+                    matchedUtterance = {utterance: utterance, count: 0};
+                    const words = ("" + utterance).toLowerCase().replaceAll(/[’']/g, "").replaceAll(/[,\."?…\s]+/g, " ").split(" ").filter((e)=> !!e);
+                    for (let word of words) {
+                        let matchedWord = matchedIntent.words.find((e)=> e.word === word);
+                        if (!matchedWord) {
+                            matchedWord = {word: word, count: 0};
+                            matchedIntent.words.push(matchedWord);
+                        }
+                        matchedWord.count++;
+                    }
+                    matchedIntent.utterances.push(matchedUtterance);
+                }
+                matchedUtterance.count++;
+            }
+        }
+    }
+
+    for (let intent of intents) {
+        const sortByCount = sortByKey("count");
+        intent.utterances.sort(sortByCount);
+        intent.words.sort(sortByCount);
+    }
+    return intents;
+}
+
 function roundTo(num, digits) {
     const mult = Math.pow(10, digits);
     return Math.round(num * mult) / mult;
@@ -321,8 +362,8 @@ async function getBotVersion(flowId) {
 
 function sortByKey(key) {
     return function (a, b) {
-        if (a[key] > b[key]) return 1;
-        if (a[key] < b[key]) return -1;
+        if (a[key] < b[key]) return 1;
+        if (a[key] > b[key]) return -1;
         return 0;
     }
 }
