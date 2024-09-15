@@ -1,8 +1,10 @@
 var queryConfidences = {};
+var intentCounts = {};
 var botFlowCache = {};
 
 async function run(flowId) {
-    window.queryConfidences = {};
+    await getQueryConfidences(flowId);
+
     const flowVersion = await getBotFromFile() || await getBotVersion(flowId);
 
     const newFlowName = `${flowVersion.name} Copy - NLU Optimization`
@@ -21,7 +23,24 @@ async function run(flowId) {
             }
         };
     }
-    flowVersionBody.nluMetaData.rawNlu = JSON.stringify({ intents: JSON.parse(flowVersion.nluMetaData.rawNlu).intents });
+
+    const originalMetaData = JSON.parse(flowVersion.nluMetaData.rawNlu);
+    const selectedIntentName = eById('intent').value;
+    const selectedIntent = originalMetaData.intents.find((e) => e.name === selectedIntentName);
+
+    const newUtteranceElems = Array.from(qsa(".utterance input"));
+    const newUtterances = [];
+    for (let utteranceElem of newUtteranceElems) {
+        const utterance = utteranceElem.value;
+        const existingUtterance = selectedIntent.utterances.find((e) => utterance === flattenUtterance(e.segments));
+        if (existingUtterance) newUtterances.push(existingUtterance);
+        else newUtterances.push(createNewUtterance(utterance));
+    }
+    selectedIntent.utterances = newUtterances;
+
+    flowVersionBody.nluMetaData.rawNlu = JSON.stringify(originalMetaData);
+    flowVersionBody.nluMetaData.slots = flowVersion.nluMetaData.slots;
+    flowVersionBody.nluMetaData.archNlu = flowVersion.nluMetaData.archNlu;
     flowVersionBody.userInputSettings = flowVersion.userInputSettings;
 
     for (let key in flowVersion.nluMetaData.mappings.intentsToReusableTasks) {
@@ -36,19 +55,9 @@ async function run(flowId) {
     }
     catch (error) {
         console.log("Deleting the flow");
-        await deleteFlow(newFlow.id);
-    }
-
-    const currentDate = new Date().toISOString().split("T")[0] + "T23:59:59Z";
-    const date10DaysAgo = new Date(new Date().valueOf() - (86400000 * 10)).toISOString().split("T")[0] + "T00:00:00Z";
-
-    const botTurns = await getPagedGenesysItems(`/api/v2/analytics/botflows/${flowId}/reportingturns?interval=${date10DaysAgo}/${currentDate}`);
-    for (let turn of botTurns) {
-        if (turn?.askAction?.actionType === "WaitForInputAction" || turn?.askAction?.actionType === "DigitalMenuAction") {
-            if (turn?.intent?.name && turn?.intent?.confidence) {
-                queryConfidences[turn.userInput] = { intent: turn.intent.name, confidence: turn.intent.confidence };
-            }
-        }
+        console.error(error);
+        // await deleteFlow(newFlow.id);
+        return;
     }
 
     const results = {
@@ -57,29 +66,117 @@ async function run(flowId) {
         "even": [],
         "change": []
     };
+
+    let total = 0;
+    let totalInstances = 0;
     for (let query in window.queryConfidences) {
-        const testResult = await testFlow(publishedVersion.nluInfo.domain.id, publishedVersion.nluInfo.version.id, query);
+        if (window.queryConfidences[query].intent !== eById("intent").value) continue;
+        total++;
+        totalInstances += window.queryConfidences[query].count;
+        let testResult;
+        try {
+            testResult = await testFlow(publishedVersion.nluInfo.domain.id, publishedVersion.nluInfo.version.id, query);
+        }
+        catch (err) {
+            console.error(err);
+            testResult = await testFlow(publishedVersion.nluInfo.domain.id, publishedVersion.nluInfo.version.id, query);
+        }
         const newResult = testResult?.output?.intents[0];
         const currentResult = window.queryConfidences[query];
         if (newResult.name === currentResult.intent) {
-            if (currentResult.confidence === newResult.probability) {
-                results.even.push({ query: query, old: currentResult.confidence, new: newResult.probability, newIntent: newResult.name, oldIntent: currentResult.intent })
+            const oldProb = roundTo(currentResult.confidence, 3);
+            const newProb = roundTo(newResult.probability, 3);
+
+            if (oldProb === newProb) {
+                results.even.push({ query: query, old: oldProb, new: newProb, newIntent: newResult.name, oldIntent: currentResult.intent });
             }
-            else if (currentResult.confidence < newResult.probability) {
-                results.up.push({ query: query, old: currentResult.confidence, new: newResult.probability, newIntent: newResult.name, oldIntent: currentResult.intent })
+            else if (oldProb < newProb) {
+                results.up.push({ query: query, old: oldProb, new: newProb, newIntent: newResult.name, oldIntent: currentResult.intent, difference: roundTo(Math.abs(newProb - oldProb), 3) });
             }
             else {
-                results.down.push({ query: query, old: currentResult.confidence, new: newResult.probability, newIntent: newResult.name, oldIntent: currentResult.intent })
+                results.down.push({ query: query, old: oldProb, new: newProb, newIntent: newResult.name, oldIntent: currentResult.intent, difference: roundTo(Math.abs(newProb - oldProb), 3) });
             }
         }
         else {
-            results.change.push({ query: query, old: currentResult.confidence, new: newResult.probability, newIntent: newResult.name, oldIntent: currentResult.intent })
+            results.change.push({ query: query, old: oldProb, new: newProb, newIntent: newResult.name, oldIntent: currentResult.intent });
         }
     }
+    console.log(total);
+    console.log(totalInstances);
     console.log(results);
 
     await deleteFlow(newFlow.id);
     return;
+}
+
+function roundTo(num, digits) {
+    const mult = Math.pow(10, digits);
+    return Math.round(num * mult) / mult;
+}
+
+function createNewUtterance(utterance) {
+    return {
+        id: crypto.randomUUID(),
+        segments: [{
+            text: utterance
+        }]
+    }
+}
+
+function flattenUtterance(segments) {
+    let fullUtterance = "";
+    for (let segment of segments) {
+        fullUtterance += segment.text;
+    }
+    return fullUtterance;
+}
+
+async function getQueryConfidences(flowId) {
+    window.queryConfidences = {};
+
+    const csvBotTurns = await loadCsvFile();
+    if (csvBotTurns) {
+        for (let turn of csvBotTurns.data) {
+            const result = csvBotTurn(turn);
+            if (result) {
+                if (window.queryConfidences[turn["Utterance"]]) window.queryConfidences[turn["Utterance"]].count++
+                else window.queryConfidences[turn["Utterance"]] = result;
+            }
+        }
+    }
+    else {
+        const currentDate = new Date().toISOString().split("T")[0] + "T23:59:59Z";
+        const date10DaysAgo = new Date(new Date().valueOf() - (86400000 * 10)).toISOString().split("T")[0] + "T00:00:00Z";
+        const jsonBotTurns = await getPagedGenesysItems(`/api/v2/analytics/botflows/${flowId}/reportingturns?interval=${date10DaysAgo}/${currentDate}`);
+        for (let turn of jsonBotTurns) {
+            const result = jsonBotTurn(turn);
+            if (result) window.queryConfidences[turn.userInput] = result;
+        }
+    }
+}
+
+function jsonBotTurn(turn) {
+    if (turn?.askAction?.actionType === "WaitForInputAction" || turn?.askAction?.actionType === "DigitalMenuAction") {
+        if (turn?.intent?.name && turn?.intent?.confidence) {
+            if (!window.intentCounts[turn.intent.name]) {
+                window.intentCounts[turn.intent.name] = 0;
+            }
+            window.intentCounts[turn.intent.name]++;
+            return { intent: turn.intent.name, confidence: turn.intent.confidence, count: 1 };
+        }
+    }
+}
+
+function csvBotTurn(turn) {
+    if (turn["Ask Action Type"] === "WaitForInputAction" || turn["Ask Action Type"] === "DigitalMenuAction") {
+        if (turn["Intent"] && turn["Intent Confidence"]) {
+            if (!window.intentCounts[turn["Intent"]]) {
+                window.intentCounts[turn["Intent"]] = 0;
+            }
+            window.intentCounts[turn["Intent"]]++;
+            return { intent: turn["Intent"], confidence: turn["Intent Confidence"], count: 1 };
+        }
+    }
 }
 
 async function getBotFromFile() {
@@ -89,14 +186,36 @@ async function getBotFromFile() {
     const file = flowInputFiles[0];
     const reader = new FileReader();
 
-    return new Promise((resolve, reject) => {
-
+    return new Promise((resolve) => {
         reader.addEventListener('load', function (data) {
             try {
                 resolve(decodeDigitalBotFlow(data.target.result));
             }
             catch (error) {
-                reject(error);
+                console.error(error);
+                return;
+            }
+        })
+        reader.readAsText(file);
+    })
+}
+
+async function loadCsvFile() {
+    const flowInputFiles = eById('utteranceHistory').files;
+    if (flowInputFiles.length < 1) return;
+
+    const file = flowInputFiles[0];
+    const reader = new FileReader();
+
+    return new Promise((resolve) => {
+        reader.addEventListener('load', function (data) {
+            try {
+                fileContents = Papa.parse(data.target.result, { header: true, dynamicTyping: true });
+                resolve(fileContents);
+            }
+            catch (error) {
+                console.error(error);
+                return;
             }
         })
         reader.readAsText(file);
@@ -171,11 +290,16 @@ function showMainMenu() {
     registerElement(refreshButton, "click", () => { clearElement(botSelect); showLoading(populateBotSelect) });
     showLoading(populateBotSelect, [botSelect]);
 
-    const fileInputLabel = newElement('label', { innerText: "File: " });
-    const fileInput = newElement('input', { type: "file", accept: ".i3DigitalBotFlow", id: "flowInput" });
-    addElement(fileInput, fileInputLabel);
-    registerElement(botSelect, "change", () => { fileInput.value = ""; clearElement(intentSelect); showLoading(populateIntentList, [botSelect.value]) });
-    registerElement(fileInput, "change", () => { clearElement(intentSelect); showLoading(populateIntentList, [botSelect.value]) });
+    const flowInputLabel = newElement('label', { innerText: "File: " });
+    const flowInput = newElement('input', { type: "file", accept: ".i3DigitalBotFlow", id: "flowInput" });
+    addElement(flowInput, flowInputLabel);
+
+    const utteranceHistoryLabel = newElement('label', { innerText: "Utterance History: " });
+    const utteranceHistoryInput = newElement('input', { type: "file", accept: ".csv", id: "utteranceHistory" });
+    addElement(utteranceHistoryInput, utteranceHistoryLabel);
+
+    registerElement(botSelect, "change", () => { flowInput.value = ""; clearElement(intentSelect); showLoading(populateIntentList, [botSelect.value]) });
+    registerElement(flowInput, "change", () => { clearElement(intentSelect); showLoading(populateIntentList, [botSelect.value]) });
 
     registerElement(intentSelect, "change", () => { updateUtterances(botSelect.value, intentSelect.value) });
 
@@ -184,7 +308,7 @@ function showMainMenu() {
     const logoutButton = newElement('button', { innerText: "Logout" });
     registerElement(logoutButton, "click", logout);
     const results = newElement('div', { id: "results" })
-    addElements([botFlowLabel, fileInputLabel, intentLabel], inputs);
+    addElements([botFlowLabel, flowInputLabel, utteranceHistoryLabel, intentLabel], inputs);
     addElements([inputs, startButton, logoutButton, results], page);
 }
 
@@ -219,10 +343,7 @@ async function updateUtterances(flowId, intentName) {
     const container = eById("results");
     clearElement(container);
     for (let utterance of utterances) {
-        let fullUtterance = "";
-        for (let segment of utterance.segments) {
-            fullUtterance += segment.text;
-        }
+        let fullUtterance = flattenUtterance(utterance.segments);
         addElement(createUtteranceItem(fullUtterance), container);
     }
 }
@@ -247,7 +368,7 @@ function createUtteranceItem(utterance) {
         utteranceContainer.remove();
     })
     const moveUpButton = newElement('button', { innerText: "▲", title: "Move Up" });
-    registerElement(moveUpButton, "click", ()=>{
+    registerElement(moveUpButton, "click", () => {
         const allUtteranceContainters = Array.from(qsa(".utterance"));
         const currentIndex = allUtteranceContainters.indexOf(utteranceContainer);
         if (currentIndex === 0) return;
@@ -256,7 +377,7 @@ function createUtteranceItem(utterance) {
         addElement(utteranceContainer, prevUtteranceContainer, "beforebegin");
     })
     const moveDownButton = newElement('button', { innerText: "▼", title: "Move Down" });
-    registerElement(moveDownButton, "click", ()=>{
+    registerElement(moveDownButton, "click", () => {
         const allUtteranceContainters = Array.from(qsa(".utterance"));
         const currentIndex = allUtteranceContainters.indexOf(utteranceContainer);
         if (currentIndex === allUtteranceContainters.length - 1) return;
