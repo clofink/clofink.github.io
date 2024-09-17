@@ -21,6 +21,9 @@ async function makeGenesysRequest(path, method, body, isEmptyResponse) {
                 resultJson.status = resultJson.status || result.status;
                 return resultJson
             }
+            else if (result.ok && isEmptyResponse) {
+                return result;
+            }
             else {
                 throw result;
             }
