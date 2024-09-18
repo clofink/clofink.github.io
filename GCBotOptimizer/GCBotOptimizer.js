@@ -4,7 +4,6 @@ var botFlowCache = {};
 
 
 async function createAndTrainNlu(data) {
-
     const newDomain = await createNluDomain("NLU Testing Domain");
 
     const newVersion = await createNluVersion(newDomain.id, data);
@@ -99,7 +98,6 @@ async function run(flowId) {
     }
     console.log(results);
 
-    // await deleteFlow(newFlow.id);
     await deleteNluDomain(nlu.domainId);
     return;
 }
@@ -367,9 +365,68 @@ async function populateIntentList(flowId) {
     await updateUtterances(flowId, intents[0]);
 }
 
+async function updateUtterances(flowId, intentName) {
+    const utterances = await createUtteranceList(flowId, intentName);
+    const container = eById("results");
+    clearElement(container);
+    for (let utterance of utterances) {
+        let fullUtterance = flattenUtterance(utterance.segments);
+        addElement(createUtteranceItem(fullUtterance), container);
+    }
+}
+
+async function createUtteranceList(flowId, intentName) {
+    const botflow = await getBotFromFile() || await getBotVersion(flowId);
+    const intents = JSON.parse(botflow?.nluMetaData?.rawNlu || "{\"intents\":[]}").intents;
+    const intent = intents.find((e) => e.name === intentName);
+    return intent?.utterances || [];
+}
+
+function createUtteranceItem(utterance) {
+    const utteranceContainer = newElement('div', { class: ["utterance"] });
+    const utteranceInput = newElement('input', { value: utterance || "" });
+    const addAfterButton = newElement('button', { innerText: "+", title: "Add Below" });
+    registerElement(addAfterButton, "click", () => {
+        const newUtterance = createUtteranceItem();
+        addElement(newUtterance, utteranceContainer, "afterend");
+    })
+    const removeButton = newElement('button', { innerText: "x", title: "Remove" });
+    registerElement(removeButton, "click", () => {
+        utteranceContainer.remove();
+    })
+    const moveUpButton = newElement('button', { innerText: "▲", title: "Move Up" });
+    registerElement(moveUpButton, "click", () => {
+        const allUtteranceContainters = Array.from(qsa(".utterance"));
+        const currentIndex = allUtteranceContainters.indexOf(utteranceContainer);
+        if (currentIndex === 0) return;
+        const prevUtteranceContainer = allUtteranceContainters[currentIndex - 1];
+        utteranceContainer.remove();
+        addElement(utteranceContainer, prevUtteranceContainer, "beforebegin");
+    })
+    const moveDownButton = newElement('button', { innerText: "▼", title: "Move Down" });
+    registerElement(moveDownButton, "click", () => {
+        const allUtteranceContainters = Array.from(qsa(".utterance"));
+        const currentIndex = allUtteranceContainters.indexOf(utteranceContainer);
+        if (currentIndex === allUtteranceContainters.length - 1) return;
+        const nextUtteranceContainer = allUtteranceContainters[currentIndex + 1];
+        utteranceContainer.remove();
+        addElement(utteranceContainer, nextUtteranceContainer, "afterend");
+    })
+    addElements([utteranceInput, moveUpButton, moveDownButton, addAfterButton, removeButton], utteranceContainer);
+    return utteranceContainer;
+}
+
 async function getOrgDetails() {
     return makeGenesysRequest(`/api/v2/organizations/me`);
 }
+
+async function getBotVersion(flowId) {
+    if (!window.botFlowCache[flowId]) {
+        window.botFlowCache[flowId] = await makeGenesysRequest(`/api/v2/flows/${flowId}/latestconfiguration`);
+    }
+    return window.botFlowCache[flowId];
+}
+
 // window.doNotCompressFlow = true;
 
 runLoginProcess(showLoginPage, showMainMenu);
