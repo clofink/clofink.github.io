@@ -6,16 +6,22 @@ var botFlowCache = {};
 async function createAndTrainNlu(data) {
     const newDomain = await createNluDomain("NLU Testing Domain");
 
-    const newVersion = await createNluVersion(newDomain.id, data);
-
-    await trainNluDomain(newDomain.id, newVersion.id);
-
-    await pollStatus(requestUpdateOnTraining, [newDomain.id, newVersion.id], "trainingStatus", ["Trained"], ["Error"], 2000);
-    return {domainId: newDomain.id, versionId: newVersion.id};
+    try {
+        const newVersion = await createNluVersion(newDomain.id, data);
+    
+        await trainNluDomain(newDomain.id, newVersion.id);
+    
+        await pollStatus(requestUpdateOnTraining, [newDomain.id, newVersion.id], "trainingStatus", ["Trained"], ["Error"], 2000);
+        return { domainId: newDomain.id, versionId: newVersion.id };
+    }
+    catch(error) {
+        await deleteNluDomain(newDomain.id);
+        throw(error)
+    }
 }
 
 async function createNluDomain(name) {
-    return makeGenesysRequest(`/api/v2/languageunderstanding/domains`, "POST", {name: name});
+    return makeGenesysRequest(`/api/v2/languageunderstanding/domains`, "POST", { name: name });
 }
 
 async function createNluVersion(domainId, intents) {
@@ -55,51 +61,70 @@ async function run(flowId) {
 
     const nlu = await createAndTrainNlu(originalMetaData);
 
-    const results = {
-        "up": [],
-        "down": [],
-        "even": [],
-        "change": []
-    };
-
-    let total = 0;
-    let totalInstances = 0;
-    for (let query in window.queryConfidences) {
-        if (window.queryConfidences[query].intent !== eById("intent").value) continue;
-        total++;
-        totalInstances += window.queryConfidences[query].count;
-        let testResult;
-        try {
-            testResult = await testFlow(nlu.domainId, nlu.versionId, query);
+    try {
+        const results = {
+            "up": [],
+            "down": [],
+            "even": [],
+            "change": []
+        };
+    
+        const testQueries = []
+        for (let query in window.queryConfidences) {
+            if (window.queryConfidences[query].intent !== eById("intent").value) continue;
+            try {
+                testQueries.push(testFlow(nlu.domainId, nlu.versionId, query));
+            }
+            catch (err) {
+                console.error(err);
+                testQueries.push(testFlow(nlu.domainId, nlu.versionId, query));
+            }
         }
-        catch (err) {
-            console.error(err);
-            testResult = await testFlow(nlu.domainId, nlu.versionId, query);
-        }
-        const newResult = testResult?.output?.intents[0];
-        const currentResult = window.queryConfidences[query];
-        if (newResult.name === currentResult.intent) {
+        const testResults = await Promise.all(testQueries);
+    
+        for (let testResult of testResults) {
+            const query = testResult.input.text;
+            const newResult = testResult?.output?.intents[0];
+            const currentResult = window.queryConfidences[query];
             const oldProb = roundTo(currentResult.confidence, 3);
             const newProb = roundTo(newResult.probability, 3);
-
-            if (oldProb === newProb) {
-                results.even.push({ query: query, old: oldProb, new: newProb, newIntent: newResult.name, oldIntent: currentResult.intent });
-            }
-            else if (oldProb < newProb) {
-                results.up.push({ query: query, old: oldProb, new: newProb, newIntent: newResult.name, oldIntent: currentResult.intent, difference: roundTo(Math.abs(newProb - oldProb), 3) });
+            if (newResult.name === currentResult.intent) {
+    
+                if (oldProb === newProb) {
+                    results.even.push({ query: query, old: oldProb, new: newProb, newIntent: newResult.name, oldIntent: currentResult.intent });
+                }
+                else if (oldProb < newProb) {
+                    results.up.push({ difference: roundTo(Math.abs(newProb - oldProb), 3), query: query, old: oldProb, new: newProb, newIntent: newResult.name, oldIntent: currentResult.intent });
+                }
+                else {
+                    results.down.push({ difference: roundTo(Math.abs(newProb - oldProb), 3), query: query, old: oldProb, new: newProb, newIntent: newResult.name, oldIntent: currentResult.intent });
+                }
             }
             else {
-                results.down.push({ query: query, old: oldProb, new: newProb, newIntent: newResult.name, oldIntent: currentResult.intent, difference: roundTo(Math.abs(newProb - oldProb), 3) });
+                results.change.push({ query: query, old: oldProb, new: newProb, newIntent: newResult.name, oldIntent: currentResult.intent });
             }
         }
-        else {
-            results.change.push({ query: query, old: oldProb, new: newProb, newIntent: newResult.name, oldIntent: currentResult.intent });
-        }
+        console.log(results);
+        console.log(roundTo(getTotalChange(results), 3));
     }
-    console.log(results);
-
-    await deleteNluDomain(nlu.domainId);
+    catch(error) {
+        console.error(error);
+    }
+    finally {
+        if (nlu?.domainId) await deleteNluDomain(nlu.domainId);
+    }
     return;
+}
+
+function getTotalChange(result) {
+    let totalChange = 0;
+    for (let increase of result.up) {
+        totalChange += increase.difference;
+    }
+    for (let decrease of result.down) {
+        totalChange -= decrease.difference;
+    }
+    return totalChange;
 }
 
 async function getUtteranceStats() {
@@ -112,18 +137,18 @@ async function getUtteranceStats() {
             if (intent && turn["Intent Confidence"]) {
                 let matchedIntent = intents.find((e) => e.name === intent);
                 if (!matchedIntent) {
-                    matchedIntent = {name: intent, words: [], utterances: []}
+                    matchedIntent = { name: intent, words: [], utterances: [] }
                     intents.push(matchedIntent);
                 }
-                
+
                 let matchedUtterance = matchedIntent.utterances.find((e) => e.utterance === utterance);
                 if (!matchedUtterance) {
-                    matchedUtterance = {utterance: utterance, count: 0};
-                    const words = ("" + utterance).toLowerCase().replaceAll(/[’']/g, "").replaceAll(/[,\."?…\s]+/g, " ").split(" ").filter((e)=> !!e);
+                    matchedUtterance = { utterance: utterance, count: 0 };
+                    const words = ("" + utterance).toLowerCase().replaceAll(/[’']/g, "").replaceAll(/[,\."?…\s]+/g, " ").split(" ").filter((e) => !!e);
                     for (let word of words) {
-                        let matchedWord = matchedIntent.words.find((e)=> e.word === word);
+                        let matchedWord = matchedIntent.words.find((e) => e.word === word);
                         if (!matchedWord) {
-                            matchedWord = {word: word, count: 0};
+                            matchedWord = { word: word, count: 0 };
                             matchedIntent.words.push(matchedWord);
                         }
                         matchedWord.count++;
@@ -165,6 +190,12 @@ function flattenUtterance(segments) {
     return fullUtterance;
 }
 
+function normalizeQuery(query) {
+    // make lower case
+    // remove special characters
+    return query.toLowerCase().replaceAll(/[’']/g, "").replaceAll(/[,\."?…\s]+/g, " ").split(" ").filter((e) => !!e).join(" ");
+}
+
 async function getQueryConfidences(flowId) {
     window.queryConfidences = {};
 
@@ -173,8 +204,9 @@ async function getQueryConfidences(flowId) {
         for (let turn of csvBotTurns.data) {
             const result = csvBotTurn(turn);
             if (result) {
-                if (window.queryConfidences[turn["Utterance"]]) window.queryConfidences[turn["Utterance"]].count++
-                else window.queryConfidences[turn["Utterance"]] = result;
+                const currentQuery = turn["Utterance"];
+                if (window.queryConfidences[currentQuery]) window.queryConfidences[currentQuery].count++
+                else window.queryConfidences[currentQuery] = result;
             }
         }
     }
@@ -184,7 +216,12 @@ async function getQueryConfidences(flowId) {
         const jsonBotTurns = await getPagedGenesysItems(`/api/v2/analytics/botflows/${flowId}/reportingturns?interval=${date10DaysAgo}/${currentDate}`);
         for (let turn of jsonBotTurns) {
             const result = jsonBotTurn(turn);
-            if (result) window.queryConfidences[turn.userInput] = result;
+            if (result) {
+                const currentQuery = turn.userInput;
+                window.queryConfidences[currentQuery] = result;
+                if (window.queryConfidences[currentQuery]) window.queryConfidences[currentQuery].count++
+                else window.queryConfidences[currentQuery] = result;
+            }
         }
     }
 }
@@ -321,7 +358,6 @@ function showMainMenu() {
     const botSelect = newElement('select', { id: "botFlowId" });
     const refreshButton = newElement('button', { innerText: "Refresh" });
     addElements([botSelect, refreshButton], botFlowLabel);
-    registerElement(refreshButton, "click", () => { clearElement(botSelect); showLoading(populateBotSelect) });
     showLoading(populateBotSelect, [botSelect]);
 
     const flowInputLabel = newElement('label', { innerText: "File: " });
@@ -336,6 +372,7 @@ function showMainMenu() {
     registerElement(flowInput, "change", () => { clearElement(intentSelect); showLoading(populateIntentList, [botSelect.value]) });
 
     registerElement(intentSelect, "change", () => { updateUtterances(botSelect.value, intentSelect.value) });
+    registerElement(refreshButton, "click", () => { clearElement(botSelect); clearElement(intentSelect); showLoading(populateBotSelect) });
 
     const startButton = newElement('button', { innerText: "Start" });
     registerElement(startButton, "click", () => { showLoading(run, [botSelect.value]) });
