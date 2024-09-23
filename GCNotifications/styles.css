@@ -1,130 +1,126 @@
-#inputs label {
-    display: block;
-    margin-bottom: .5em;
-    width: fit-content;
-    user-select: none;
+body {
+    margin: 0;
 }
-table, th, td {
-    padding: 5px;
-    border: 1px solid black;
-    border-collapse: collapse;
+#uiContainer {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(16, 1fr);
+    height: 100vh;
 }
-table {
-    margin: .5em;
+#topicOptions, #addTopic, #addedTopics, #notifications, #globalControls {
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
 }
-td, th {
-    text-align: center;
+#globalControls {
+    grid-column: 1 / span 2;
+    grid-row: 1;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    display: grid;
 }
-th {
-    user-select: none;
+#globalControls .orgName {
+    grid-column: 1 / span 10;
+    grid-row: 1;
+    justify-self: center;
 }
-.raceSelector {
-    padding-top: .5em;
+#globalControls .orgId {
+    grid-column: 1 / span 10;
+    grid-row: 2;
+    justify-self: center;
 }
-dialog {
-    position: fixed;
-    top: 10vh;
-    border: solid black 1px;
-    margin-left: auto;
-    margin-top: 0;
+#globalControls .buttonContainer {
+    grid-column: 1 / span 10;
+    grid-row: 3;
+    justify-self: right;
 }
-dialog div {
-    max-height: calc(80vh - 4em - 2px - 1.5em);
+#globalControls .buttonContainer button {
+    margin-right: .5em;
+}
+#topicOptions {
+    grid-column: 1;
+    grid-row: 2 / span 6;
     overflow-y: scroll;
 }
-dialog h2 {
-    margin-top: .5em;
-    margin-bottom: .5em;
+#addTopic {
+    grid-column: 2;
+    grid-row: 2 / span 2;
 }
-body:has(dialog[open]) {
-    overflow: hidden;
+#addedTopics {
+    grid-column: 2;
+    grid-row: 4 / span 4;
+    overflow-y: scroll;
 }
-.modal-close {
-    float: right;
-    user-select: none;
-    cursor: pointer;
+#notifications {
+    grid-column: 1 / span 2;
+    grid-row: 8 / span 9;
+    overflow-y: scroll;
 }
-#page {
-    margin-top: .5em;
-}
-.tableContainer {
-    width: fit-content;
-}
-.pageButtons {
+.header {
+    position: sticky;
+    top: 0;
+    background-color: lightgrey;
     text-align: center;
+    margin: 0;
+    padding: .25em;
 }
-.pageButtons button {
-    margin-left: .5em;
-    margin-right: .5em;
-    margin-bottom: .5em;
-}
-th * {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-}
-.nameField {
-    cursor: pointer;
-}
-
-[data-current-sort="true"][data-sort-direction="asc"]::after {
-    content: " ▲";
-    font-size: .75em;
-}
-[data-current-sort="true"][data-sort-direction="desc"]::after {
-    content: " ▼";
-    font-size: .75em;
-}
-th span {
-    padding-top: .5em;
-    padding-bottom: .5em;
-}
-table.sortable th span {
-    cursor: pointer;
-}
-.fieldOption {
-    margin-top: .5em;
-    margin-bottom: .5em;
-}
-.fieldOption select, .fieldOption input, .fieldOption button {
-    margin-right: .5em;
-}
-#page>button {
-    margin-right: .5em;
-}
-#loadIcon {
-    position: fixed;
-    height: 3em;
-    width: 3em;
-    top: calc(50% - calc(3em / 2));
-    left: calc(50% - calc(3em / 2));
-    z-index: 10;
-    background-repeat: no-repeat;
-    background-size: 3em 3em;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M18.364 5.63604L16.9497 7.05025C15.683 5.7835 13.933 5 12 5C8.13401 5 5 8.13401 5 12C5 15.866 8.13401 19 12 19C15.866 19 19 15.866 19 12H21C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C14.4853 3 16.7353 4.00736 18.364 5.63604Z'%3E%3C/path%3E%3C/svg%3E");
-    visibility: hidden;
-}
-#loadIcon.shown{
-    visibility: visible;
-    animation-name: spin;
-    animation-duration: 1500ms;
-    animation-iteration-count: infinite;
-    animation-timing-function: linear; 
-}
-
-@keyframes spin {
-    from {
-        transform:rotate(0deg);
-    }
-    to {
-        transform:rotate(360deg);
-    }
-}
-#header {
-    text-align: center;
+.addedTopic, .topicOption {
     padding: .5em;
-    background-color: lightgray;
-    margin: .5em;
-    border-radius: 5px;
     border: 1px solid black;
+    border-radius: .25em;
+    margin: .25em;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+}
+.fullNotificationBody {
+    overflow-y: scroll;
+    max-height: 20em;
+}
+summary {
+    cursor: pointer;
+    user-select: none;
+}
+details {
+    padding: .5em;
+    margin: .25em;
+    border: 1px solid black;
+    border-radius: .25em;
+}
+.addedTopic button, .topicOption button {
+    grid-column: 5;
+}
+.addedTopic span, .topicOption span {
+    grid-column: 1 / span 4;
+    white-space: nowrap;
+    overflow-x: hidden;
+}
+#topicConfig {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+}
+#topicConfig label {
+    display: block;
+    padding-bottom: .25em;
+}
+#topicConfig .topicInputs {
+    grid-row: 2 / span 2;
+    grid-column: 1 / span 4;
+
+}
+#topicConfig button {
+    grid-row: 3;
+    grid-column: 5;
+}
+#topicConfig .topicName {
+    grid-row: 1;
+    grid-column: 1 / span 5;
+    white-space: nowrap;
+    overflow-x: hidden;
+}
+#topicConfig {
+    margin-left: .25em;
+    margin-right: .25em;
+    padding-left: .5em;
+    padding-right: .5em;
 }

@@ -188,6 +188,20 @@ function addSubscriptions(channelId, subscriptions) {
     return makeGenesysRequest(`/api/v2/notifications/channels/${channelId}/subscriptions`, 'POST', subscriptions);
 }
 
+async function removeSubscription(channelId, topicName) {
+    const topic = "v2." + topicName;
+    const subscriptionIndex = window.subscribedTopics.indexOf(topic);
+    if (subscriptionIndex < 0) return;
+
+    window.subscribedTopics.splice(subscriptionIndex, 1);
+    console.log(subscribedTopics)
+    const newTopics = [];
+    for (let topic of window.subscribedTopics) {
+        newTopics.push({id: topic});
+    }
+    return makeGenesysRequest(`/api/v2/notifications/channels/${channelId}/subscriptions`, 'PUT', newTopics);
+}
+
 async function run() {
     if (!websocket) {
         const newChannel = await createChannel();
@@ -200,6 +214,8 @@ async function run() {
         socketConnection.onmessage = (event) => {
             const message = JSON.parse(event.data);
             if (!window.subscribedTopics.includes(message.topicName)) return;
+            const notification = createNotificationUi(message.topicName, message.eventBody);
+            addElement(notification, eById('notifications'));
             log(message.eventBody || "");
         }
         socketConnection.onerror = (event) => {
@@ -208,18 +224,6 @@ async function run() {
             window.subscribedTopics = [];
         }
     }
-
-    const topic = "v2." + eById('topic').value;
-    if (window.subscribedTopics.includes(topic)) return;
-    window.subscribedTopics.push(topic);
-    const params = getParams(topic);
-    for (const param of params) {
-        const value = eById(param.key).value;
-        if (!value) return;
-        topic = topic.replace(param.replace, value);
-    }
-
-    await addSubscriptions(window.websocket, [{id: topic}]);
 }
 
 function showLoginPage() {
@@ -243,39 +247,116 @@ function showLoginPage() {
     addElement(inputsWrapper, parent);
 }
 
+function createUiSection(id, headerName) {
+    const section = newElement('div', {id: id});
+    const header = newElement('h2', {innerText: headerName, class: ["header"]})
+    addElement(header, section);
+    return section;
+}
+
+function createNotificationUi(topicName, notificationObject) {
+    const details = newElement('details');
+    const summary = newElement('summary', {innerText: topicName});
+    const pre = newElement("pre", {innerText: JSON.stringify(notificationObject, null, 2), class: ["fullNotificationBody"]})
+    addElements([summary, pre], details);
+    return details;
+}
+
+function createAddedTopic(topicName) {
+    const addedTopic = newElement('div', { class: ["addedTopic"]});
+    const nameSpan = newElement('span', {innerText: topicName});
+    const removeButton = newElement('button', {innerText: "Remove"});
+    registerElement(removeButton, 'click', async ()=>{
+        await removeSubscription(window.websocket, topicName);
+        addedTopic.remove();
+    })
+    addElements([nameSpan, removeButton], addedTopic);
+    return addedTopic;
+}
+
+function createTopicOption(topicName) {
+    const addedTopic = newElement('div', { class: ["topicOption"]});
+    const nameSpan = newElement('span', {innerText: topicName});
+    const configureButton = newElement('button', {innerText: "Configure"});
+    registerElement(configureButton, "click", ()=>{
+        const addTopicSection = eById("addTopic");
+        clearElement(addTopicSection, "#topicConfig");
+        const topicOptions = createAddTopic(topicName);
+        addElement(topicOptions, addTopicSection);
+    })
+    addElements([nameSpan, configureButton], addedTopic);
+    return addedTopic;
+}
+
+function createAddTopic(topicName) {
+    const topicConfig = newElement('div', { id: "topicConfig"});
+
+    const topicNameElem = newElement('div', {class: ['topicName'], innerText: topicName});
+    const topicInputs = newElement('div', {class: ['topicInputs']});
+    const addTopicButton = newElement('button', { innerText: "Add"});
+
+    const topicParams = getParams(topicName);
+    for (let param of topicParams) {
+        const paramLabel = newElement("label", {innerText: `${prettyPrintCamelCase(param.key)}: `});
+        const paramInput = newElement('input', { id: param.key });
+        addElement(paramInput, paramLabel);
+        addElement(paramLabel, topicInputs);
+    }
+
+    registerElement(addTopicButton, "click", async ()=>{
+        await run(); // makes sure that a websocket is created
+
+        const addedTopicSection = eById('addedTopics');
+        const addedTopic = createAddedTopic(topicName);
+        addElement(addedTopic, addedTopicSection);
+
+        const topic = "v2." + topicName;
+        if (window.subscribedTopics.includes(topic)) return;
+        window.subscribedTopics.push(topic);
+        const params = getParams(topic);
+        for (const param of params) {
+            const value = eById(param.key).value;
+            if (!value) return;
+            topic = topic.replace(param.replace, value);
+        }
+    
+        await addSubscriptions(window.websocket, [{id: topic}]);
+    })
+
+    addElements([topicNameElem, topicInputs, addTopicButton], topicConfig)
+    return topicConfig;
+}
+
 function showMainMenu() {
     const page = eById('page');
     clearElement(page);
-    const inputs = newElement("div", { id: "inputs" });
 
-    const topicSelectLabel = newElement('label', {  });
-    const topicSelect = newElement('select', { id: "topic"} );
-    addElement(topicSelect, topicSelectLabel);
+    const uiContainer = newElement('div', {id: "uiContainer"});
 
+    const globalControls = newElement('div', {id: "globalControls"});
+    const orgName = newElement('div', {innerText: "Current Org Name: ", class: ["orgName"]});
+    const orgId = newElement('div', {innerText: "Current Org ID: ", class: ["orgId"]});
+    const buttonContainer = newElement('div', { class: ["buttonContainer"]})
+    const logoutButton = newElement('button', {innerText: "Logout"});
+    addElements([logoutButton], buttonContainer);
+    addElements([orgName, orgId, buttonContainer], globalControls);
+
+    registerElement(logoutButton, 'click', logout);
+
+    const topicOptions = createUiSection("topicOptions", "Topics");
+    const addTopic = createUiSection("addTopic", "Topic Configuration");
+    const addedTopics = createUiSection("addedTopics", "Added Topics");
+    const notifications = createUiSection("notifications", "Notifications");
+
+    addElements([globalControls, topicOptions, addTopic, addedTopics, notifications], uiContainer);
+
+    // make this list filter-able
     for (const topic of topics.sort()) {
-        const topicParts = topic.split(".");
-        const groupName = topicParts.shift();
-        if (!qs(`#${groupName}`, topicSelect)) {
-            const topicGroup = newElement('optgroup', { id: groupName, label: prettyPrintCamelCase(groupName) });
-            addElement(topicGroup, topicSelect);
-        }
-
-        const topicName = topicParts.join(".");
-        const topicOption = newElement('option', { innerText: topicName, value: topic });
-        addElement(topicOption, topicSelect);
+        const topicOption = createTopicOption(topic);
+        addElement(topicOption, topicOptions);
     }
 
-    updateInputs(topics[0], inputs);
-    registerElement(topicSelect, "change", ()=>{updateInputs(topicSelect.value, inputs)});
-
-    const startButton = newElement('button', { innerText: "Start" });
-    registerElement(startButton, "click", run);
-    const logoutButton = newElement('button', { innerText: "Logout" });
-    registerElement(logoutButton, "click", logout);
-    const results = newElement('div', { id: "results" });
-
-    addElement(topicSelectLabel, inputs);
-    addElements([inputs, startButton, logoutButton, results], page);
+    addElement(uiContainer, page);
 
     getOrgDetails().then(function (result) {
         if (result.status !== 200) {
@@ -283,9 +364,8 @@ function showMainMenu() {
             logout();
             return;
         }
-        window.orgName = result.name;
-        window.orgId = result.id;
-        eById("header").innerText = `Current Org Name: ${result.name} (${result.thirdPartyOrgName})\nCurrent Org ID: ${result.id}`
+        orgName.innerText = `Current Org Name: ${result.name}`;
+        orgId.innerText = `Current Org ID: ${result.id}`
     }).catch(function (error) { log(error, "error"); logout(); });
 }
 
