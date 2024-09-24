@@ -18,6 +18,7 @@ body {
     grid-template-columns: repeat(10, 1fr);
     grid-template-rows: repeat(2, 1fr);
     display: grid;
+    background-color: lightgray;
 }
 #globalControls .orgName {
     grid-column: 3 / span 6;
