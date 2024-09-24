@@ -1,200 +1,20 @@
-const topics = [
-    "analytics.conversations.details.jobs.availability",
-    "analytics.flow.{flowId}.aggregates",
-    "analytics.flow.{flowOutcomeId}.aggregates",
-    "analytics.queues.{queueId}.observations",
-    "analytics.users.details.jobs.availability",
-    "analytics.users.{userId}.aggregates",
-    "analytics.wrapup.{wrapupCodeId}.aggregates",
-    "architect.dependencytracking.build",
-    "architect.prompts.{promptId}",
-    "architect.prompts.{promptId}.resources.{languageCode}",
-    "architect.systemprompts.{promptId}.resources.{languageCode}",
-    "audits.entitytype.{entityType}.entityid.{entityId}",
-    "businessunits.{businessUnitId}.workforcemanagement.intraday",
-    "contentmanagement.documents.{documentId}",
-    "contentmanagement.workspaces.{workspaceId}.documents",
-    "conversations.{conversationId}.transcription",
-    "detail.events.conversation.{conversationId}.acd.end",
-    "detail.events.conversation.{conversationId}.acd.start",
-    "detail.events.conversation.{conversationId}.acw",
-    "detail.events.conversation.{conversationId}.attributes",
-    "detail.events.conversation.{conversationId}.contact",
-    "detail.events.conversation.{conversationId}.customer.end",
-    "detail.events.conversation.{conversationId}.customer.start",
-    "detail.events.conversation.{conversationId}.flow.end",
-    "detail.events.conversation.{conversationId}.flow.outcome",
-    "detail.events.conversation.{conversationId}.flow.start",
-    "detail.events.conversation.{conversationId}.outbound",
-    "detail.events.conversation.{conversationId}.user.end",
-    "detail.events.conversation.{conversationId}.user.start",
-    "detail.events.conversation.{conversationId}.voicemail.end",
-    "detail.events.conversation.{conversationId}.voicemail.start",
-    "detail.events.conversation.{conversationId}.wrapup",
-    "externalcontacts.contacts.{contactId}",
-    "externalcontacts.contacts.{contactId}.journey.sessions",
-    "externalcontacts.contacts.{contactId}.notes.{noteId}",
-    "externalcontacts.contacts.{contactId}.unresolved",
-    "externalcontacts.organization.{organizationId}",
-    "externalcontacts.organization.{organizationId}.notes.{noteId}",
-    "externalcontacts.relationships.{relationshipId}",
-    "flows.instances.flow.{flowId}",
-    "flows.outcomes.{outcomeId}",
-    "flows.{flowId}",
-    "gamification.scorecards.users.{userId}",
-    "groups.{userId}.greetings",
-    "journey.sessions.{sessionId}.action.events",
-    "journey.sessions.{sessionId}.app.events",
-    "journey.sessions.{sessionId}.outcome.events",
-    "journey.sessions.{sessionId}.web.events",
-    "managementunits.{managementUnitId}.workforcemanagement.intraday",
-    "operations.events.{operationalEventId}",
-    "outbound.attemptlimits.{outboundAttemptId}",
-    "outbound.callabletimesets.{callbackTimesetId}",
-    "outbound.campaignrules.{campaignRuleId}",
-    "outbound.campaigns.{campaignId}",
-    "outbound.campaigns.{campaignId}.progress",
-    "outbound.campaigns.{campaignId}.stats",
-    "outbound.contactlistfilters.{contactListId}",
-    "outbound.contactlists.{campaignId}",
-    "outbound.contactlists.{contactListId}.importstatus",
-    "outbound.dnclists.{DNCListId}",
-    "outbound.dnclists.{DNCListId}.importstatus",
-    "outbound.emailcampaigns.{emailCampaignId}",
-    "outbound.emailcampaigns.{emailCampaignId}.progress",
-    "outbound.importtemplates.{importTemplateId}.importstatus",
-    "outbound.messagingcampaigns.{messagingCampaignId}",
-    "outbound.messagingcampaigns.{messagingCampaignId}.progress",
-    "outbound.responsesets.{callAnalysisSetId}",
-    "outbound.rulesets.{ruleSetId}",
-    "outbound.schedules.campaigns.{campaignId}",
-    "outbound.schedules.sequences.{sequenceId}",
-    "outbound.sequences.{sequenceId}",
-    "outbound.settings",
-    "outbound.wrapupcodemappings.{wrapUpCodeMappingId}",
-    "quality.evaluations",
-    "routing.queues.{queueId}.conversations",
-    "routing.queues.{queueId}.conversations.callbacks",
-    "routing.queues.{queueId}.conversations.calls",
-    "routing.queues.{queueId}.conversations.chats",
-    "routing.queues.{queueId}.conversations.cobrowseSessions",
-    "routing.queues.{queueId}.conversations.emails",
-    "routing.queues.{queueId}.conversations.messages",
-    "routing.queues.{queueId}.conversations.screenshares",
-    "routing.queues.{queueId}.conversations.socialexpressions",
-    "routing.queues.{queueId}.conversations.videos",
-    "routing.queues.{queueId}.users",
-    "speechandtextanalytics.programs.general.jobs.{jobId}",
-    "speechandtextanalytics.programs.publishjobs.{jobId}",
-    "speechandtextanalytics.topics.publishjobs.{jobId}",
-    "taskmanagement.workitems.queues.{queueId}",
-    "taskmanagement.workitems.users.{userId}",
-    "taskmanagement.workitems.{workitemId}",
-    "telephony.providers.edges.phones.{phoneId}",
-    "telephony.providers.edges.trunks.{trunkId}",
-    "telephony.providers.edges.trunks.{trunkId}.metrics",
-    "telephony.providers.edges.{edgeId}",
-    "telephony.providers.edges.{edgeId}.logicalinterfaces",
-    "telephony.providers.edges.{edgeId}.metrics",
-    "telephony.providers.edges.{edgeId}.softwareupdate",
-    "users.{userId}.activity",
-    "users.{userId}.alerting.alerts",
-    "users.{userId}.alerting.heartbeat.alerts",
-    "users.{userId}.alerting.heartbeat.rules",
-    "users.{userId}.alerting.interactionstats.alerts",
-    "users.{userId}.alerting.interactionstats.rules",
-    "users.{userId}.alerting.rules",
-    "users.{userId}.analytics.reporting.exports",
-    "users.{userId}.badges.chats",
-    "users.{userId}.callforwarding",
-    "users.{userId}.conversations",
-    "users.{userId}.conversations.callbacks",
-    "users.{userId}.conversations.calls",
-    "users.{userId}.conversations.chats",
-    "users.{userId}.conversations.cobrowseSessions",
-    "users.{userId}.conversations.emails",
-    "users.{userId}.conversations.inbound.typing.event",
-    "users.{userId}.conversations.messages",
-    "users.{userId}.conversations.screenshares",
-    "users.{userId}.conversations.socialexpressions",
-    "users.{userId}.conversations.videos",
-    "users.{userId}.conversations.{conversationId}.recordings",
-    "users.{userId}.conversations.{conversationId}.recordings.{recordingId}",
-    "users.{userId}.conversationsummary",
-    "users.{userId}.fax.documents",
-    "users.{userId}.geolocation",
-    "users.{userId}.greeting",
-    "users.{userId}.integrationpresence",
-    "users.{userId}.outbound.contactlists.{contactListId}.export",
-    "users.{userId}.outbound.dnclists.{DNCListId}.export",
-    "users.{userId}.outofoffice",
-    "users.{userId}.presence",
-    "users.{userId}.recordings",
-    "users.{userId}.routingStatus",
-    "users.{userId}.station",
-    "users.{userId}.tokens",
-    "users.{userId}.userrecordings",
-    "users.{userId}.voicemail.messages",
-    "users.{userId}.wem.coaching.notifications",
-    "users.{userId}.wem.learning.assignment",
-    "users.{userId}.workforcemanagement.adherence",
-    "users.{userId}.workforcemanagement.adherence.explanations.jobs",
-    "users.{userId}.workforcemanagement.adherence.historical.bulk",
-    "users.{userId}.workforcemanagement.alternative.shift.jobs",
-    "users.{userId}.workforcemanagement.historicaladherencequery",
-    "users.{userId}.workforcemanagement.integrations.hris.timeofftypes.jobs",
-    "users.{userId}.workforcemanagement.notifications",
-    "users.{userId}.workforcemanagement.performanceprediction.schedules.recalculations",
-    "users.{userId}.workforcemanagement.schedules",
-    "users.{userId}.workforcemanagement.shrinkage.jobs",
-    "users.{userId}.workforcemanagement.timeoffbalance.jobs",
-    "users.{userId}.workforcemanagement.timeoffrequests",
-    "video.conferences.{conferenceJid}",
-    "webdeployments.configurations.{configurationId}",
-    "webdeployments.deployments.{deploymentId}",
-    "wem.learning.assignments.modules.{moduleId}",
-    "workflows.{workflowId}.conversations.inbound.typing.event",
-    "workforcemanagement.agents",
-    "workforcemanagement.agents.{agentId}.adherence.explanations.{adherenceExplanationId}",
-    "workforcemanagement.businessunits.{businessUnitId}.activityplans.jobs",
-    "workforcemanagement.businessunits.{businessUnitId}.activityplans.runs.jobs",
-    "workforcemanagement.businessunits.{businessUnitId}.adherence.explanations",
-    "workforcemanagement.businessunits.{businessUnitId}.forecasts.staffingrequirement",
-    "workforcemanagement.businessunits.{businessUnitId}.schedules",
-    "workforcemanagement.businessunits.{businessUnitId}.scheduling.runs",
-    "workforcemanagement.businessunits.{businessUnitId}.shorttermforecasts",
-    "workforcemanagement.businessunits.{businessUnitId}.shorttermforecasts.copy",
-    "workforcemanagement.businessunits.{businessUnitId}.shorttermforecasts.generate",
-    "workforcemanagement.businessunits.{businessUnitId}.shorttermforecasts.import",
-    "workforcemanagement.businessunits.{businessUnitId}.workplanbids.{bidId}",
-    "workforcemanagement.historicaldata.deletejob",
-    "workforcemanagement.historicaldata.status",
-    "workforcemanagement.managementunits.{managementUnitId}",
-    "workforcemanagement.managementunits.{managementUnitId}.adherence",
-    "workforcemanagement.managementunits.{managementUnitId}.agents.sync",
-    "workforcemanagement.managementunits.{managementUnitId}.schedules",
-    "workforcemanagement.managementunits.{managementUnitId}.shifttrades.state.bulk",
-    "workforcemanagement.performanceprediction.schedules.{scheduleId}",
-    "workforcemanagement.teams.{teamId}.adherence",
-    "workforcemanagement.users.{userId}.schedules.query",
-    "workforcemanagement.users.{userId}.schedules.search",
-]
-
 function createChannel() {
     return makeGenesysRequest(`/api/v2/notifications/channels`, 'POST');
+}
+
+function getAvailableTopics() {
+    return makeGenesysRequest(`/api/v2/notifications/availabletopics?expand=description,transports,topicParameters,visibility&includePreview=true`);
 }
 
 function addSubscriptions(channelId, subscriptions) {
     return makeGenesysRequest(`/api/v2/notifications/channels/${channelId}/subscriptions`, 'POST', subscriptions);
 }
 
-async function removeSubscription(channelId, topicName) {
-    const topic = "v2." + topicName;
-    const subscriptionIndex = window.subscribedTopics.indexOf(topic);
+function removeSubscription(channelId, topicName) {
+    const subscriptionIndex = window.subscribedTopics.indexOf(topicName);
     if (subscriptionIndex < 0) return;
 
     window.subscribedTopics.splice(subscriptionIndex, 1);
-    console.log(subscribedTopics)
     const newTopics = [];
     for (let topic of window.subscribedTopics) {
         newTopics.push({id: topic});
@@ -254,6 +74,19 @@ function createUiSection(id, headerName) {
     return section;
 }
 
+function createTopicOptionsUi() {
+    const section = newElement('div', {id: "topicOptions"});
+    const header = newElement('h2', {innerText: "Topics", class: ["header"]});
+    const searchBar = newElement('input');
+    registerElement(searchBar, 'input', ()=>{
+        const filteredList = window.availableTopics.filter((e)=>e.id.toLowerCase().includes(searchBar.value.toLowerCase()));
+        populateTopics(filteredList);
+    })
+    addElement(searchBar, header)
+    addElement(header, section);
+    return section;
+}
+
 function createNotificationUi(topicName, notificationObject) {
     const details = newElement('details');
     const summary = newElement('summary', {innerText: topicName});
@@ -274,53 +107,56 @@ function createAddedTopic(topicName) {
     return addedTopic;
 }
 
-function createTopicOption(topicName) {
+function createTopicOption(topic) {
     const addedTopic = newElement('div', { class: ["topicOption"]});
-    const nameSpan = newElement('span', {innerText: topicName});
-    const configureButton = newElement('button', {innerText: "Configure"});
-    registerElement(configureButton, "click", ()=>{
+    const nameSpan = newElement('span', {innerText: `${topic.id}\n${topic.description}`});
+    registerElement(addedTopic, "click", ()=>{
         const addTopicSection = eById("addTopic");
         clearElement(addTopicSection, "#topicConfig");
-        const topicOptions = createAddTopic(topicName);
+        const chosenTopic = window.availableTopics.find((e)=>e.id === topic.id);
+        const topicOptions = createAddTopic(chosenTopic);
         addElement(topicOptions, addTopicSection);
     })
-    addElements([nameSpan, configureButton], addedTopic);
+    addElement(nameSpan, addedTopic);
     return addedTopic;
 }
 
-function createAddTopic(topicName) {
+function createAddTopic(topic) {
     const topicConfig = newElement('div', { id: "topicConfig"});
 
-    const topicNameElem = newElement('div', {class: ['topicName'], innerText: topicName});
+    const topicNameElem = newElement('div', {class: ['topicName'], innerText: `${topic.visibility === "Preview" ? "[Preview] ": ""}${topic.id}`});
     const topicInputs = newElement('div', {class: ['topicInputs']});
     const addTopicButton = newElement('button', { innerText: "Add"});
 
-    const topicParams = getParams(topicName);
-    for (let param of topicParams) {
-        const paramLabel = newElement("label", {innerText: `${prettyPrintCamelCase(param.key)}: `});
-        const paramInput = newElement('input', { id: param.key });
+    const paramInputList = [];
+    for (let param of topic.topicParameters) {
+
+        const paramName = param.split(" ").map((e) => e.substring(0,1).toUpperCase() + e.substring(1)).join(" ");
+
+        const paramLabel = newElement("label", {innerText: `${paramName}: `});
+        const paramInput = newElement('input');
+        paramInputList.push(paramInput);
         addElement(paramInput, paramLabel);
         addElement(paramLabel, topicInputs);
     }
 
     registerElement(addTopicButton, "click", async ()=>{
         await run(); // makes sure that a websocket is created
-
-        const addedTopicSection = eById('addedTopics');
-        const addedTopic = createAddedTopic(topicName);
-        addElement(addedTopic, addedTopicSection);
-
-        const topic = "v2." + topicName;
-        if (window.subscribedTopics.includes(topic)) return;
-        window.subscribedTopics.push(topic);
-        const params = getParams(topic);
-        for (const param of params) {
-            const value = eById(param.key).value;
-            if (!value) return;
-            topic = topic.replace(param.replace, value);
+        let topicString = topic.id;
+        for (let paramInput of paramInputList) {
+            if (!paramInput.value) return;
+            topicString = topicString.replace("{id}", paramInput.value);
         }
+        
+        if (window.subscribedTopics.includes(topicString)) return;
+        const addResult = await addSubscriptions(window.websocket, [{id: topicString}]);
+        if (addResult.status !== 200) return;
+
+        window.subscribedTopics.push(topicString);
+        const addedTopicSection = eById('addedTopics');
+        const addedTopic = createAddedTopic(topicString);
+        addElement(addedTopic, addedTopicSection);
     
-        await addSubscriptions(window.websocket, [{id: topic}]);
     })
 
     addElements([topicNameElem, topicInputs, addTopicButton], topicConfig)
@@ -343,7 +179,7 @@ function showMainMenu() {
 
     registerElement(logoutButton, 'click', logout);
 
-    const topicOptions = createUiSection("topicOptions", "Topics");
+    const topicOptions = createTopicOptionsUi();
     const addTopic = createUiSection("addTopic", "Topic Configuration");
     const addedTopics = createUiSection("addedTopics", "Added Topics");
     const notifications = createUiSection("notifications", "Notifications");
@@ -351,10 +187,16 @@ function showMainMenu() {
     addElements([globalControls, topicOptions, addTopic, addedTopics, notifications], uiContainer);
 
     // make this list filter-able
-    for (const topic of topics.sort()) {
-        const topicOption = createTopicOption(topic);
-        addElement(topicOption, topicOptions);
-    }
+    showLoading(async ()=>{
+        const availableTopics = await getAvailableTopics();
+        for (const topic of availableTopics.entities) {
+            if (!topic.transports.includes("All") && !topic.transports.includes("Websocket")) continue;
+            const topicParts = topic.id.split(".");
+            if (topicParts[1] === "system") continue;
+            window.availableTopics.push(topic);
+        }
+        populateTopics(window.availableTopics);
+    });
 
     addElement(uiContainer, page);
 
@@ -369,6 +211,15 @@ function showMainMenu() {
     }).catch(function (error) { log(error, "error"); logout(); });
 }
 
+function populateTopics(availableOptions) {
+    const topicsSelect = eById('topicOptions');
+    clearElement(topicsSelect, ".topicOption");
+    for (const topic of availableOptions) {
+        const topicElem = createTopicOption(topic);
+        addElement(topicElem, topicsSelect);
+    }
+}
+
 function mapProperty(propA, propB, objects) {
     const mapping = {};
     for (let object of objects) {
@@ -381,48 +232,8 @@ async function getOrgDetails() {
     return makeGenesysRequest(`/api/v2/organizations/me`);
 }
 
-function getParams(topic) {
-    const results = [...topic.matchAll(/\{(\w+)\}/g)];
-    const formattedResults = [];
-    for (let result of results) {
-        const formattedResult = {};
-        formattedResult.replace = result[0];
-        formattedResult.key = result[1];
-        formattedResults.push(formattedResult);
-    }
-    return formattedResults;
-}
-
-function updateInputs(fieldName, inputsContainer) {
-    clearElement(inputsContainer, ".paramInput");
-    const parameters = getParams(fieldName);
-    
-    for (let parameter of parameters) {
-        const paramInput = createInput(parameter.key);
-        addElement(paramInput, inputsContainer);
-    }
-}
-
-function createInput(parameter) {
-    const inputLabel = newElement('label', { innerText: `${prettyPrintCamelCase(parameter)}: `, class: ["paramInput"] });
-    const inputElem = newElement('input', { id: parameter });
-    addElement(inputElem, inputLabel);
-    return inputLabel;
-}
-
-function prettyPrintCamelCase(string) {
-    const capitalRegex = /[A-Z]/g;
-    const matches = [...string.matchAll(capitalRegex)];
-    matches.reverse();
-    for (let match of matches) {
-        const end = string.substring(match.index);
-        const begin = string.substring(0, match.index);
-        string = begin + " " + end;
-    }
-    return string[0].toUpperCase() + string.substring(1);
-}
-
 var websocket;
 var subscribedTopics = [];
+var availableTopics = [];
 
 runLoginProcess(showLoginPage, showMainMenu);
