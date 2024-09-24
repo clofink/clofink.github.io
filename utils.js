@@ -94,6 +94,23 @@ function replaceInArray(array, item, replacement) {
     if (indexToRemove < 0) return;
     array.splice(indexToRemove, 1, replacement);
 }
+
+function capitalizeWords(string) {
+    return string.split(" ").map((e) => e.substring(0,1).toUpperCase() + e.substring(1)).join(" ");
+}
+
+function prettyPrintCamelCase(string) {
+    const capitalRegex = /[A-Z]/g;
+    const matches = [...string.matchAll(capitalRegex)];
+    matches.reverse();
+    for (let match of matches) {
+        const end = string.substring(match.index);
+        const begin = string.substring(0, match.index);
+        string = begin + " " + end;
+    }
+    return string[0].toUpperCase() + string.substring(1);
+}
+
 async function showLoading(loadingFunc, args = [], spinnerSelector = "#loadIcon") {
     const spinnerElement = qs(spinnerSelector);
     spinnerElement.classList.add("shown");
