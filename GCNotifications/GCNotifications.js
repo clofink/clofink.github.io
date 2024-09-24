@@ -22,7 +22,7 @@ function removeSubscription(channelId, topicName) {
     return makeGenesysRequest(`/api/v2/notifications/channels/${channelId}/subscriptions`, 'PUT', newTopics);
 }
 
-async function run() {
+async function createWebsocket() {
     if (!websocket) {
         const newChannel = await createChannel();
         window.websocket = newChannel.id;
@@ -124,14 +124,14 @@ function createTopicOption(topic) {
 function createAddTopic(topic) {
     const topicConfig = newElement('div', { id: "topicConfig"});
 
-    const topicNameElem = newElement('div', {class: ['topicName'], innerText: `${topic.visibility === "Preview" ? "[Preview] ": ""}${topic.id}`});
+    const topicNameElem = newElement('div', {class: ['topicName'], innerText: `${topic.visibility === "Preview" ? "[PREVIEW] ": ""}${topic.id}`});
     const topicInputs = newElement('div', {class: ['topicInputs']});
     const addTopicButton = newElement('button', { innerText: "Add"});
 
     const paramInputList = [];
     for (let param of topic.topicParameters) {
 
-        const paramName = param.split(" ").map((e) => e.substring(0,1).toUpperCase() + e.substring(1)).join(" ");
+        const paramName = capitalizeWords(param);
 
         const paramLabel = newElement("label", {innerText: `${paramName}: `});
         const paramInput = newElement('input');
@@ -141,22 +141,25 @@ function createAddTopic(topic) {
     }
 
     registerElement(addTopicButton, "click", async ()=>{
-        await run(); // makes sure that a websocket is created
+        // makes sure that a websocket is created
+        await createWebsocket();
+
         let topicString = topic.id;
         for (let paramInput of paramInputList) {
             if (!paramInput.value) return;
             topicString = topicString.replace("{id}", paramInput.value);
         }
-        
+
         if (window.subscribedTopics.includes(topicString)) return;
         const addResult = await addSubscriptions(window.websocket, [{id: topicString}]);
+        // don't add the subscription to the list if it wasn't added successfully
+        // FIXME: add a way to show the error message
         if (addResult.status !== 200) return;
 
         window.subscribedTopics.push(topicString);
         const addedTopicSection = eById('addedTopics');
         const addedTopic = createAddedTopic(topicString);
         addElement(addedTopic, addedTopicSection);
-    
     })
 
     addElements([topicNameElem, topicInputs, addTopicButton], topicConfig)
@@ -186,13 +189,11 @@ function showMainMenu() {
 
     addElements([globalControls, topicOptions, addTopic, addedTopics, notifications], uiContainer);
 
-    // make this list filter-able
     showLoading(async ()=>{
         const availableTopics = await getAvailableTopics();
         for (const topic of availableTopics.entities) {
             if (!topic.transports.includes("All") && !topic.transports.includes("Websocket")) continue;
-            const topicParts = topic.id.split(".");
-            if (topicParts[1] === "system") continue;
+            if (isSystemTopic(topic.id)) continue;
             window.availableTopics.push(topic);
         }
         populateTopics(window.availableTopics);
@@ -211,6 +212,11 @@ function showMainMenu() {
     }).catch(function (error) { log(error, "error"); logout(); });
 }
 
+function isSystemTopic(topicName) {
+    const topicParts = topicName.split(".");
+    return topicParts[1] === "system";
+}
+
 function populateTopics(availableOptions) {
     const topicsSelect = eById('topicOptions');
     clearElement(topicsSelect, ".topicOption");
@@ -218,14 +224,6 @@ function populateTopics(availableOptions) {
         const topicElem = createTopicOption(topic);
         addElement(topicElem, topicsSelect);
     }
-}
-
-function mapProperty(propA, propB, objects) {
-    const mapping = {};
-    for (let object of objects) {
-        mapping[object[propA]] = object[propB]
-    }
-    return mapping;
 }
 
 async function getOrgDetails() {
