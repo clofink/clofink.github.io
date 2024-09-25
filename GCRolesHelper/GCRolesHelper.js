@@ -226,7 +226,31 @@ function showMainMenu() {
 }
 
 async function exportRoles() {
-    // get the roles and download them
+    if (window?.allRoles?.length < 1 || window?.allPermissions?.length < 1) return;
+    const headers = ["Permission"];
+    const sortByName = sortByKey('name', false);
+    window.allRoles.sort(sortByName);
+    window.allPermissions.sort(sortByName);
+    const rolePerms = [];
+    for (const role of window.allRoles) {
+        headers.push(role.name);
+        rolePerms.push(getPermissionsFromRole(role));
+    }
+    const data = [];
+    for (const permission of window.allPermissions) {
+        const rowData = [permission.name];
+        for (const role of rolePerms) {
+            if (role.some((e) => e.name === permission.name)) {
+                rowData.push("X");
+            }
+            else {
+                rowData.push("");
+            }
+        }
+        data.push(rowData);
+    }
+    const download = createDownloadLink("Roles Export.csv", Papa.unparse([headers, ...data]), "text/csv");
+    download.click();
 }
 
 function populateCurrentRoles(roles) {
@@ -283,6 +307,12 @@ function populateAvailablePermissions(permissions) {
         const item = createAvailablePermission(permission);
         addElement(item, permissionsContainer)
     }
+}
+
+function createDownloadLink(fileName, fileContents, fileType) {
+    const fileData = new Blob([fileContents], { type: fileType });
+    const fileURL = window.URL.createObjectURL(fileData);
+    return newElement('a', { href: fileURL, download: fileName });
 }
 
 async function getOrgDetails() {
