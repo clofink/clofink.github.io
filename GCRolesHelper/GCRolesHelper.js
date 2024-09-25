@@ -87,7 +87,7 @@ function createAvailablePermission(permission) {
 
 function createRoleOption(role) {
     const roleOption = newElement('div', { class: ["roleOption"] });
-    const nameSpan = newElement('span', { innerText: `${role.name}\n${role.description}` });
+    const nameSpan = newElement('span', { innerText: `${role.default ? "[Default]" : "[Custom]"} ${role.name}\n${role.description}` });
     registerElement(roleOption, "click", () => {
         if (roleOption.classList.contains("selected")) return;
         const allSelected = qsa('#currentRoles .selected');
@@ -171,13 +171,19 @@ function showMainMenu() {
     const currentPermissions = createUiSectionWithFilter("currentPermissions", "Current Permissions", "selectedRolePermissions", (item, searchValue) => { return item.name.toLowerCase().includes(searchValue.toLowerCase()) || item.description.toLowerCase().includes(searchValue.toLowerCase()) }, populateCurrentPermissions);
     const availablePermissions = createUiSectionWithFilter("availablePermissions", "All Available Permissions", "allPermissions", (item, searchValue) => { return item.name.toLowerCase().includes(searchValue.toLowerCase()) || item.description.toLowerCase().includes(searchValue.toLowerCase()) }, populateAvailablePermissions);
 
+    const div1 = newElement('div');
+    const div2 = newElement('div');
+    const div3 = newElement('div');
     const nameLabel = newElement('label', { innerText: "Role Name: " });
     const nameInput = newElement('input');
     addElement(nameInput, nameLabel);
+    addElement(nameLabel, div1);
     const descriptionLabel = newElement('label', { innerText: "Description" });
     const descriptionInput = newElement('input');
     addElement(descriptionInput, descriptionLabel);
+    addElement(descriptionLabel, div2);
     const addButton = newElement('button', { innerText: "Add Role" });
+    addElement(addButton, div3);
 
     registerElement(addButton, 'click', ()=>{showLoading(async ()=>{
         if (!nameInput.value) return;
@@ -185,11 +191,9 @@ function showMainMenu() {
         nameInput.value = "";
         descriptionInput.value = "";
         window.allRoles.push(newRole);
-        const sortByName = sortByKey("name");
-        window.allRoles.sort(sortByName);
         populateCurrentRoles(window.allRoles);
     })})
-    addElements([nameLabel, descriptionLabel, addButton], addNewRole);
+    addElements([div1, div2, div3], addNewRole);
     addElements([globalControls, currentRoles, addNewRole, currentPermissions, availablePermissions], uiContainer);
 
     showLoading(async () => {
@@ -227,6 +231,8 @@ async function exportRoles() {
 
 function populateCurrentRoles(roles) {
     const currentRolesContainer = eById('currentRoles');
+    const sortByName = sortByKey('name', false);
+    roles.sort(sortByName);
     clearElement(currentRolesContainer, ".roleOption")
     for (let i = 0; i < roles.length; i++) {
         const role = roles[i];
@@ -247,7 +253,7 @@ function getPermissionsFromRole(role) {
             allPermissions.push(...resolvePermission(permission.domain, permission.entityName, action));
         }
     }
-    const sortByName = sortByKey('name');
+    const sortByName = sortByKey('name', false);
     window.selectedRolePermissions = allPermissions.sort(sortByName);
     return allPermissions;
 }
