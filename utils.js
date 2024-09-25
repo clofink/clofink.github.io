@@ -82,7 +82,13 @@ async function wait(time) {
         setTimeout(() => {resolve()}, time);
     })
 }
-
+function sortByKey(key) {
+    return function (a, b) {
+        if (a[key] > b[key]) return 1;
+        if (a[key] < b[key]) return -1;
+        return 0;
+    }
+}
 function removeFromArray(array, item) {
     const indexToRemove = array.indexOf(item);
     if (indexToRemove < 0) return;
