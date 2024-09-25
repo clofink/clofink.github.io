@@ -70,8 +70,8 @@ function createNotificationUi(topicName, notificationObject) {
 
 function createCurrentPermission(permission) {
     const currentPermission = newElement('div', { class: ["currentPermission"] });
-    const name = newElement('div', { innerText: permission.name });
-    const description = newElement('div', { innerText: permission.description });
+    const name = newElement('div', { innerText: permission.name, class: ["valueName"] });
+    const description = newElement('div', { innerText: permission.description, class: ["permissionDescription"] });
     const removeButton = newElement('button', { innerText: "Remove" });
     addElements([name, description, removeButton], currentPermission);
     return currentPermission;
@@ -79,8 +79,8 @@ function createCurrentPermission(permission) {
 
 function createAvailablePermission(permission) {
     const availablePermission = newElement('div', { class: ["availablePermission"] });
-    const name = newElement('div', { innerText: permission.name });
-    const description = newElement('div', { innerText: permission.description });
+    const name = newElement('div', { innerText: permission.name, class: ["valueName"] });
+    const description = newElement('div', { innerText: permission.description, class: ["permissionDescription"] });
     const addButton = newElement('button', { innerText: "Add" });
     addElements([name, description, addButton], availablePermission);
     return availablePermission;
@@ -88,7 +88,8 @@ function createAvailablePermission(permission) {
 
 function createRoleOption(role) {
     const roleOption = newElement('div', { class: ["roleOption"] });
-    const nameSpan = newElement('span', { innerText: `${role.default ? "[Default]" : "[Custom]"} ${role.name}\n${role.description}` });
+    const name = newElement('div', { innerText: `${role.default ? "[Default]" : "[Custom]"} ${role.name}`, class: ["valueName"] });
+    const description = newElement('div', { innerText: role.description, class: ["permissionDescription"] });
     registerElement(roleOption, "click", () => {
         if (roleOption.classList.contains("selected")) return;
         const allSelected = qsa('#currentRoles .selected');
@@ -100,7 +101,7 @@ function createRoleOption(role) {
         const rolePermissions = getPermissionsFromRole(selectedRole);
         populateCurrentPermissions(rolePermissions);
     })
-    addElement(nameSpan, roleOption);
+    addElements([name, description], roleOption);
     return roleOption;
 }
 
@@ -147,6 +148,7 @@ function showMainMenu() {
     registerElement(addButton, 'click', ()=>{showLoading(async ()=>{
         if (!nameInput.value) return;
         const newRole = await createNewRole(nameInput.value, descriptionInput.value);
+        if (newRole.status !== 200) return;
         nameInput.value = "";
         descriptionInput.value = "";
         window.allRoles.push(newRole);

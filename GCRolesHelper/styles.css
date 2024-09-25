@@ -63,6 +63,10 @@ body {
     margin: 0;
     padding: 0;
 }
+.valueName {
+    font-size: 1.1em;
+    font-weight: bold;
+}
 .header {
     position: sticky;
     top: 0;
