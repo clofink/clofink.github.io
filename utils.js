@@ -82,10 +82,12 @@ async function wait(time) {
         setTimeout(() => {resolve()}, time);
     })
 }
-function sortByKey(key) {
+function sortByKey(key, caseSensitive = true) {
     return function (a, b) {
-        if (a[key] > b[key]) return 1;
-        if (a[key] < b[key]) return -1;
+        const valueA = caseSensitive ? a[key] : a[key].toLowerCase();
+        const valueB = caseSensitive ? b[key] : b[key].toLowerCase();
+        if (valueA > valueB) return 1;
+        if (valueA < valueB) return -1;
         return 0;
     }
 }
