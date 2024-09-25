@@ -1,0 +1,175 @@
+body {
+    margin: 0;
+}
+#uiContainer {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(16, 1fr);
+    height: 100vh;
+}
+#currentRoles, #addNewRole, #currentPermissions, #availablePermissions, #globalControls {
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+}
+#globalControls {
+    grid-column: 1 / span 3;
+    grid-row: 1;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    display: grid;
+    background-color: lightgray;
+}
+#globalControls .orgName, #globalControls .orgId {
+    grid-column: 2;
+    justify-self: center;
+}
+#globalControls .orgName {
+    grid-row: 1;
+}
+#globalControls .orgId {
+    grid-row: 2;
+    white-space: nowrap;
+}
+#globalControls .buttonContainer {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    justify-self: right;
+}
+#globalControls .buttonContainer button {
+    margin-right: .5em;
+}
+#currentRoles {
+    grid-column: 1;
+    grid-row: 2 / span 11;
+    overflow-y: auto;
+}
+#addNewRole {
+    grid-column: 1;
+    grid-row: 13 / span 4;
+}
+#currentPermissions {
+    grid-column: 2;
+    grid-row: 2 / span 15;
+    overflow-y: auto;
+}
+#availablePermissions {
+    grid-column: 3;
+    grid-row: 2 / span 15;
+    overflow-y: auto;
+}
+#currentRoles input, #availablePermissions input, #currentPermissions input {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+.header {
+    position: sticky;
+    top: 0;
+    background-color: lightgrey;
+    text-align: center;
+    margin: 0;
+    padding: .25em;
+}
+.footer {
+    position: sticky;
+    top: 100%;
+    background-color: lightgray;
+    text-align: center;
+    margin: 0;
+    padding: .25em;
+}
+.roleOption {
+    cursor: pointer;
+    user-select: none;
+}
+.roleOption:hover {
+    background-color: rgb(232, 232, 232);
+}
+.availablePermission, .currentPermission, .roleOption {
+    padding: .5em;
+    border: 1px solid black;
+    border-radius: .25em;
+    margin: .25em;
+}
+.fullNotificationBody {
+    overflow-y: scroll;
+    max-height: 20em;
+}
+summary {
+    cursor: pointer;
+    user-select: none;
+}
+details {
+    padding: .5em;
+    margin: .25em;
+    border: 1px solid black;
+    border-radius: .25em;
+}
+.permissionOption button {
+    grid-column: 5;
+}
+.permissionOption span {
+    grid-column: 1 / span 4;
+    white-space: nowrap;
+    overflow-x: hidden;
+}
+#topicConfig {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+}
+#topicConfig label {
+    display: block;
+    padding-bottom: .25em;
+}
+#topicConfig .topicInputs {
+    grid-row: 2 / span 2;
+    grid-column: 1 / span 4;
+}
+.roleOption.selected {
+    background-color: rgb(197, 197, 197);
+}
+#topicConfig button {
+    grid-row: 3;
+    grid-column: 5;
+}
+#topicConfig .topicName {
+    grid-row: 1;
+    grid-column: 1 / span 5;
+    white-space: nowrap;
+    overflow-x: hidden;
+}
+#topicConfig {
+    margin-left: .25em;
+    margin-right: .25em;
+    padding-left: .5em;
+    padding-right: .5em;
+}
+#loadIcon {
+    position: fixed;
+    height: 3em;
+    width: 3em;
+    top: calc(50% - calc(3em / 2));
+    left: calc(50% - calc(3em / 2));
+    z-index: 10;
+    background-repeat: no-repeat;
+    background-size: 3em 3em;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M18.364 5.63604L16.9497 7.05025C15.683 5.7835 13.933 5 12 5C8.13401 5 5 8.13401 5 12C5 15.866 8.13401 19 12 19C15.866 19 19 15.866 19 12H21C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C14.4853 3 16.7353 4.00736 18.364 5.63604Z'%3E%3C/path%3E%3C/svg%3E");
+    visibility: hidden;
+}
+#loadIcon.shown{
+    visibility: visible;
+    animation-name: spin;
+    animation-duration: 1500ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear; 
+}
+@keyframes spin {
+    from {
+        transform:rotate(0deg);
+    }
+    to {
+        transform:rotate(360deg);
+    }
+}
