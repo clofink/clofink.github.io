@@ -127,6 +127,9 @@ function showMainMenu() {
     const currentPermissions = createUiSectionWithFilter("currentPermissions", "Current Permissions", "selectedRolePermissions", (item, searchValue) => { return item.name.toLowerCase().includes(searchValue.toLowerCase()) || item.description.toLowerCase().includes(searchValue.toLowerCase()) }, populateCurrentPermissions);
     const availablePermissions = createUiSectionWithFilter("availablePermissions", "All Available Permissions", "allPermissions", (item, searchValue) => { return item.name.toLowerCase().includes(searchValue.toLowerCase()) || item.description.toLowerCase().includes(searchValue.toLowerCase()) }, populateAvailablePermissions);
 
+    const countSpan = newElement('span', { id: "currentCount", innerText: "test" })
+    addElement(countSpan, qs(".header", currentPermissions), "afterbegin")
+
     const div1 = newElement('div');
     const div2 = newElement('div');
     const div3 = newElement('div');
@@ -240,13 +243,13 @@ function getPermissionsFromRole(role) {
 
 function populateCurrentPermissions(permissions) {
     const currentPermissionContainer = eById("currentPermissions");
-    const currentPermissionsHeader = qs(".header", currentPermissionContainer);
+    const headerCount = eById('currentCount');
     clearElement(currentPermissionContainer, ".currentPermission");
     for (const permission of permissions) {
         const permissionElement = createCurrentPermission(permission);
         addElement(permissionElement, currentPermissionContainer);
     }
-    currentPermissionsHeader.innerText = `Current Permissions (${permissions.length})`
+    headerCount.innerText = `(${permissions.length}) `;
     currentPermissionContainer.scrollTo({ top: 0, behavior: "instant" })
 }
 
