@@ -51,6 +51,7 @@ function createUiSectionWithFilter(id, headerName, listName, filterFunc, updateF
     const header = newElement('h2', { innerText: headerName, class: ["header"] });
     const searchBar = newElement('input');
     registerElement(searchBar, 'input', () => {
+        if (!window.hasOwnProperty(listName) || window[listName]?.length < 1) return;
         const filteredList = window[listName].filter((e) => filterFunc(e, searchBar.value));
         updateFunc(filteredList);
     })
@@ -101,51 +102,6 @@ function createRoleOption(role) {
     })
     addElement(nameSpan, roleOption);
     return roleOption;
-}
-
-function createAddTopic(topic) {
-    const topicConfig = newElement('div', { id: "topicConfig" });
-
-    const topicNameElem = newElement('div', { class: ['topicName'], innerText: `${topic.visibility === "Preview" ? "[PREVIEW] " : ""}${topic.id}` });
-    const topicInputs = newElement('div', { class: ['topicInputs'] });
-    const addTopicButton = newElement('button', { innerText: "Add" });
-
-    const paramInputList = [];
-    for (let param of topic.topicParameters) {
-
-        const paramName = capitalizeWords(param);
-
-        const paramLabel = newElement("label", { innerText: `${paramName}: ` });
-        const paramInput = newElement('input');
-        paramInputList.push(paramInput);
-        addElement(paramInput, paramLabel);
-        addElement(paramLabel, topicInputs);
-    }
-
-    registerElement(addTopicButton, "click", async () => {
-        // makes sure that a websocket is created
-        await createWebsocket();
-
-        let topicString = topic.id;
-        for (let paramInput of paramInputList) {
-            if (!paramInput.value) return;
-            topicString = topicString.replace("{id}", paramInput.value);
-        }
-
-        if (window.subscribedTopics.includes(topicString)) return;
-        const addResult = await addSubscriptions(window.websocket, [{ id: topicString }]);
-        // don't add the subscription to the list if it wasn't added successfully
-        // FIXME: add a way to show the error message
-        if (addResult.status !== 200) return;
-
-        window.subscribedTopics.push(topicString);
-        const addedTopicSection = eById('addedTopics');
-        const addedTopic = createAddedTopic(topicString);
-        addElement(addedTopic, addedTopicSection);
-    })
-
-    addElements([topicNameElem, topicInputs, addTopicButton], topicConfig)
-    return topicConfig;
 }
 
 function showMainMenu() {
@@ -263,7 +219,7 @@ function populateCurrentRoles(roles) {
         const roleOption = createRoleOption(role);
         if (i === 0) {
             roleOption.classList.add("selected");
-            const rolePermissions = getPermissionsFromRole(roles[0])
+            const rolePermissions = getPermissionsFromRole(roles[0]);
             populateCurrentPermissions(rolePermissions);
         }
         addElement(roleOption, currentRolesContainer);
@@ -284,11 +240,13 @@ function getPermissionsFromRole(role) {
 
 function populateCurrentPermissions(permissions) {
     const currentPermissionContainer = eById("currentPermissions");
+    const currentPermissionsHeader = qs(".header", currentPermissionContainer);
     clearElement(currentPermissionContainer, ".currentPermission");
     for (const permission of permissions) {
         const permissionElement = createCurrentPermission(permission);
         addElement(permissionElement, currentPermissionContainer);
     }
+    currentPermissionsHeader.innerText = `Current Permissions (${permissions.length})`
     currentPermissionContainer.scrollTo({ top: 0, behavior: "instant" })
 }
 
