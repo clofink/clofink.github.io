@@ -4,7 +4,7 @@ function getAllRoles() {
 }
 
 function getAllPermissions() {
-    return getAllGenesysItems(`/api/v2/authorization/permissions`, 100, "entities");
+    return getAllGenesysItems(`/api/v2/authorization/permissions`, 99999, "entities");
 }
 
 function createNewRole(roleName, roleDescription = "") {
