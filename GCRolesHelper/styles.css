@@ -50,8 +50,12 @@ body {
 }
 #currentPermissions {
     grid-column: 2;
-    grid-row: 2 / span 15;
+    grid-row: 2 / span 14;
     overflow-y: auto;
+}
+.footer {
+    grid-column: 2;
+    grid-row: 16;
 }
 #availablePermissions {
     grid-column: 3;

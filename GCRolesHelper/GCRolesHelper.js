@@ -18,6 +18,38 @@ function createNewRole(roleName, roleDescription = "") {
     return makeGenesysRequest(`/api/v2/authorization/roles`, "POST", body);
 }
 
+function updateRolePermissions(roleId, role) {
+    return makeGenesysRequest(`/api/v2/authorization/roles/${roleId}`, "PUT", role);
+}
+
+function applyChangesToRole(roleId, permissions) {
+    const currentRoleInfo = window.allRoles.find((e)=>e.id === roleId);
+    if (!currentRoleInfo) return;
+    const newRoleInfo = currentRoleInfo;
+    newRoleInfo.permissionPolicies = [];
+
+    for (const permission of permissions) {
+        const permParts = permission.name.split(".");
+        if (permParts.length !== 3) {
+            console.log(`Permission [${permission.name}] doesn't have 3 parts`);
+            continue;
+        }
+        const existingDomains = newRoleInfo.permissionPolicies.filter((e)=>e.domain === permParts[0]);
+        if (existingDomains.length === 0) {
+            newRoleInfo.permissionPolicies.push({domain: permParts[0], entityName: permParts[1], actionSet: [permParts[2]]});
+            continue;
+        }
+        const existingEntity = existingDomains.filter((e)=>e.entityName === permParts[1]);
+        if (existingEntity.length === 0) {
+            newRoleInfo.permissionPolicies.push({domain: permParts[0], entityName: permParts[1], actionSet: [permParts[2]]});
+            continue;
+        }
+        existingEntity[0].actionSet.push(permParts[2]);
+    }
+    console.log(newRoleInfo);
+    return updateRolePermissions(roleId, newRoleInfo);
+}
+
 function showLoginPage() {
     const urls = ["usw2.pure.cloud", "mypurecloud.com", "use2.us-gov-pure.cloud", "cac1.pure.cloud", "mypurecloud.ie", "euw2.pure.cloud", "mypurecloud.de", "aps1.pure.cloud", "mypurecloud.jp", "apne2.pure.cloud", "mypurecloud.com.au", "sae1.pure.cloud"]
     const inputsWrapper = newElement('div', { id: "inputs" });
@@ -73,6 +105,12 @@ function createCurrentPermission(permission) {
     const name = newElement('div', { innerText: permission.name, class: ["valueName"] });
     const description = newElement('div', { innerText: permission.description, class: ["permissionDescription"] });
     const removeButton = newElement('button', { innerText: "Remove" });
+    registerElement(removeButton, "click", ()=>{
+        const permissionIndex = window.selectedRolePermissions.findIndex((e)=>e.name === permission.name);
+        if (permissionIndex < 0) return;
+        window.selectedRolePermissions.splice(permissionIndex, 1);
+        populateCurrentPermissions(window.selectedRolePermissions);
+    })
     addElements([name, description, removeButton], currentPermission);
     return currentPermission;
 }
@@ -82,6 +120,12 @@ function createAvailablePermission(permission) {
     const name = newElement('div', { innerText: permission.name, class: ["valueName"] });
     const description = newElement('div', { innerText: permission.description, class: ["permissionDescription"] });
     const addButton = newElement('button', { innerText: "Add" });
+    registerElement(addButton, "click", ()=>{
+        const existingPermission = window.selectedRolePermissions.find((e)=>e.name === permission.name);
+        if (existingPermission) return;
+        window.selectedRolePermissions.push(permission);
+        populateCurrentPermissions(window.selectedRolePermissions);
+    })
     addElements([name, description, addButton], availablePermission);
     return availablePermission;
 }
@@ -97,7 +141,7 @@ function createRoleOption(role) {
             selected.classList.remove("selected");
         }
         roleOption.classList.add("selected")
-        const selectedRole = window.allRoles.find((e) => e.id === role.id);
+        window.selectedRole = window.allRoles.find((e) => e.id === role.id);
         const rolePermissions = getPermissionsFromRole(selectedRole);
         populateCurrentPermissions(rolePermissions);
     })
@@ -130,6 +174,19 @@ function showMainMenu() {
 
     const countSpan = newElement('span', { id: "currentCount", innerText: "test" })
     addElement(countSpan, qs(".header", currentPermissions), "afterbegin")
+    const footerDiv = newElement('div', {class: ["footer"]});
+    const applyButton = newElement('button', { innerText: "Apply Changes"});
+    registerElement(applyButton, "click", ()=>{
+        showLoading(async()=>{
+            const result = await applyChangesToRole(window.selectedRole.id, window.selectedRolePermissions);
+            if (result.status !== 200) return;
+            const currentRoleIndex = window.allRoles.findIndex((e)=>e.id === window.selectedRole.id);
+            if (currentRoleIndex < 0) return;
+            window.allRoles.splice(currentRoleIndex, 1, result);
+            populateCurrentRoles(window.allRoles);
+        })
+    })
+    addElement(applyButton, footerDiv);
 
     const div1 = newElement('div');
     const div2 = newElement('div');
@@ -155,7 +212,7 @@ function showMainMenu() {
         populateCurrentRoles(window.allRoles);
     })})
     addElements([div1, div2, div3], addNewRole);
-    addElements([globalControls, currentRoles, addNewRole, currentPermissions, availablePermissions], uiContainer);
+    addElements([globalControls, currentRoles, addNewRole, currentPermissions, footerDiv, availablePermissions], uiContainer);
 
     showLoading(async () => {
         const allRoles = await getAllRoles();
@@ -225,6 +282,7 @@ function populateCurrentRoles(roles) {
         if (i === 0) {
             roleOption.classList.add("selected");
             const rolePermissions = getPermissionsFromRole(roles[0]);
+            window.selectedRole = roles[0];
             populateCurrentPermissions(rolePermissions);
         }
         addElement(roleOption, currentRolesContainer);
@@ -238,12 +296,13 @@ function getPermissionsFromRole(role) {
             allPermissions.push(...resolvePermission(permission.domain, permission.entityName, action));
         }
     }
-    const sortByName = sortByKey('name', false);
-    window.selectedRolePermissions = allPermissions.sort(sortByName);
+    window.selectedRolePermissions = allPermissions;
     return allPermissions;
 }
 
 function populateCurrentPermissions(permissions) {
+    const sortByName = sortByKey('name', false);
+    permissions.sort(sortByName);
     const currentPermissionContainer = eById("currentPermissions");
     const headerCount = eById('currentCount');
     clearElement(currentPermissionContainer, ".currentPermission");
@@ -264,6 +323,8 @@ function resolvePermission(domain, entityName, action) {
 }
 
 function populateAvailablePermissions(permissions) {
+    const sortByName = sortByKey('name', false);
+    permissions.sort(sortByName);
     const permissionsContainer = eById('availablePermissions');
     clearElement(permissionsContainer, ".availablePermission");
     for (const permission of permissions) {
@@ -285,5 +346,6 @@ async function getOrgDetails() {
 var allRoles = [];
 var allPermissions = [];
 var selectedRolePermissions = [];
+var selectedRole;
 
 runLoginProcess(showLoginPage, showMainMenu);
