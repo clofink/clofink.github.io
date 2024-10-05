@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Note Offset</title>
+    <link rel="stylesheet" href="/NoteOffset/styles.css">
+</head>
+<body>
+    <div id="screen">
+        <div id="inputs">
+            <label>Spacing: 
+                <input type="number" min="1" max="6" id="offset" value="1">
+            </label>
+            <button id="start">Start</button>
+            <button id="stop">Stop</button>
+        </div>
+        <div id="displayNote"></div>
+        <div id="displayOffset"></div>
+        <div id="options"></div>
+        <div id="result"></div>
+    </div>
+    <script src="../utils.js"></script>
+    <script src="/NoteOffset/NoteOffset.js"></script>
+</body>
+</html>
