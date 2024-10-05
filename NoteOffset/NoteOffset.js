@@ -61,6 +61,9 @@ function startGame() {
 }
 
 function stopGame() {
+    clearElement(eById("options"));
+    eById("displayNote").innerText = "";
+    eById("displayOffset").innerText = "";
     const timingsReport = reportTimings();
     eById("result").innerText = timingsReport;
 }
