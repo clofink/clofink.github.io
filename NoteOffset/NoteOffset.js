@@ -33,7 +33,12 @@ function startGame() {
         }
         const isOffsetPos = randomIntFromInterval(0,1) > 0;
         currentOffset = isOffsetPos ? selectedOffset : 0 - selectedOffset;
-        currentNote = getRandomNote();
+        let randomNote = getRandomNote();
+        // ensure there is no duplicates
+        while (randomNote === currentNote) {
+            randomNote = getRandomNote();
+        }
+        currentNote = randomNote;
         eById("displayNote").innerText = currentNote;
         eById("displayOffset").innerText = currentOffset;
         currentTiming = {start: performance.now(), note: currentNote, offset: currentOffset};
