@@ -10,7 +10,7 @@ function randomIntFromInterval(min, max) {
 }
 
 function startGame() {
-    let currentOffset, currentNote, correctAnswer, currentTiming;
+    let currentOffset, currentNote, correctAnswer, currentTiming, answerSubmitted;
     eById('result').innerText = "";
     const buttonContainer = eById("options");
     for (let note of window.notes) {
@@ -24,6 +24,8 @@ function startGame() {
     newRound();
 
     function newRound() {
+        answerSubmitted = false;
+        eById("result").innerText = "";
         const selectedOffset = parseInt(eById("offset").value, 10);
         if (isNaN(selectedOffset)) {
             console.error("Must have a number selected");
@@ -46,17 +48,23 @@ function startGame() {
     }
 
     function submitAnswer(event) {
+        if (answerSubmitted) return;
+        answerSubmitted = true;
         currentTiming.end = performance.now();
         if (event.target.textContent === correctAnswer) {
             currentTiming.result = "success";
-            eById("result").innerText = `That is correct! ${correctAnswer} is ${currentOffset} away from ${currentNote}`;
+            timings.push(currentTiming);
+            newRound();
         }
         else {
             currentTiming.result = "fail";
-            eById("result").innerText = `That is not correct. ${correctAnswer} is ${currentOffset} away from ${currentNote}`;
+            timings.push(currentTiming);
+            eById("displayNote").innerText = "No";
+            eById("result").innerText = `${correctAnswer} is ${currentOffset} away from ${currentNote}`;
+            const acknowledgeButton = newElement("button", {innerText: "Okay", style: "display: block; margin: auto;"});
+            addElement(acknowledgeButton, eById("result"));
+            registerElement(acknowledgeButton, "click", newRound);
         }
-        timings.push(currentTiming);
-        newRound();
     }
 }
 
