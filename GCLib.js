@@ -44,6 +44,23 @@ async function getAllGenesysItems(path, pageSize = 100, entitiesKey = "entities"
     return items;
 }
 
+async function getAllCursoredGenesysItems(path, pageSize = 100, entitiesKey = "entities") {
+    const items = [];
+    let morePages = true;
+    let url = `${path}${path.includes('?') ? "&" : "?"}pageSize=${pageSize}`
+    while (morePages) {
+        const results = await makeGenesysRequest(url);
+        items.push(...results[entitiesKey]);
+        if (results.cursor) {
+            url = `${path}${path.includes('?') ? "&" : "?"}pageSize=${pageSize}&cursor=${results.cursor}`
+        }
+        else {
+            morePages = false;
+        }
+    }
+    return items;
+}
+
 async function getPagedGenesysItems(path, entitiesKey = "entities") {
     const items = [];
     while (path) {

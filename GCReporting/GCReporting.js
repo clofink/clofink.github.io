@@ -274,7 +274,7 @@ async function createJob(startDate, endDate) {
 }
 
 async function getJobResults(jobId) {
-    return getAllGenesysItems(`/api/v2/analytics/conversations/details/jobs/${jobId}/results`, 100, "conversations");
+    return getAllCursoredGenesysItems(`/api/v2/analytics/conversations/details/jobs/${jobId}/results`, 100, "conversations");
 }
 
 async function getBotTurns(botFlowId, start, end) {
