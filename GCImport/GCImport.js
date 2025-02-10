@@ -1,17 +1,17 @@
 function showLoginPage() {
     const urls = ["usw2.pure.cloud", "mypurecloud.com", "use2.us-gov-pure.cloud", "cac1.pure.cloud", "mypurecloud.ie", "euw2.pure.cloud", "mypurecloud.de", "aps1.pure.cloud", "mypurecloud.jp", "apne2.pure.cloud", "mypurecloud.com.au", "sae1.pure.cloud"]
-    const inputsWrapper = newElement('div', {id: "userInputs"});
-    const clientIdLabel = newElement('label', {innerText: "Client ID: "});
-    const clientInput = newElement('input', {name: "clientId"});
+    const inputsWrapper = newElement('div', { id: "userInputs" });
+    const clientIdLabel = newElement('label', { innerText: "Client ID: " });
+    const clientInput = newElement('input', { name: "clientId" });
     addElement(clientInput, clientIdLabel);
-    const environmentLabel = newElement('label', {innerText: "Environment: "});
-    const environmentSelect = newElement('select', {name: "environment"});
+    const environmentLabel = newElement('label', { innerText: "Environment: " });
+    const environmentSelect = newElement('select', { name: "environment" });
     for (let url of urls) {
-        const option = newElement('option', {innerText: url});
+        const option = newElement('option', { innerText: url });
         addElement(option, environmentSelect);
     }
     addElement(environmentSelect, environmentLabel);
-    const loginButton = newElement("button", {id: "login", innerText: "Log In"});
+    const loginButton = newElement("button", { id: "login", innerText: "Log In" });
     registerElement(loginButton, "click", login);
     const parent = eById('page');
     clearElement(parent);
@@ -40,7 +40,7 @@ function showMainMenu() {
     const tabContainer = new TabContainer([
         new CannedResponsesTab(),
         new SkillsTab(),
-        new QueuesTab(), 
+        new QueuesTab(),
         new AgentAliasTab(),
         new WrapUpCodesTab(),
         new WidgetsTab(),
@@ -51,14 +51,14 @@ function showMainMenu() {
         new ExternalContactsTab(),
     ]);
     addElement(tabContainer.getTabContainer(), page);
-    getOrgDetails().then(function(result) {
+    getOrgDetails().then(function (result) {
         if (result.status !== 200) {
             log(result.message, "error");
             logout();
             return;
         }
         eById("header").innerText = `Current Org Name: ${result.name} (${result.thirdPartyOrgName}) Current Org ID: ${result.id}`
-    }).catch(function(error) {log(error, "error"); logout();});
+    }).catch(function (error) { log(error, "error"); logout(); });
 }
 
 async function getOrgDetails() {
@@ -72,9 +72,9 @@ function loadFile(event) {
         }
         const file = event.target.files[0];
         const reader = new FileReader();
-        reader.addEventListener('load', function(data) {
+        reader.addEventListener('load', function (data) {
             try {
-                fileContents = Papa.parse(data.target.result, {header: true, dynamicTyping: true, skipEmptyLines: true});
+                fileContents = Papa.parse(data.target.result, { header: true, dynamicTyping: true, skipEmptyLines: true });
                 log(fileContents);
                 if (fileContents.meta.fields.length < window.requiredFields.length) {
                     fileContents = undefined;
@@ -104,10 +104,10 @@ function loadFile(event) {
 
 function addHelp(textList) {
     const details = newElement('details');
-    const summary = newElement("summary", {innerText: "Help"});
+    const summary = newElement("summary", { innerText: "Help" });
     const listContainer = newElement("ul");
     for (let text of textList) {
-        const listItem = newElement('li', {innerText: text});
+        const listItem = newElement('li', { innerText: text });
         addElement(listItem, listContainer);
     }
     addElements([summary, listContainer], details);
@@ -124,7 +124,7 @@ async function getAllPost(path, body, pageSize) {
         body.pageSize = pageSize;
         body.pageNumber = pageNum;
         const url = `https://api.${window.localStorage.getItem('environment')}${path}`;
-        const result = await fetch(url, {method: "POST", body: JSON.stringify(body), headers: {'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json'}});
+        const result = await fetch(url, { method: "POST", body: JSON.stringify(body), headers: { 'Authorization': `bearer ${getToken()}`, 'Content-Type': 'application/json' } });
         const resultJson = await result.json();
         if (result.ok) {
             resultJson.status = 200;
@@ -144,27 +144,27 @@ async function showLoading(loadingFunc, containerElement) {
     try {
         results = await loadingFunc();
     }
-    catch(error) {
-        results = [{name: "", type: "Loading Info", status: "failed", error: error}]
+    catch (error) {
+        results = [{ name: "", type: "Loading Info", status: "failed", error: error }]
     }
     eById("loadIcon").classList.remove("shown");
-    
+
     let resultsContainer = qs(".resultsContainer");
     if (!resultsContainer) {
-        resultsContainer = newElement("div", {class: ["resultsContainer"]});
+        resultsContainer = newElement("div", { class: ["resultsContainer"] });
     }
     clearElement(resultsContainer);
 
     if (results) {
-        const resultHeader = newElement("div", {class: ["resultHeader"], innerText: "Results"});
-        addElement(resultHeader, resultsContainer);    
+        const resultHeader = newElement("div", { class: ["resultHeader"], innerText: "Results" });
+        addElement(resultHeader, resultsContainer);
         log(results);
         for (let result of results) {
             // this should be a format like this:
             // {name: "", type: "", status: "failed/success", error: error}
-            let item = newElement("div", {class: ["resultItem"], innerText: `[${result.type}] ${result.name}`});
+            let item = newElement("div", { class: ["resultItem"], innerText: `[${result.type}] ${result.name}` });
             if (result.status === "failed") {
-                item = newElement("div", {class: ["resultItem", "error"], innerText: `[${result.type}] ${result.name}: ${result.error}`});
+                item = newElement("div", { class: ["resultItem", "error"], innerText: `[${result.type}] ${result.name}: ${result.error}` });
             }
             addElement(item, resultsContainer);
         }
@@ -173,23 +173,23 @@ async function showLoading(loadingFunc, containerElement) {
 }
 
 function createDownloadLink(fileName, fileContents, fileType) {
-    const fileData = new Blob([fileContents], {type: fileType});
+    const fileData = new Blob([fileContents], { type: fileType });
     const fileURL = window.URL.createObjectURL(fileData);
-    return newElement('a', {href: fileURL, download: fileName, innerText: "Example"});
+    return newElement('a', { href: fileURL, download: fileName, innerText: "Example" });
 }
 
 async function makeCallAndHandleErrors(callFunc, args, results, itemName, itemType) {
     try {
         const result = await callFunc(...args);
         if (result.status !== 200) {
-            results.push({name: itemName, type: itemType, status: "failed", error: result.message});
+            results.push({ name: itemName, type: itemType, status: "failed", error: result.message });
             return;
         }
-        results.push({name: itemName, type: itemType, status: "success"});
+        results.push({ name: itemName, type: itemType, status: "success" });
         return result;
     }
-    catch(error) {
-        results.push({name: itemName, type: itemType, status: "failed", error: error});
+    catch (error) {
+        results.push({ name: itemName, type: itemType, status: "failed", error: error });
     }
 }
 
