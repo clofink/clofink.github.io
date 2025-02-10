@@ -41,7 +41,8 @@ class AgentAliasTab extends Tab {
                 results.push({ name: user.Email, type: "Agent Alias", status: "failed", error: `No active user matching email ${user.Email}` });
                 continue;
             }
-            await makeCallAndHandleErrors(makeGenesysRequest, [`/api/v2/users/${currentUser.id}`, "PATCH", { version: currentUser.version, preferredName: user.Alias }], results, user.Email, "Agent Alias");
+            const result = await makeCallAndHandleErrors(makeGenesysRequest, [`/api/v2/users/${currentUser.id}`, "PATCH", { version: currentUser.version, preferredName: user.Alias }], results, user.Email, "Agent Alias");
+            if (result) userInfo[user.Email.toLowerCase()] = result;
         }
         return results;
     }
