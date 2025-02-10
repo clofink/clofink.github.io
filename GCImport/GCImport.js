@@ -74,7 +74,7 @@ function loadFile(event) {
         const reader = new FileReader();
         reader.addEventListener('load', function(data) {
             try {
-                fileContents = Papa.parse(data.target.result, {header: true, dynamicTyping: true});
+                fileContents = Papa.parse(data.target.result, {header: true, dynamicTyping: true, skipEmptyLines: true});
                 log(fileContents);
                 if (fileContents.meta.fields.length < window.requiredFields.length) {
                     fileContents = undefined;
