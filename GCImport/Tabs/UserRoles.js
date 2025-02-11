@@ -11,8 +11,9 @@ class UserRolesTab extends Tab {
         addElement(fileInput, label);
         registerElement(fileInput, "change", loadFile);
         const startButton = newElement('button', { innerText: "Start" });
-        const buttonClickHandler = this.bulkUpdateRolesWrapper.bind(this);
-        registerElement(startButton, "click", buttonClickHandler);
+        registerElement(startButton, "click", () => {
+            showLoading(async () => { return this.bulkUpdateRoles() }, this.container);
+        });
         const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
@@ -26,11 +27,6 @@ class UserRolesTab extends Tab {
         const exampleLink = createDownloadLink("Roles Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
         addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
         return this.container;
-    }
-
-    bulkUpdateRolesWrapper() {
-        const boundFunc = this.bulkUpdateRoles.bind(this);
-        showLoading(boundFunc, this.container);
     }
 
     async updateRoles(userId, roles) {
@@ -87,7 +83,7 @@ class UserRolesTab extends Tab {
                 }
                 newRoles.push(newRole);
             }
-            await makeCallAndHandleErrors(this.updateRoles, [userInfo[user.Email.toLowerCase()], {grants: newRoles}], results, user.Email, "User Role");
+            await makeCallAndHandleErrors(this.updateRoles, [userInfo[user.Email.toLowerCase()], { grants: newRoles }], results, user.Email, "User Role");
         }
         return results;
     }

@@ -11,8 +11,9 @@ class UtilizationTab extends Tab {
         addElement(fileInput, label);
         registerElement(fileInput, "change", loadFile);
         const startButton = newElement('button', { innerText: "Start" });
-        const buttonClickHandler = this.bulkUpdateUtilizationWrapper.bind(this);
-        registerElement(startButton, "click", buttonClickHandler);
+        registerElement(startButton, "click", () => {
+            showLoading(async () => { return this.bulkUpdateUtilization() }, this.container);
+        });
         const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
@@ -24,11 +25,6 @@ class UtilizationTab extends Tab {
         const exampleLink = createDownloadLink("Utilization Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
         addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
         return this.container;
-    }
-
-    bulkUpdateUtilizationWrapper() {
-        const boundFunc = this.bulkUpdateUtilization.bind(this);
-        showLoading(boundFunc, this.container);
     }
 
     async updateUtilization(userId, utilization) {
@@ -50,7 +46,7 @@ class UtilizationTab extends Tab {
                 results.push({ name: user.Email.toLowerCase(), type: "Utilization", status: "failed", error: `No active user matching email ${user['User Email']}` });
                 continue;
             }
-            const utilization = {utilization: {}}
+            const utilization = { utilization: {} }
 
             for (let type of ["Call", "Message", "Email", "Chat", "Callback", "Workitem"]) {
                 if (user[type]) {
@@ -58,7 +54,7 @@ class UtilizationTab extends Tab {
                         results.push({ name: user["User Email"].toLowerCase(), type: "Utilization", status: "failed", error: `Invalid value for ${type} utlization ${user[type]}` });
                     }
                     else {
-                        utilization.utilization[type.toLowerCase()] = {maximumCapacity: parseInt(user[type])}
+                        utilization.utilization[type.toLowerCase()] = { maximumCapacity: parseInt(user[type]) }
                     }
                 }
             }

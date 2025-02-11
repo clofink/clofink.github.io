@@ -4,21 +4,22 @@ class QueuesTab extends Tab {
     render() {
         window.requiredFields = ["Name"];
         window.allValidFields = ["Name", "Division", "Description", "Auto Answer", "Alerting Timeout", "SLA Percentage", "SLA Duration", "ACW", "ACW Timeout", "Manual Assignment", "Scoring Method", "Evaluation Method", "Script", "In-Queue Flow"];
-    
-        this.container = newElement('div', {id: "userInputs"});
-        const label = newElement('label', {innerText: "Queues CSV: "});
-        const fileInput = newElement('input', {type: "file", accept: ".csv"});
+
+        this.container = newElement('div', { id: "userInputs" });
+        const label = newElement('label', { innerText: "Queues CSV: " });
+        const fileInput = newElement('input', { type: "file", accept: ".csv" });
         addElement(fileInput, label);
         registerElement(fileInput, "change", loadFile);
-        const startButton = newElement('button', {innerText: "Start"});
-        const buttonClickHandler = this.importQueuesWrapper.bind(this);
-        registerElement(startButton, "click", buttonClickHandler);
-        const logoutButton = newElement("button", {innerText: "Logout"});
+        const startButton = newElement('button', { innerText: "Start" });
+        registerElement(startButton, "click", () => {
+            showLoading(async () => { return this.importQueues() }, this.container);
+        });
+        const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
-            `Must have "routing" scope`, 
+            `Must have "routing" scope`,
             `If using the Script column, "scripts-readonly" or "scripts" scope required. If using the In-Queue Flow column, "architect-readonly" or "architect" scope required`,
-            `Required CSV column "Name"`, 
+            `Required CSV column "Name"`,
             `Default values are used for the queue if no override is provided`,
             `Other valid fields are "Division", "Description", "Auto Answer", "Alerting Timeout", "SLA Percentage", "SLA Duration", "ACW", "ACW Timeout", "Manual Assignment", "Scoring Method", "Evaluation Method", "Script", "In-Queue Flow"`,
             `SLA Percentage: value between 0 and 1`,
@@ -30,15 +31,10 @@ class QueuesTab extends Tab {
         addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
         return this.container;
     }
-        
-    importQueuesWrapper() {
-        const boundFunc = this.importQueues.bind(this);
-        showLoading(boundFunc, this.container);
-    }
-    
+
     async importQueues() {
         if (!fileContents) throw "No valid file selected";
-    
+
         const scripts = {};
         const inQueueFlows = {};
         let scriptsAdded = false;
@@ -79,7 +75,7 @@ class QueuesTab extends Tab {
                     }
                 }
                 const mappedQueue = this.resolveMapping(queue);
-                await makeCallAndHandleErrors(makeGenesysRequest, ["/api/v2/routing/queues", 'POST', this.parseInput({...mappedQueue, ...newFields})], results, mappedQueue.name, "Queue");
+                await makeCallAndHandleErrors(makeGenesysRequest, ["/api/v2/routing/queues", 'POST', this.parseInput({ ...mappedQueue, ...newFields })], results, mappedQueue.name, "Queue");
             }
         }
         return Promise.all(results);
@@ -87,7 +83,7 @@ class QueuesTab extends Tab {
     resolveMapping(inputObj) {
         const newObj = {};
         const validQueueProperties = {
-            "Name" : "name",
+            "Name": "name",
             "Division": "division.name",
             "Description": "description",
             "Auto Answer": "mediaSettings.message.enableAutoAnswer", // true, false
@@ -131,11 +127,11 @@ class QueuesTab extends Tab {
                 }
             },
             "routingRules": [
-              {
-                "operator": "",
-                "threshold": "",
-                "waitSeconds": ""
-              }
+                {
+                    "operator": "",
+                    "threshold": "",
+                    "waitSeconds": ""
+                }
             ],
             "conditionalGroupRouting": "",
             "bullseye": "",
@@ -176,11 +172,11 @@ class QueuesTab extends Tab {
             "callingPartyName": "",
             "callingPartyNumber": "",
             "defaultScripts": {
-                "EMAIL": {"id": ""},
-                "CALLBACK": {"id": ""},
-                "VOICE": {"id": ""},
-                "CHAT": {"id": ""},
-                "MESSAGE": {"id": ""}
+                "EMAIL": { "id": "" },
+                "CALLBACK": { "id": "" },
+                "VOICE": { "id": "" },
+                "CHAT": { "id": "" },
+                "MESSAGE": { "id": "" }
             },
             "outboundMessagingAddresses": "",
             "outboundEmailAddress": "",
@@ -192,7 +188,7 @@ class QueuesTab extends Tab {
         // loop through each key and understand where it fits into the queue model to recreate
         for (let key in inputObj) {
             if (inputObj[key] === undefined || inputObj[key] === null) continue;
-    
+
             let exampleCurrent = example;
             let queueCurrent = queue;
             let parts = key.split(".");

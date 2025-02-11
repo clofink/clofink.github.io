@@ -4,15 +4,16 @@ class UserPromptsTab extends Tab {
     render() {
         window.requiredFields = ["Name"];
         window.allValidFields = ["Name", "EN-US Text", "Description"];
-    
+
         this.container = newElement('div', { id: "userInputs" });
         const label = newElement('label', { innerText: "Prompts CSV: " });
         const fileInput = newElement('input', { type: "file", accept: ".csv" });
         addElement(fileInput, label);
         registerElement(fileInput, "change", loadFile);
         const startButton = newElement('button', { innerText: "Start" });
-        const buttonClickHandler = this.importPromptsWrapper.bind(this);
-        registerElement(startButton, "click", buttonClickHandler);
+        registerElement(startButton, "click", () => {
+            showLoading(async () => { return this.importPrompts() }, this.container);
+        });
         const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
@@ -23,10 +24,6 @@ class UserPromptsTab extends Tab {
         const exampleLink = createDownloadLink("Prompts Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
         addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
         return this.container;
-    }
-
-    importPromptsWrapper() {
-        showLoading(this.importPrompts, this.container);
     }
 
     async importPrompts() {
@@ -41,7 +38,7 @@ class UserPromptsTab extends Tab {
         const results = [];
         for (let prompt of fileContents.data) {
             if (promptMapping.hasOwnProperty(prompt["Name"])) {
-                results.push({name: prompt["Name"], type: "Prompt", status: "failed", error: `Prompt already exists with name ${prompt["Name"]}`});
+                results.push({ name: prompt["Name"], type: "Prompt", status: "failed", error: `Prompt already exists with name ${prompt["Name"]}` });
                 continue;
             }
 
