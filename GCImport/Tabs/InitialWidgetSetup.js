@@ -4,16 +4,17 @@ class WidgetsTab extends Tab {
     render() {
         window.requiredFields = ["Configuration Name", "Inbound Flow Name", "Deployment Name"];
         window.allValidFields = ["Configuration Name", "Inbound Flow Name", "Deployment Name", "Languages", "Default Language", "Home Screen", "Home Screen Logo URL", "Agent Typing Indicator", "Visitor Typing Indicator", "Auto-Start Conversations", "Rich Text Formatting", "Conversation Disconnect", "Clear Conversation", "Humanize Conversation", "Bot Name", "Bot Image URL", "Color", "Position", "Allow Co-Browse", "Allow Agent Control", "Predictive Engagement", "Headless Mode"]
-    
+
         this.container = newElement('div', { id: "userInputs" });
-        const label = newElement('label', {innerText: "Widgets CSV: "});
+        const label = newElement('label', { innerText: "Widgets CSV: " });
         const fileInput = newElement('input', { type: "file", accept: ".csv" });
         addElement(fileInput, label);
         registerElement(fileInput, "change", loadFile);
-        const startButton = newElement('button', {innerText: "Start"});
-        const buttonClickHandler = this.importWidgetsWrapper.bind(this);
-        registerElement(startButton, "click", buttonClickHandler);
-        const logoutButton = newElement("button", {innerText: "Logout"});
+        const startButton = newElement('button', { innerText: "Start" });
+        registerElement(startButton, "click", () => {
+            showLoading(async () => { return this.importWidgets() }, this.container);
+        });
+        const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
             `Must have "webdeployments" and "architect" scopes`,
@@ -80,20 +81,20 @@ class WidgetsTab extends Tab {
                 }
             ],
             "supportedLanguageOptions": [
-                { 
-                    "language": "en-US", 
-                    "languageSkill": { 
-                        "config": { 
-                            "emp": { "pos": 1, "text": "", "type": "lac" } 
-                        }, 
-                        "text": "", 
-                        "type": "lac", 
-                        "uiMetaData": { "mode": 3 }, 
-                        "metaData": {}, 
-                        "version": 2 
-                    } 
+                {
+                    "language": "en-US",
+                    "languageSkill": {
+                        "config": {
+                            "emp": { "pos": 1, "text": "", "type": "lac" }
+                        },
+                        "text": "",
+                        "type": "lac",
+                        "uiMetaData": { "mode": 3 },
+                        "metaData": {},
+                        "version": 2
+                    }
                 }
-            ], 
+            ],
             "variables": []
         }
         // gzip json.stringify flow json, but it's not required to be compressed
@@ -104,12 +105,7 @@ class WidgetsTab extends Tab {
         // };
         return makeGenesysRequest(`/api/v2/flows/${flowId}/versions`, "POST", body);
     }
-    
-    importWidgetsWrapper() {
-        const boundFunc = this.importWidgets.bind(this);
-        showLoading(boundFunc, this.container);
-    }
-    
+
     async importWidgets() {
         if (!fileContents) throw "No valid file selected";
 
@@ -169,7 +165,7 @@ class WidgetsTab extends Tab {
         }
         return results;
     }
-    
+
     resolveMapping(inputObj) {
         const newObj = {};
         const validConfigProperties = {
@@ -217,7 +213,7 @@ class WidgetsTab extends Tab {
         }
         return newObj;
     }
-    
+
     parseInput(inputObj) {
         const defaultWidget = {
             "name": "",
