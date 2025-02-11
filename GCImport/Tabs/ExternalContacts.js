@@ -111,14 +111,14 @@ class ExternalContactsTab extends Tab {
     async addContacts(contacts, results) {
         while (contacts.length > 0) {
             const subGroup = contacts.splice(0, 50);
-            const response = await makeGenesysRequest("/api/v2/externalcontacts/bulk/contacts/add", "POST", {entities: subGroup});
+            const response = await makeGenesysRequest("/api/v2/externalcontacts/bulk/contacts/add", "POST", { entities: subGroup });
             for (let result of response.results) {
                 const resultName = `${result.entity?.firstName || ""} ${result.entity?.lastName || ""}`
                 if (result.hasOwnProperty('error')) {
-                    results.push({name: resultName, type: "External Contact", status: "failed", error: result.error?.message || ""});
+                    results.push({ name: resultName, type: "External Contact", status: "failed", error: result.error?.message || "" });
                 }
                 else {
-                    results.push({name: resultName, type: "External Contact", status: "success"});
+                    results.push({ name: resultName, type: "External Contact", status: "success" });
                 }
             }
         }
