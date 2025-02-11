@@ -12,7 +12,7 @@ class WrapUpCodesTab extends Tab {
         registerElement(fileInput, "change", loadFile);
         const startButton = newElement('button', { innerText: "Start" });
         registerElement(startButton, "click", () => {
-            showLoading(async () => { await this.importWrapUpCodes() }, this.container);
+            showLoading(async () => { return this.importWrapUpCodes() }, this.container);
         });
         const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);

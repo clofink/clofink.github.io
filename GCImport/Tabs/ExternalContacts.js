@@ -38,11 +38,11 @@ class ExternalContactsTab extends Tab {
         registerElement(fileInput, "change", loadFile);
         const importButton = newElement('button', { innerText: "Import" });
         registerElement(importButton, "click", () => {
-            showLoading(async () => { return await this.importContacts() }, this.container);
+            showLoading(async () => { return this.importContacts() }, this.container);
         });
         const exportButton = newElement('button', { innerText: "Export" });
         registerElement(exportButton, "click", () => {
-            showLoading(async () => { return await this.exportContacts() }, this.container);
+            showLoading(async () => { return this.exportContacts() }, this.container);
         });
         const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);

@@ -12,7 +12,7 @@ class AgentAliasTab extends Tab {
         registerElement(fileInput, "change", loadFile);
         const startButton = newElement('button', { innerText: "Start" });
         registerElement(startButton, "click", () => {
-            showLoading(async () => { await this.importAgentAliases() }, this.container);
+            showLoading(async () => { return this.importAgentAliases() }, this.container);
         });
         const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
@@ -41,7 +41,7 @@ class AgentAliasTab extends Tab {
                 results.push({ name: user.Email, type: "Agent Alias", status: "failed", error: `No active user matching email ${user.Email}` });
                 continue;
             }
-            const result = await makeCallAndHandleErrors(makeGenesysRequest, [`/api/v2/users/${currentUser.id}`, "PATCH", { version: currentUser.version, preferredName: user.Alias }], results, user.Email, "Agent Alias");
+            const result = await makeCallAndHandleErrors(makeGenesysRequest, [`/api/v2/users/${currentUser.id}`, "PATCH", { version: currentUser.version, preferredName: user.Alias }], results, `${user.Email} set to ${user.Alias}`, "Agent Alias");
             if (result) userInfo[user.Email.toLowerCase()] = result;
         }
         return results;

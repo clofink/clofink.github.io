@@ -12,7 +12,7 @@ class CannedResponsesTab extends Tab {
         registerElement(fileInput, "change", loadFile);
         const startButton = newElement('button', { innerText: "Start" });
         registerElement(startButton, "click", () => {
-            showLoading(async () => { await this.importCannedResponses() }, this.container);
+            showLoading(async () => { return this.importCannedResponses() }, this.container);
         });
         const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
