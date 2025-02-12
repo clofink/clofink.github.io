@@ -14,6 +14,10 @@ class UserSkillsTab extends Tab {
         registerElement(startButton, "click", () => {
             showLoading(async () => { return this.addUserSkills() }, this.container);
         });
+        const exportButton = newElement('button', { innerText: "Export" });
+        registerElement(exportButton, "click", () => {
+            showLoading(async () => { return this.exportUserSkills() }, this.container);
+        })
         const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
@@ -25,7 +29,7 @@ class UserSkillsTab extends Tab {
             `If a skill or language is referenced that does not exist, it will be created`
         ]);
         const exampleLink = createDownloadLink("User Skills Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
-        addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
+        addElements([label, startButton, exportButton, logoutButton, helpSection, exampleLink], this.container);
         return this.container;
     }
 
@@ -36,6 +40,24 @@ class UserSkillsTab extends Tab {
             map[item[field].toLowerCase()] = item.id;
         }
         return map;
+    }
+
+    async exportUserSkills() {
+        const usersInfo = await getAllGenesysItems("/api/v2/users?state=active&expand=languages,skills");
+        const dataRows = [];
+        for (const user of usersInfo) {
+            const userSkills = [];
+            for (const skill of user?.skills || []) {
+                userSkills.push(`${skill.name}:${skill.proficiency}`);
+            }
+            const userLanguages = [];
+            for (const language of user?.languages || []) {
+                userLanguages.push(`${language.name}:${language.proficiency}`);
+            }
+            dataRows.push([user.email, userSkills.join(","), userLanguages.join(",")])
+        }
+        const downloadLink = createDownloadLink("User Skills Export.csv", Papa.unparse([["Email", "Skills", "Languages"], ...dataRows]), "text/csv");
+        downloadLink.click();
     }
 
     async parseAndCreateIfNeeded(createPath, fullValue, fullMap, label) {
