@@ -14,6 +14,10 @@ class UtilizationTab extends Tab {
         registerElement(startButton, "click", () => {
             showLoading(async () => { return this.bulkUpdateUtilization() }, this.container);
         });
+        const exportButton = newElement('button', { innerText: "Export" });
+        registerElement(exportButton, "click", () => {
+            showLoading(async () => { return this.exportUtilization() }, this.container);
+        });
         const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
@@ -23,7 +27,7 @@ class UtilizationTab extends Tab {
             `Each column just takes a number for the utlization limit`,
         ]);
         const exampleLink = createDownloadLink("Utilization Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
-        addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
+        addElements([label, startButton, exportButton, logoutButton, helpSection, exampleLink], this.container);
         return this.container;
     }
 
@@ -62,5 +66,26 @@ class UtilizationTab extends Tab {
             await makeCallAndHandleErrors(this.updateUtilization, [userInfo[user["User Email"].toLowerCase()], utilization], results, user["User Email"], "Utilization")
         }
         return results;
+    }
+
+    async exportUtilization() {
+        const headers = ["User Email", "Level", "Call", "Message", "Chat", "Email", "Callback", "Workitem"];
+        const users = await getAllGenesysItems(`/api/v2/users?state=active`, 100, "entities");
+        const dataRows = [];
+        for (const user of users) {
+            const userUtilization = await makeGenesysRequest(`/api/v2/routing/users/${user.id}/utilization`);
+            dataRows.push([
+                user.email,
+                userUtilization.level,
+                userUtilization?.utilization?.call?.maximumCapacity || "",
+                userUtilization?.utilization?.message?.maximumCapacity || "",
+                userUtilization?.utilization?.chat?.maximumCapacity || "",
+                userUtilization?.utilization?.email?.maximumCapacity || "",
+                userUtilization?.utilization?.callback?.maximumCapacity || "",
+                userUtilization?.utilization?.workitem?.maximumCapacity || "",
+            ])
+        }
+        const downloadLink = createDownloadLink("User Utilization Export.csv", Papa.unparse([headers, ...dataRows]), "text/csv");
+        downloadLink.click();
     }
 }
