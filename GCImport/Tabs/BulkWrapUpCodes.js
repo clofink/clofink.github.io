@@ -14,6 +14,10 @@ class WrapUpCodesTab extends Tab {
         registerElement(startButton, "click", () => {
             showLoading(async () => { return this.importWrapUpCodes() }, this.container);
         });
+        const exportButton = newElement('button', { innerText: "Export" });
+        registerElement(exportButton, "click", () => {
+            showLoading(async () => { return this.exportWrapUpCodes() }, this.container);
+        })
         const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
@@ -24,8 +28,23 @@ class WrapUpCodesTab extends Tab {
             `Wrap-Up Codes are only added. If there are already codes on a queue, they will not be removed.`
         ]);
         const exampleLink = createDownloadLink("Wrapup Codes Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
-        addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
+        addElements([label, startButton, exportButton, logoutButton, helpSection, exampleLink], this.container);
         return this.container;
+    }
+
+    async exportWrapUpCodes() {
+        const queues = await getAllGenesysItems("/api/v2/routing/queues?sortOrder=asc&sortBy=name&name=**&divisionId", 50, "entities");
+        const dataRows = [];
+        for (const queue of queues) {
+            const wrapUpCodeNames = [];
+            const wrapUpCodes = await getAllGenesysItems(`/api/v2/routing/queues/${queue.id}/wrapupcodes?sortOrder=asc&sortBy=name&queueId=${queue.id}`, 50, "entities");
+            for (const wrapUpCode of wrapUpCodes) {
+                wrapUpCodeNames.push(wrapUpCode.name);
+            }
+            dataRows.push([queue.name, wrapUpCodeNames.join(",")]);
+        }
+        const downloadLink = createDownloadLink("Queue Wrap-Up Codes Export.csv", Papa.unparse([["Queue Name", "Wrap-Up Codes"], ...dataRows]), "text/csv");
+        downloadLink.click();
     }
 
     async importWrapUpCodes() {
