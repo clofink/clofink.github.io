@@ -14,6 +14,10 @@ class AgentAliasTab extends Tab {
         registerElement(startButton, "click", () => {
             showLoading(async () => { return this.importAgentAliases() }, this.container);
         });
+        const exportButton = newElement('button', { innerText: "Export" });
+        registerElement(exportButton, "click", () => {
+            showLoading(async () => { return this.exportUserAliases() }, this.container);
+        })
         const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
@@ -21,7 +25,7 @@ class AgentAliasTab extends Tab {
             `Required CSV columns "Email" and "Alias"`
         ]);
         const exampleLink = createDownloadLink("Agent Aliases Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
-        addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
+        addElements([label, startButton, exportButton, logoutButton, helpSection, exampleLink], this.container);
         return this.container;
     }
 
@@ -45,5 +49,15 @@ class AgentAliasTab extends Tab {
             if (result) userInfo[user.Email.toLowerCase()] = result;
         }
         return results;
+    }
+
+    async exportUserAliases() {
+        const users = await getAllGenesysItems(`/api/v2/users?state=active`, 100, 'entities');
+        const dataRows = [];
+        for (const user of users) {
+            dataRows.push([user.email, user.preferredName]);
+        }
+        const downloadLink = createDownloadLink("User Aliases Export.csv", Papa.unparse([["Email", "Alias"], ...dataRows]), "text/csv");
+        downloadLink.click();
     }
 }
