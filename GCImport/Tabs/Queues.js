@@ -14,6 +14,10 @@ class QueuesTab extends Tab {
         registerElement(startButton, "click", () => {
             showLoading(async () => { return this.importQueues() }, this.container);
         });
+        const exportButton = newElement('button', {innerText: "Export"});
+        registerElement(exportButton, "click", () => {
+            showLoading(async () => { return this.exportQueues() }, this.container);
+        });
         const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
@@ -28,15 +32,52 @@ class QueuesTab extends Tab {
             `Evaluation Method: one of ALL, BEST, NONE`
         ]);
         const exampleLink = createDownloadLink("Queues Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
-        addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
+        addElements([label, startButton, exportButton, logoutButton, helpSection, exampleLink], this.container);
         return this.container;
     }
 
+    async getAllMapped(path, fieldFrom = "name", fieldTo = "id", normalize = true) {
+        const allItems = await getAllGenesysItems(path);
+        const map = {};
+        for (const item of allItems) {
+            map[normalize ? item[fieldFrom].toLowerCase() : item[fieldFrom]] = item[fieldTo];
+        }
+        return map;
+    }
+
+    async exportQueues() {
+        const queues = await getAllGenesysItems("/api/v2/routing/queues/?sortOrder=asc&sortBy=name&name=**&divisionId=");
+        const scripts = await this.getAllMapped("/api/v2/scripts?sortBy=name&sortOrder=ascending&scriptDataVersion=0&pageDataVersion=0&divisionIds=", "id", "name", false);
+        const inQueueFlows = await this.getAllMapped("/api/v2/flows?sortBy=name&sortOrder=asc&type=inqueueshortmessage", "id", "name", false);
+
+        const dataRows = []
+        for (const queue of queues) {
+            dataRows.push([
+                queue.name,
+                queue.division.name,
+                queue.description,
+                queue.mediaSettings?.message?.enableAutoAnswer || "",
+                queue.mediaSettings?.message?.alertingTimeoutSeconds || "",
+                queue.mediaSettings?.message?.serviceLevel?.percentage || "",
+                queue.mediaSettings?.message?.serviceLevel?.durationMs || "",
+                queue.acwSettings.wrapupPrompt,
+                queue.acwSettings.timeoutMs,
+                queue.enableManualAssignment,
+                queue.scoringMethod,
+                queue.skillEvaluationMethod,
+                scripts[queue?.defaultScripts?.MESSAGE?.id] || "",
+                inQueueFlows[queue?.messageInQueueFlow?.id] || ""
+            ])
+        }
+        const headers = ["Name", "Division", "Description", "Auto Answer", "Alerting Timeout", "SLA Percentage", "SLA Duration", "ACW", "ACW Timeout", "Manual Assignment", "Scoring Method", "Evaluation Method", "Script", "In-Queue Flow"];
+        const downloadLink = createDownloadLink("Queues Export.csv", Papa.unparse([headers, ...dataRows]), "text/csv");
+        downloadLink.click();
+    }
     async importQueues() {
         if (!fileContents) throw "No valid file selected";
 
-        const scripts = {};
-        const inQueueFlows = {};
+        let scripts = {};
+        let inQueueFlows = {};
         let scriptsAdded = false;
         let inQueueFlowsAdded = false;
 
@@ -46,10 +87,7 @@ class QueuesTab extends Tab {
                 const newFields = {}
                 if (queue["Script"]) {
                     if (!scriptsAdded) {
-                        const allScripts = await getAllGenesysItems("/api/v2/scripts?sortBy=name&sortOrder=ascending&scriptDataVersion=0&pageDataVersion=0&divisionIds=", 50, "entities");
-                        for (let script of allScripts) {
-                            scripts[script.name] = script.id;
-                        }
+                        scripts = this.getAllMapped("/api/v2/scripts?sortBy=name&sortOrder=ascending&scriptDataVersion=0&pageDataVersion=0&divisionIds=");
                         scriptsAdded = true;
                     }
                     if (scripts.hasOwnProperty(queue["Script"])) {
@@ -61,10 +99,7 @@ class QueuesTab extends Tab {
                 }
                 if (queue["In-Queue Flow"]) {
                     if (!inQueueFlowsAdded) {
-                        const allInqueueFlows = await getAllGenesysItems("/api/v2/flows?sortBy=name&sortOrder=asc&type=inqueueshortmessage", 50, "entities");
-                        for (let flow of allInqueueFlows) {
-                            inQueueFlows[flow.name] = flow.id;
-                        }
+                        inQueueFlows = this.getAllMapped("/api/v2/flows?sortBy=name&sortOrder=asc&type=inqueueshortmessage");
                         inQueueFlowsAdded = true;
                     }
                     if (inQueueFlows.hasOwnProperty(queue["In-Queue Flow"])) {
