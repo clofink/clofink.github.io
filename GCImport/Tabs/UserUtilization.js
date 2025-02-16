@@ -36,6 +36,7 @@ class UtilizationTab extends Tab {
     }
 
     async bulkUpdateUtilization() {
+        // TODO: add way to set interruptable media
         if (!fileContents) throw "No valid file selected";
 
         const allUsers = await getAllGenesysItems(`/api/v2/users?state=active`, 100, "entities");
@@ -50,7 +51,9 @@ class UtilizationTab extends Tab {
                 results.push({ name: user.Email.toLowerCase(), type: "Utilization", status: "failed", error: `No active user matching email ${user['User Email']}` });
                 continue;
             }
-            const utilization = { utilization: {} }
+            // cannot initialize to nothing, since anything missing will overwrite to org defaults
+            const currentUtilization = await makeGenesysRequest(`/api/v2/routing/users/${userInfo[user["User Email"].toLowerCase()]}/utilization`);
+            const utilization = { utilization: currentUtilization.utilization };
 
             for (let type of ["Call", "Message", "Email", "Chat", "Callback", "Workitem"]) {
                 if (user[type]) {
