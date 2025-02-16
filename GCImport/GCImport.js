@@ -145,6 +145,7 @@ async function showLoading(loadingFunc, containerElement) {
         results = await loadingFunc();
     }
     catch (error) {
+        console.error(error);
         results = [{ name: "", type: "Loading Info", status: "failed", error: error }]
     }
     eById("loadIcon").classList.remove("shown");
