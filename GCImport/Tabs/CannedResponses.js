@@ -14,6 +14,10 @@ class CannedResponsesTab extends Tab {
         registerElement(startButton, "click", () => {
             showLoading(async () => { return this.importCannedResponses() }, this.container);
         });
+        const exportButton = newElement('button', { innerText: "Export" });
+        registerElement(exportButton, "click", () => {
+            showLoading(async () => { return this.exportCannedResponses() }, this.container);
+        })
         const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
@@ -23,8 +27,22 @@ class CannedResponsesTab extends Tab {
             `If multiple libraries have the same name, the last one in the list returned from the API will be used`
         ]);
         const exampleLink = createDownloadLink("Canned Responses Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
-        addElements([label, startButton, logoutButton, helpSection, exampleLink], this.container);
+        addElements([label, startButton, exportButton, logoutButton, helpSection, exampleLink], this.container);
         return this.container;
+    }
+
+    async exportCannedResponses() {
+        const libraries = await getAllGenesysItems("/api/v2/responsemanagement/libraries?", 500, "entities");
+        const dataRows = [];
+        for (const library of libraries) {
+            const responses = await getAllGenesysItems(`/api/v2/responsemanagement/responses?expand=substitutionsSchema&libraryId=${library.id}`, 100, "entities");
+            for (const response of responses) {
+                if (response.texts[0].contentType !== "text/html") continue;
+                dataRows.push([response.name, response.libraries[0].name, response.texts[0].content])
+            }
+        }
+        const downloadLink = createDownloadLink("Canned Response Export.csv", Papa.unparse([["Name", "Library", "Content"], ...dataRows]), "text/csv");
+        downloadLink.click();
     }
 
     async importCannedResponses() {
