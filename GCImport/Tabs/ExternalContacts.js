@@ -29,7 +29,7 @@ class ExternalContactsTab extends Tab {
 
     render() {
         window.requiredFields = ["First Name", "Last Name"];
-        window.allValidFields = ["Queue Name", "Wrap-Up Codes"];
+        window.allValidFields = ["First Name", "Middle Name", "Last Name", "Salutation", "Title", "Work Phone", "Cell Phone", "Home Phone", "Other Phone", "Work Email", "Personal Email", "Other Email", "Address Line 1", "Address Line 2", "City", "State", "Postal Code", "Country Code", "Survey Opt Out"];
 
         this.container = newElement('div', { id: "userInputs" });
         const label = newElement('label', { innerText: "External Contacts CSV: " });
@@ -47,13 +47,9 @@ class ExternalContactsTab extends Tab {
         const logoutButton = newElement("button", { innerText: "Logout" });
         registerElement(logoutButton, "click", logout);
         const helpSection = addHelp([
-            `Must have "routing" scope`,
-            `Required CSV columns "Queue Name" and "Wrap-Up Codes"`,
-            `Wrap-Up Codes column is a comma-separated list of wrap-up codes`,
-            `If the code does not exist, it will be created`,
-            `Wrap-Up Codes are only added. If there are already codes on a queue, they will not be removed.`
+            `Required CSV columns "First Name" and "Last Name"`,
         ]);
-        const exampleLink = createDownloadLink("Wrapup Codes Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
+        const exampleLink = createDownloadLink("External Contacts Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
         addElements([label, importButton, exportButton, logoutButton, helpSection, exampleLink], this.container);
         return this.container;
     }
