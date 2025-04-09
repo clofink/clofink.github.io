@@ -24,7 +24,8 @@ class CannedResponsesTab extends Tab {
             `Must have "response-management" scope`,
             `Required CSV columns "Name", "Library", and "Content"`,
             `If a library with a matching name does not exist, it will be created`,
-            `If multiple libraries have the same name, the last one in the list returned from the API will be used`
+            `Library column is a comma-separated list of Library names`,
+            `If multiple libraries have the same name, the last one in the list returned from the API will be used`,
         ]);
         const exampleLink = createDownloadLink("Canned Responses Example.csv", Papa.unparse([window.allValidFields]), "text/csv");
         addElements([label, startButton, exportButton, logoutButton, helpSection, exampleLink], this.container);
@@ -34,11 +35,15 @@ class CannedResponsesTab extends Tab {
     async exportCannedResponses() {
         const libraries = await getAllGenesysItems("/api/v2/responsemanagement/libraries?", 500, "entities");
         const dataRows = [];
+        const responseIds = new Set();
         for (const library of libraries) {
-            const responses = await getAllGenesysItems(`/api/v2/responsemanagement/responses?expand=substitutionsSchema&libraryId=${library.id}`, 100, "entities");
+            const responses = await getAllGenesysItems(`/api/v2/responsemanagement/responses?libraryId=${library.id}`, 100, "entities");
             for (const response of responses) {
+                if (responseIds.has(response.id)) continue;
                 if (response.texts[0].contentType !== "text/html") continue;
-                dataRows.push([response.name, response.libraries[0].name, response.texts[0].content])
+                const libraryNames = response.libraries.map((e) => e.name).join(",");
+                dataRows.push([response.name, libraryNames, response.texts[0].content]);
+                responseIds.add(response.id);
             }
         }
         const downloadLink = createDownloadLink("Canned Response Export.csv", Papa.unparse([["Name", "Library", "Content"], ...dataRows]), "text/csv");
@@ -57,12 +62,15 @@ class CannedResponsesTab extends Tab {
 
         for (let response of fileContents.data) {
             if (Object.keys(response).length != 3) continue;
-            let libraryId;
-            if (response.Library && !libraryInfo[response.Library]) {
-                const newLibrary = await makeCallAndHandleErrors(makeGenesysRequest, ["/api/v2/responsemanagement/libraries", "POST", { name: response.Library }], results, response.Library, "Response Library");
-                if (newLibrary) libraryInfo[response.Library] = newLibrary.id;
+            const libraries = [];
+            const libraryList = response.Library.split(",").map((e) => e.trim());
+            for (const libraryName of libraryList) {
+                if (libraryName && !libraryInfo[libraryName]) {
+                    const newLibrary = await makeCallAndHandleErrors(makeGenesysRequest, ["/api/v2/responsemanagement/libraries", "POST", { name: libraryName }], results, libraryName, "Response Library");
+                    if (newLibrary) libraryInfo[libraryName] = newLibrary.id;
+                }
+                libraries.push({id: libraryInfo[libraryName]})
             }
-            libraryId = libraryInfo[response.Library];
             if (response.Name && response.Content) {
                 let substitutions = [];
                 const matches = response.Content.match(/({{[\w\d_-]+}})/g);
@@ -74,11 +82,7 @@ class CannedResponsesTab extends Tab {
                 }
                 const body = {
                     "assets": [],
-                    "libraries": [
-                        {
-                            "id": libraryId
-                        }
-                    ],
+                    "libraries": libraries,
                     "name": response.Name,
                     "substitutions": substitutions,
                     "texts": [
