@@ -63,7 +63,10 @@ class CannedResponsesTab extends Tab {
         }
 
         for (let response of fileContents.data) {
-            if (Object.keys(response).length != 3) continue;
+            if (Object.keys(response).length < window.requiredFields.length) {
+                console.warn(`There are not enough fields for the required fields`);
+                continue;
+            }
             const libraries = [];
             const libraryList = response.Library.split(",").map((e) => e.trim());
             for (const libraryName of libraryList) {
