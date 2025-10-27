@@ -3,7 +3,7 @@ class CannedResponsesTab extends Tab {
 
     render() {
         window.requiredFields = ["Name", "Library", "Content"];
-        window.allValidFields = ["Name", "Library", "Content"];
+        window.allValidFields = ["Name", "Library", "Content", "Subject"];
 
         this.container = newElement('div', { id: "userInputs" });
         const label = newElement('label', { innerText: "Canned Responses CSV: " });
@@ -23,6 +23,8 @@ class CannedResponsesTab extends Tab {
         const helpSection = addHelp([
             `Must have "response-management" scope`,
             `Required CSV columns "Name", "Library", and "Content"`,
+            `Other valid fields are: Subject (used only for outbound campaign emails)`,
+            `Including a value for the Subject will make the canned response an Outbound Campaign Email type`,
             `If a library with a matching name does not exist, it will be created`,
             `Library column is a comma-separated list of Library names`,
             `If multiple libraries have the same name, the last one in the list returned from the API will be used`,
@@ -69,7 +71,7 @@ class CannedResponsesTab extends Tab {
                     const newLibrary = await makeCallAndHandleErrors(makeGenesysRequest, ["/api/v2/responsemanagement/libraries", "POST", { name: libraryName }], results, libraryName, "Response Library");
                     if (newLibrary) libraryInfo[libraryName] = newLibrary.id;
                 }
-                libraries.push({id: libraryInfo[libraryName]})
+                libraries.push({ id: libraryInfo[libraryName] })
             }
             if (response.Name && response.Content) {
                 let substitutions = [];
@@ -88,9 +90,19 @@ class CannedResponsesTab extends Tab {
                     "texts": [
                         {
                             "content": response.Content,
-                            "contentType": "text/html"
+                            "contentType": "text/html",
+                            "type": "body"
                         }
                     ],
+                }
+                // if there is a subject, we can add it to the front of the texts
+                if (response.Subject) {
+                    body.texts.unshift({
+                        "type": "subject",
+                        "contentType": "plain/text",
+                        "content": response.Subject
+                    })
+                    body.responseType = "CampaignEmailTemplate"; // hardcoded since the subject field is only valid for these types of messages
                 }
                 await makeCallAndHandleErrors(makeGenesysRequest, ["/api/v2/responsemanagement/responses", "POST", body], results, response.Name, "Canned Response");
             }
