@@ -102,7 +102,7 @@ class CannedResponsesTab extends Tab {
                 if (response.Subject) {
                     body.texts.unshift({
                         "type": "subject",
-                        "contentType": "plain/text",
+                        "contentType": "text/plain",
                         "content": response.Subject
                     })
                     body.responseType = "CampaignEmailTemplate"; // hardcoded since the subject field is only valid for these types of messages
