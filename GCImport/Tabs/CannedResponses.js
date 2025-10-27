@@ -77,7 +77,7 @@ class CannedResponsesTab extends Tab {
                 if (matches && matches.length >= 0) {
                     for (let match of matches) {
                         substitutions.push({ id: match.substring(2, match.length - 2) });
-                        response.Content = response.Content.replace(match, `<span class="rm-placeholder" data-placeholder="true">${match}</span>`);
+                        response.Content = response.Content.replaceAll(match, `<span class="rm-placeholder" data-placeholder="true">${match}</span>`);
                     }
                 }
                 const body = {
