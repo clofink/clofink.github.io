@@ -73,7 +73,7 @@ class CannedResponsesTab extends Tab {
             }
             if (response.Name && response.Content) {
                 let substitutions = [];
-                const matches = response.Content.match(/({{[\w\d_-]+}})/g);
+                const matches = response.Content.match(/({{[\w\d_- ]+}})/g);
                 if (matches && matches.length >= 0) {
                     for (let match of matches) {
                         substitutions.push({ id: match.substring(2, match.length - 2) });
