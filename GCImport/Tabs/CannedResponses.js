@@ -76,12 +76,18 @@ class CannedResponsesTab extends Tab {
                 }
                 libraries.push({ id: libraryInfo[libraryName] })
             }
+
             if (response.Name && response.Content) {
-                let substitutions = [];
-                const matches = response.Content.match(/({{[\w\s_-]+}})/g);
+                const substitutions = [];
+                // check for parens in the substitution name
+                const matches = response.Content.match(/({{[\w\s\(\)_-]+}})/g);
                 if (matches && matches.length >= 0) {
                     for (let match of matches) {
-                        substitutions.push({ id: match.substring(2, match.length - 2) });
+                        const substitutionName = match.substring(2, match.length - 2);
+                        // deduplicate the list of substitution options so it doesn't create one per instance
+                        if (!substitutions.some((e) => e.id === substitutionName)) {
+                            substitutions.push({ id: substitutionName });
+                        }
                         response.Content = response.Content.replaceAll(match, `<span class="rm-placeholder" data-placeholder="true">${match}</span>`);
                     }
                 }
