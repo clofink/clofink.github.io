@@ -220,8 +220,13 @@ function load(executionData) {
         }
     }
 
-    window.headerFields = ["Type", "Start Date", "Tracking ID", "Name", "Duration"];
-    window.dataRows = steps.map((e) => ([e.type, e.dateTime, e.trackingId || "", e.name || "", prettyPrintMs(e.duration)]))
+    window.headerFields = ["Action Number", "Type", "Start Date", "Tracking ID", "Name", "Duration"];
+    let actionNum = 0;
+    const specialOnes = ["eventLoop", "startedFlow", "endedFlow"]
+    window.dataRows = steps.map((e) => {
+        if (e.type.includes('action') || specialOnes.includes(e.type)) actionNum++;
+        return [e.type.includes('action') || specialOnes.includes(e.type) ? actionNum : "", e.type, e.dateTime, e.trackingId || "", e.name || "", prettyPrintMs(e.duration)]
+    });
 
     const resultsElem = document.getElementById('results');
     const resultTable = new PagedTable(
