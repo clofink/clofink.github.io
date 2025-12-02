@@ -82,9 +82,6 @@ async function run() {
         result = await getExecutionHistoryForConversation(conversationId);
     }
     for (const executionData of result || importJsons) {
-        log(`-------- CHECKING FLOW ${executionData.flow.flowName.toUpperCase()} v${executionData.flow.flowVersion} --------`);
-        log(`-------- INTERACTION ID: ${executionData.flow.conversationId} --------`);
-        log(`Total flow time: ${new Date(executionData.flow.endDateTime) - new Date(executionData.flow.startDateTime)}ms`);
         load(executionData);
     }
 }
@@ -96,6 +93,17 @@ function exportData() {
     }
     const download = createDownloadLink("Execution Data.csv", Papa.unparse([window.headerFields, ...window.dataRows]), "text/csv");
     download.click();
+}
+
+function prettyPrintMs(ms) {
+    const millis = ms % 1000;
+    const totalSeconds = Math.floor(ms / 1000);
+    const sec_num = parseInt(totalSeconds, 10);
+    const minutes = Math.floor(sec_num / 60) % 60;
+    const seconds = sec_num % 60;
+
+    const pretty = [minutes, seconds].map(v => v < 10 ? "0" + v : v).join(":")
+    return `${pretty}.${millis.toString().padEnd(3, "0")}`;
 }
 
 function createDownloadLink(fileName, fileContents, fileType) {
@@ -142,7 +150,7 @@ function showLoginPage() {
 }
 
 function createTableHeader(flow, actionCount) {
-    const tableHeader = newElement('div', { class: ['tableHeader'], innerText: `Flow Name: ${flow.flowName} v${flow.flowVersion}\nInteraction ID: ${flow.conversationId}\nTotal Flow Time: ${new Date(flow.endDateTime) - new Date(flow.startDateTime)}ms for ${actionCount} actions` });
+    const tableHeader = newElement('div', { class: ['tableHeader'], innerText: `Flow Name: ${flow.flowName} v${flow.flowVersion}\nInteraction ID: ${flow.conversationId}\nTotal Flow Time: ${prettyPrintMs(new Date(flow.endDateTime) - new Date(flow.startDateTime))}ms for ${actionCount} actions` });
     return tableHeader;
 }
 
@@ -213,7 +221,7 @@ function load(executionData) {
     }
 
     window.headerFields = ["Type", "Start Date", "Tracking ID", "Name", "Duration"];
-    window.dataRows = steps.map((e) => ([e.type, e.dateTime, e.trackingId || "", e.name || "", e.duration]))
+    window.dataRows = steps.map((e) => ([e.type, e.dateTime, e.trackingId || "", e.name || "", prettyPrintMs(e.duration)]))
 
     const resultsElem = document.getElementById('results');
     const resultTable = new PagedTable(
