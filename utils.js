@@ -10,7 +10,7 @@ function log(message, level) {
     console[level || "log"](message);
 }
 function eById(id, target) {
-    return (target || document).getElementById(id); 
+    return (target || document).getElementById(id);
 }
 function registerElement(element, event, callback, doCallback) {
     element.addEventListener(event, callback);
@@ -21,7 +21,7 @@ function unregisterElement(element, event, callback) {
 }
 function registerElements(elements, event, callback, doCallback) {
     for (let element of elements) {
-        if(doCallback) callback(element);
+        if (doCallback) callback(element);
         registerElement(element, event, callback);
     }
 }
@@ -79,7 +79,7 @@ function generateRange(low, high) {
 }
 async function wait(time) {
     return new Promise((resolve) => {
-        setTimeout(() => {resolve()}, time);
+        setTimeout(() => { resolve() }, time);
     })
 }
 function sortByKey(key, caseSensitive = true) {
@@ -104,7 +104,7 @@ function replaceInArray(array, item, replacement) {
 }
 
 function capitalizeWords(string) {
-    return string.split(" ").map((e) => e.substring(0,1).toUpperCase() + e.substring(1)).join(" ");
+    return string.split(" ").map((e) => e.substring(0, 1).toUpperCase() + e.substring(1)).join(" ");
 }
 
 function prettyPrintCamelCase(string) {
@@ -125,8 +125,39 @@ async function showLoading(loadingFunc, args = [], spinnerSelector = "#loadIcon"
     try {
         await loadingFunc(...args);
     }
-    catch(error) {
+    catch (error) {
         console.error(error);
     }
     spinnerElement.classList.remove("shown");
+}
+
+async function getFile(element) {
+    try {
+        if (element.files.length < 1) {
+            return [];
+        }
+        const files = [];
+        for (const file of element.files) {
+            const fileContents = await readFile(file);
+            files.push(fileContents);
+        }
+        return files;
+    }
+    catch (error) {
+        handleError(error);
+    }
+}
+
+function readFile(file) {
+    const reader = new FileReader();
+    return new Promise((resolve, reject) => {
+        reader.addEventListener('load', (data) => {
+            resolve(data.target.result);
+        })
+        reader.addEventListener('error', (error) => {
+            reject(error);
+        })
+
+        reader.readAsText(file);
+    })
 }
