@@ -103,7 +103,7 @@ function prettyPrintMs(ms) {
     const seconds = sec_num % 60;
 
     const pretty = [minutes, seconds].map(v => v < 10 ? "0" + v : v).join(":")
-    return `${pretty}.${millis.toString().padEnd(3, "0")}`;
+    return `${pretty}.${millis.toString().padStart(3, "0")}`;
 }
 
 function createDownloadLink(fileName, fileContents, fileType) {
