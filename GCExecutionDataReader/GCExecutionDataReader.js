@@ -177,8 +177,10 @@ function showMainMenu() {
     registerElement(exportButton, 'click', exportData);
     addElement(exportButton, page);
 
-    const resultDiv = newElement('results', { id: "results" });
+    const resultDiv = newElement('div', { id: "results" });
     addElement(resultDiv, page);
+    const cummulativeResultsDiv = newElement('div', { id: "cummulative-results" });
+    addElement(cummulativeResultsDiv, page);
 
     getOrgDetails().then(function (result) {
         if (result.status !== 200) {
@@ -228,6 +230,23 @@ function load(executionData) {
         return [e.type.includes('action') || specialOnes.includes(e.type) ? actionNum : "", e.type, e.dateTime, e.trackingId || "", e.name || "", prettyPrintMs(e.duration)]
     });
 
+    const totalTime = new Date(executionData.flow.endDateTime) - new Date(executionData.flow.startDateTime);
+    const cummulativeHeaderFields = ['Tracking ID', 'Name', 'Type', 'Count', 'Total (in ms)', 'Average (in ms)', 'High (in ms)', 'Low (in ms)', 'Percent of Total Time'];
+    const cummulativeData = {};
+    for (const step of steps) {
+        // skip ones that do not have a tracking ID
+        if (step.trackingId === undefined) continue;
+        // initialize the object with all properties needed
+        if (!Object.hasOwnProperty.call(cummulativeData, step.trackingId)) cummulativeData[step.trackingId] = { actionName: step.name, actionType: step.type, count: 0, high: 0, low: Infinity, total: 0, average: 0, percentTotal: 0 };
+        cummulativeData[step.trackingId].count++;
+        cummulativeData[step.trackingId].total += step.duration;
+        if (step.duration > cummulativeData[step.trackingId].high) cummulativeData[step.trackingId].high = step.duration;
+        if (step.duration < cummulativeData[step.trackingId].low) cummulativeData[step.trackingId].low = step.duration;
+        cummulativeData[step.trackingId].average = Math.round(cummulativeData[step.trackingId].total / cummulativeData[step.trackingId].count);
+        cummulativeData[step.trackingId].percentTotal = Math.round((cummulativeData[step.trackingId].total / totalTime) * 10000) / 100;
+    }
+    const cummulativeDataRows = Object.entries(cummulativeData).map(([key, value]) => ([key, value.actionName, value.actionType, value.count, value.total, value.average, value.high, value.low, value.percentTotal]));
+
     const resultsElem = document.getElementById('results');
     const resultTable = new PagedTable(
         window.headerFields,
@@ -242,6 +261,21 @@ function load(executionData) {
     const tableHeader = createTableHeader(executionData.flow, steps.length);
     addElement(tableHeader, resultsElem);
     addElement(resultTable.container, resultsElem);
+
+    const cummulativeResultElem = document.getElementById('cummulative-results');
+    const cummulativeResultTable = new PagedTable(
+        cummulativeHeaderFields,
+        cummulativeDataRows,
+        25,
+        {},
+        true,
+        true,
+        "-"
+    );
+    clearElement(cummulativeResultElem);
+    const cummulativeTableHeader = createTableHeader(executionData.flow, steps.length);
+    addElement(cummulativeTableHeader, cummulativeResultElem);
+    addElement(cummulativeResultTable.container, cummulativeResultElem);
 
     log(steps);
     return steps;
