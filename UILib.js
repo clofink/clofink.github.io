@@ -298,8 +298,8 @@ class PagedTable {
                 valueB = b[headerIndex];
             }
 
-            valueA = /^[\d\.]+$/.test(valueA) && !isNaN(parseInt(valueA)) ? parseInt(valueA) : valueA;
-            valueB = /^[\d\.]+$/.test(valueA) && !isNaN(parseInt(valueB)) ? parseInt(valueB) : valueB;
+            valueA = /^[\d\.]+$/.test(valueA) && !isNaN(parseFloat(valueA)) ? parseFloat(valueA) : valueA;
+            valueB = /^[\d\.]+$/.test(valueA) && !isNaN(parseFloat(valueB)) ? parseFloat(valueB) : valueB;
 
             valueA = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3}){0,1}Z$/.test(valueA) ? new Date(valueA) : valueA;
             valueB = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3}){0,1}Z$/.test(valueB) ? new Date(valueB) : valueB;
