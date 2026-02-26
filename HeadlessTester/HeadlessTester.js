@@ -2,6 +2,7 @@ window.storedValues = {};
 window.listenedEvents = [];
 window.readyPlugins = [];
 window.fullEventLog = [];
+window.consoleLog = [];
 
 var allEvents = [
     "Auth.ready",
@@ -408,11 +409,61 @@ function createCommandRow(command) {
     return newElement("option", { 'data-depends-on': "plugin", "data-depends-value": commandParts[0], innerText: command });
 }
 
-const createDownloadLink = (fileContents, fileType) => {
+const createDownloadLink = (fileName, fileContents, fileType) => {
     const fileData = new Blob([fileContents], { type: fileType });
     const fileURL = window.URL.createObjectURL(fileData);
-    return newElement('a', { href: fileURL, download: `Headless Events ${new Date().toLocaleDateString()}.log` });
+    return newElement('a', { href: fileURL, download: fileName });
 }
+
+(function () {
+    var originalLog = console.log;
+    console.log = function (...args) {
+        let logString = "";
+        for (const item of args) {
+            if (typeof item === "object") logString += JSON.stringify(item);
+            else logString += item;
+            logString += "\n";
+        }
+        window.consoleLog.push(logString);
+        originalLog.apply(console, args);
+    };
+
+    var originalInfo = console.info;
+    console.info = function (...args) {
+        let logString = "";
+        for (const item of args) {
+            if (typeof item === "object") logString += JSON.stringify(item);
+            else logString += item;
+            logString += "\n";
+        }
+        window.consoleLog.push(logString);
+        originalInfo.apply(console, args);
+    };
+
+    var originalWarn = console.warn;
+    console.warn = function (...args) {
+        let logString = "";
+        for (const item of args) {
+            if (typeof item === "object") logString += JSON.stringify(item);
+            else logString += item;
+            logString += "\n";
+        }
+        window.consoleLog.push(logString);
+        originalWarn.apply(console, args);
+    };
+
+    var originalError = console.error;
+    console.error = function (...args) {
+        let logString = "";
+        for (const item of args) {
+            if (typeof item === "object") logString += JSON.stringify(item);
+            else logString += item;
+            logString += "\n";
+        }
+        window.consoleLog.push(logString);
+        originalError.apply(console, args);
+    };
+})();
 
 populateList(eById('eventList'), createEventRow, window.allEvents);
 populateList(eById('command'), createCommandRow, Object.keys(window.commandMapping));
@@ -425,4 +476,5 @@ registerElement(eById("selectAll"), "click", selectAllEvents);
 registerElement(eById("runCommand"), "click", runCommand);
 registerElements(qsa("#events input"), "change", updateListenedEvents);
 registerElement(eById("reload"), "click", reloadPage);
-registerElement(eById("downloadFullLog"), "click", () => { const download = createDownloadLink(fullEventLog.join("\n"), "text/plain"); download.click() });
+registerElement(eById("downloadFullLog"), "click", () => { const download = createDownloadLink(`Headless Events ${new Date().toLocaleDateString()}.log`, fullEventLog.join("\n"), "text/plain"); download.click() });
+registerElement(eById("downloadConsoleLog"), "click", () => { const download = createDownloadLink(`Console Logs ${new Date().toLocaleDateString()}.log`, consoleLog.join("\n"), "text/plain"); download.click() })

@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Headless SDK Test Page</title>
     <link rel="stylesheet" href="/HeadlessTester/styles.css">
 </head>
+
 <body>
     <div class="panelContainer">
         <div class="panel panel1">
             <details class="config" id="account" open>
                 <summary>Account Configuration</summary>
-                <label>Deployment ID: 
+                <label>Deployment ID:
                     <input id="deployId" value="">
                 </label>
                 <label>Region:
@@ -33,7 +35,8 @@
                 <button id="loadWidget">Load Widget</button>
                 <button id="reload">Reload</button>
             </details>
-            <button id="downloadFullLog">Download Logs</button>
+            <button id="downloadFullLog">Download Events</button>
+            <button id="downloadConsoleLog">Download Logs</button>
             <label>Plugin:
                 <select id="plugin">
                     <option>Auth</option>
@@ -59,10 +62,10 @@
             </details>
             <details class="config" id="commands" data-depends-on="plugin">
                 <summary>Commands</summary>
-                <label id="commandLabel">Command: 
+                <label id="commandLabel">Command:
                     <select id="command"></select>
                 </label>
-                <label>Command Body: 
+                <label>Command Body:
                     <textarea id="commandBody">{}</textarea>
                 </label>
                 <button id="runCommand">Run Command</button>
@@ -75,4 +78,5 @@
     <script src="../utils.js"></script>
     <script src="/HeadlessTester/HeadlessTester.js"></script>
 </body>
+
 </html>
