@@ -1,6 +1,7 @@
 window.storedValues = {};
 window.listenedEvents = [];
 window.readyPlugins = [];
+window.fullEventLog = [];
 
 var allEvents = [
     "Auth.ready",
@@ -123,9 +124,9 @@ var commandMapping = {
     "AuthProvider.getAuthCode": {},
     "AuthProvider.reAuthenticate": {},
     "AuthProvider.signIn": {},
-    "CobrowseService.acceptSession": {joinCode: ""},
-    "CobrowseService.declineSession": {joinCode: "", "session-uuid": ""},
-    "CobrowseService.offerState": {joinCode: "", "session-uuid": ""},
+    "CobrowseService.acceptSession": { joinCode: "" },
+    "CobrowseService.declineSession": { joinCode: "", "session-uuid": "" },
+    "CobrowseService.offerState": { joinCode: "", "session-uuid": "" },
     "CobrowseService.stopSession": {},
     "CobrowseService.acceptControl": {},
     "CobrowseService.declineControl": {},
@@ -133,38 +134,38 @@ var commandMapping = {
     "CobrowseService.stopDrawing": {},
     "CobrowseService.acceptNavigation": {},
     "CobrowseService.declineNavigation": {},
-    "Database.set": {messaging: {customAttributes: {key: "value"}}},
-    "Database.update": {messaging: {customAttributes: {key: "value"}}},
-    "Database.get": {name: "messaging.customAttributes"},
-    "Database.remove": {name: "messaging.customAttributes"},
-    "Engage.invite": {engageContent: {offerText: ""}},
+    "Database.set": { messaging: { customAttributes: { key: "value" } } },
+    "Database.update": { messaging: { customAttributes: { key: "value" } } },
+    "Database.get": { name: "messaging.customAttributes" },
+    "Database.remove": { name: "messaging.customAttributes" },
+    "Engage.invite": { engageContent: { offerText: "" } },
     "Engage.accept": {},
     "Engage.reject": {},
-    "Journey.pageview": {pageTitle: "", pageLocation: "custom-page-location", customAttributes: {visitorPreferredLang: "en"}, traitsMapper: []},
-    "Journey.record": {eventName: "product_added", customAttributes: {price: 15.99, code: "CDE-123", name: "Product", hasBatteries: false}, traitsMapper: []},
-    "Journey.formsTrack": {selector: "#registration-form", formName: "user registration", captureFormDataOnAbandon: true, customAttributes: { isVip: true }, traitsMapper: [{ fieldName: "firstName", traitName: "givenName" }, { fieldName: "lastName", traitName: "familyName" }]},
-    "Journey.trackClickEvents": {clickEvents: [{selector: "button.green-background", eventName: "green_button_clicked" }, {selector: ".close", eventName: "close_button_clicked" }, {selector: "#sign-up", eventName: "signup_button_clicked", customAttributes: {signUpValue: 2000}}]},
-    "Journey.trackIdleEvents": {idleEvents: [{idleAfterSeconds: 30, eventName: "idle_30_seconds" }, {idleAfterSeconds: 90, eventName: "idle_90_seconds", customAttributes: {currentCartValue: 129.99}}]},
-    "Journey.trackInViewport": {inViewportEvents: [{selector: ".close-button", eventName: "close_button_shown" }, {selector: "#sign-up", eventName: "signup_button_visible", customAttributes: {signUpValue: 2000}}]},
-    "Journey.trackScrollDepth": {scrollDepthEvents: [{percentage: 60, eventName: "scrolled_60_percent" }, {percentage: 90, eventName: "bottom_of_page_reached", customAttributes: {scrollValue: 600}}]},
-    "Journey.recordActionStateChange": {actionId: "e74846b2-e74a-4f40-b237-3c197a737994", actionState: "errored", errorCode: "00045", errorMessage: "Configuration not available."},
-    "KnowledgeService.search": {"pageSize": 3, "query": "", "queryType": "ManualSearch"},
-    "KnowledgeService.getSuggestions": {"pageSize": 3, "query": ""},
+    "Journey.pageview": { pageTitle: "", pageLocation: "custom-page-location", customAttributes: { visitorPreferredLang: "en" }, traitsMapper: [] },
+    "Journey.record": { eventName: "product_added", customAttributes: { price: 15.99, code: "CDE-123", name: "Product", hasBatteries: false }, traitsMapper: [] },
+    "Journey.formsTrack": { selector: "#registration-form", formName: "user registration", captureFormDataOnAbandon: true, customAttributes: { isVip: true }, traitsMapper: [{ fieldName: "firstName", traitName: "givenName" }, { fieldName: "lastName", traitName: "familyName" }] },
+    "Journey.trackClickEvents": { clickEvents: [{ selector: "button.green-background", eventName: "green_button_clicked" }, { selector: ".close", eventName: "close_button_clicked" }, { selector: "#sign-up", eventName: "signup_button_clicked", customAttributes: { signUpValue: 2000 } }] },
+    "Journey.trackIdleEvents": { idleEvents: [{ idleAfterSeconds: 30, eventName: "idle_30_seconds" }, { idleAfterSeconds: 90, eventName: "idle_90_seconds", customAttributes: { currentCartValue: 129.99 } }] },
+    "Journey.trackInViewport": { inViewportEvents: [{ selector: ".close-button", eventName: "close_button_shown" }, { selector: "#sign-up", eventName: "signup_button_visible", customAttributes: { signUpValue: 2000 } }] },
+    "Journey.trackScrollDepth": { scrollDepthEvents: [{ percentage: 60, eventName: "scrolled_60_percent" }, { percentage: 90, eventName: "bottom_of_page_reached", customAttributes: { scrollValue: 600 } }] },
+    "Journey.recordActionStateChange": { actionId: "e74846b2-e74a-4f40-b237-3c197a737994", actionState: "errored", errorCode: "00045", errorMessage: "Configuration not available." },
+    "KnowledgeService.search": { "pageSize": 3, "query": "", "queryType": "ManualSearch" },
+    "KnowledgeService.getSuggestions": { "pageSize": 3, "query": "" },
     "KnowledgeService.getCategories": {},
-    "KnowledgeService.getArticle": {"articleId": "123abcd4-e567-890f-g123-456h789abc0d", "searchId": "123abcd4-e567-890f-g123-456h789abc0d", "queryType": "ManualSearch"},
-    "KnowledgeService.getArticlesByCategory": {"categoryId": "123abcd4-e567-890f-g123-456h789abc0d"},
-    "KnowledgeService.getTopViewedArticles": {"pageSize": 3},
-    "KnowledgeService.sendFeedback": {"documentId": "123abcd4-e567-890f-g123-456h789abc0d", "documentVersionId": "123abcd4-e567-890f-g123-456h789abc0d", "documentVariationId": "123abcd4-e567-890f-g123-456h789abc0d", "rating": "Positive", "searchId": "123abcd4-e567-890f-g123-456h789abc0d", "reason": "SearchResults", "comment": "My comment", "queryType": "ManualSearch"},
+    "KnowledgeService.getArticle": { "articleId": "123abcd4-e567-890f-g123-456h789abc0d", "searchId": "123abcd4-e567-890f-g123-456h789abc0d", "queryType": "ManualSearch" },
+    "KnowledgeService.getArticlesByCategory": { "categoryId": "123abcd4-e567-890f-g123-456h789abc0d" },
+    "KnowledgeService.getTopViewedArticles": { "pageSize": 3 },
+    "KnowledgeService.sendFeedback": { "documentId": "123abcd4-e567-890f-g123-456h789abc0d", "documentVersionId": "123abcd4-e567-890f-g123-456h789abc0d", "documentVariationId": "123abcd4-e567-890f-g123-456h789abc0d", "rating": "Positive", "searchId": "123abcd4-e567-890f-g123-456h789abc0d", "reason": "SearchResults", "comment": "My comment", "queryType": "ManualSearch" },
     "KnowledgeService.getSession": {},
     "Launcher.show": {},
     "Launcher.hide": {},
     "MessagingService.startConversation": {},
-    "MessagingService.sendMessage": {message: ""},
-    "MessagingService.requestUpload": {file: []},
-    "MessagingService.getFile": {id: ""},
-    "MessagingService.refreshFiles": {files: [{id: ""}]},
-    "MessagingService.downloadFile": {downloadUrl: "", name: ""},
-    "MessagingService.deleteFile": {id: ""},
+    "MessagingService.sendMessage": { message: "" },
+    "MessagingService.requestUpload": { file: [] },
+    "MessagingService.getFile": { id: "" },
+    "MessagingService.refreshFiles": { files: [{ id: "" }] },
+    "MessagingService.downloadFile": { downloadUrl: "", name: "" },
+    "MessagingService.deleteFile": { id: "" },
     "MessagingService.sendTyping": {},
     "MessagingService.clearTypingTimeout": {},
     "MessagingService.clearSession": {},
@@ -178,7 +179,7 @@ var commandMapping = {
     "Messenger.openCobrowse": {},
     "Messenger.clear": {},
     "Messenger.close": {},
-    "Toaster.open": {title: "Welcome to Genesys Cloud", body: "Encountering issues? Our support team is ready to troubleshoot and assist you.", buttons: {type: "binary", primary: "Get Support", secondary: "Maybe Later"}},
+    "Toaster.open": { title: "Welcome to Genesys Cloud", body: "Encountering issues? Our support team is ready to troubleshoot and assist you.", buttons: { type: "binary", primary: "Get Support", secondary: "Maybe Later" } },
     "Toaster.accept": {},
     "Toaster.decline": {},
     "Toaster.close": {}
@@ -290,6 +291,7 @@ function registerAllEvents() {
 }
 
 function handleEvent(event) {
+    window.fullEventLog.push(JSON.stringify(event, null, 2));
     const fullEventName = event.publisher && event.eventName ? `${event.publisher}.${event.eventName}` : event.event;
     const eventParts = fullEventName.split(".");
     const plugin = eventParts[0];
@@ -303,7 +305,7 @@ function handleEvent(event) {
     const logItem = createLogItem(fullEventName, event.data)
 
     addElement(logItem, eById("dataLog"));
-    logItem.scrollIntoView({behavior: "smooth"});
+    logItem.scrollIntoView({ behavior: "smooth" });
 }
 
 function updateListenedEvents() {
@@ -317,13 +319,13 @@ function updateListenedEvents() {
 
 function createLogItem(eventName, eventBody, type) {
     type = type || "info"
-    const logItem = newElement("div", {class: ['logItem']});
+    const logItem = newElement("div", { class: ['logItem'] });
     if (eventName) {
-        const logHeader = newElement("div", {class: ["logHeader", type], innerText: eventName});
+        const logHeader = newElement("div", { class: ["logHeader", type], innerText: eventName });
         addElement(logHeader, logItem);
     }
     if (eventBody && Object.keys(eventBody).length > 0) {
-        const logBody = newElement("pre", {class: ["logBody"], innerText: JSON.stringify(eventBody, null, 2)});
+        const logBody = newElement("pre", { class: ["logBody"], innerText: JSON.stringify(eventBody, null, 2) });
         addElement(logBody, logItem);
     }
     return logItem;
@@ -358,13 +360,13 @@ async function runCommand() {
         commandResult = await runCommandAsync(window.storedValues.command, JSON.parse(window.storedValues.commandBody));
         resultType = "info";
     }
-    catch(error) {
+    catch (error) {
         commandResult = error;
         resultType = "error";
     }
     const logItem = createLogItem(window.storedValues.command, commandResult, resultType);
     addElement(logItem, eById("dataLog"));
-    logItem.scrollIntoView({behavior: "smooth"});
+    logItem.scrollIntoView({ behavior: "smooth" });
 }
 
 function createEventRow(fullEventName) {
@@ -377,8 +379,8 @@ function createEventRow(fullEventName) {
         eventSection.dataset.dependsValue = eventItems.join(",");
     }
 
-    const eventLabel = newElement('label', {"data-depends-on": "plugin", "data-depends-value": eventParts[0], innerText: splitCamelCase(eventParts[1])});
-    const input = newElement('input', { id: fullEventName, type: "checkbox"});
+    const eventLabel = newElement('label', { "data-depends-on": "plugin", "data-depends-value": eventParts[0], innerText: splitCamelCase(eventParts[1]) });
+    const input = newElement('input', { id: fullEventName, type: "checkbox" });
     addElement(input, eventLabel, "afterbegin");
     return eventLabel;
 }
@@ -402,8 +404,14 @@ function createCommandRow(command) {
         commandItems.push(commandParts[0]);
         commandSection.dataset.dependsValue = commandItems.join(",");
     }
-    
+
     return newElement("option", { 'data-depends-on': "plugin", "data-depends-value": commandParts[0], innerText: command });
+}
+
+const createDownloadLink = (fileContents, fileType) => {
+    const fileData = new Blob([fileContents], { type: fileType });
+    const fileURL = window.URL.createObjectURL(fileData);
+    return newElement('a', { href: fileURL, download: `Headless Events ${new Date().toLocaleDateString()}.log` });
 }
 
 populateList(eById('eventList'), createEventRow, window.allEvents);
@@ -417,3 +425,4 @@ registerElement(eById("selectAll"), "click", selectAllEvents);
 registerElement(eById("runCommand"), "click", runCommand);
 registerElements(qsa("#events input"), "change", updateListenedEvents);
 registerElement(eById("reload"), "click", reloadPage);
+registerElement(eById("downloadFullLog"), "click", () => { const download = createDownloadLink(fullEventLog.join("\n"), "text/plain"); download.click() });
